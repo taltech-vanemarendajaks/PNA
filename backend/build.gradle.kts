@@ -25,6 +25,7 @@ dependencies {
     implementation("io.ktor:ktor-server-cors-jvm")
 
     implementation("com.google.api-client:google-api-client:2.7.0")
+    implementation("io.github.cdimascio:dotenv-java:3.0.0")
 
     implementation("ch.qos.logback:logback-classic:1.5.6")
 

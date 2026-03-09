@@ -8,8 +8,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
-fun Route.googleAuthRoutes() {
-    val googleClientId = System.getenv("GOOGLE_CLIENT_ID")
+fun Route.googleAuthRoutes(googleClientId: String?) {
     val verifier = googleClientId?.takeIf { it.isNotBlank() }?.let { GoogleTokenVerifierService(it) }
 
     route("/api/v1/auth") {

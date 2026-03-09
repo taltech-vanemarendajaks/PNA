@@ -1,6 +1,7 @@
 package com.pna.backend
 
 import auth.googleAuthRoutes
+import com.pna.backend.config.AppConfig
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.server.application.Application
@@ -17,17 +18,27 @@ import io.ktor.server.routing.routing
 import io.ktor.serialization.kotlinx.json.json
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
+    val appConfig = AppConfig.load()
+
+    embeddedServer(Netty, port = appConfig.port, host = appConfig.host) {
+        module(appConfig)
+    }
         .start(wait = true)
 }
 
-fun Application.module() {
+fun Application.module(appConfig: AppConfig = AppConfig.load()) {
     install(CallLogging)
     install(ContentNegotiation) {
         json()
     }
     install(CORS) {
-        anyHost()
+        if (appConfig.allowAnyHost) {
+            anyHost()
+        } else {
+            appConfig.allowedOrigins.forEach { origin ->
+                allowHost(origin.host, schemes = origin.schemes)
+            }
+        }
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Get)
         allowHeader(HttpHeaders.ContentType)
@@ -38,6 +49,6 @@ fun Application.module() {
         get("/health") {
             call.respondText("ok")
         }
-        googleAuthRoutes()
+        googleAuthRoutes(appConfig.googleClientId)
     }
 }
