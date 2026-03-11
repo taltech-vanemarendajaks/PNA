@@ -1,6 +1,6 @@
 package com.pna.backend
 
-import auth.googleAuthRoutes
+import com.pna.backend.routes.v1.auth.googleAuthRoutes
 import com.pna.backend.config.AppConfig
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -12,6 +12,8 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.openapi.openAPI
+import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -46,6 +48,9 @@ fun Application.module(appConfig: AppConfig = AppConfig.load()) {
     }
 
     routing {
+        openAPI(path = "openapi", swaggerFile = "openapi/documentation.yaml")
+        swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
+
         get("/health") {
             call.respondText("ok")
         }

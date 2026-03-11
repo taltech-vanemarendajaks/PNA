@@ -1,5 +1,8 @@
-package auth
+package com.pna.backend.routes.v1.auth
 
+import com.pna.backend.services.GoogleTokenVerifierService
+import domain.auth.request.GoogleAuthRequest
+import domain.auth.response.GoogleAuthResponse
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.request.receive

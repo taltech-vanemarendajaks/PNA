@@ -1,0 +1,99 @@
+openapi: 3.0.3
+info:
+  title: PNA Backend Auth API
+  version: 1.0.0
+  description: Kotlin backend API for Google authentication.
+servers:
+  - url: http://localhost:8080
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
+  /api/v1/auth/google:
+    post:
+      summary: Verify Google ID token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleAuthRequest'
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleAuthResponse'
+        '400':
+          description: Missing or malformed request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid Google ID token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server misconfiguration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    GoogleAuthRequest:
+      type: object
+      required:
+        - idToken
+      properties:
+        idToken:
+          type: string
+          example: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...
+    GoogleAuthResponse:
+      type: object
+      properties:
+        subject:
+          type: string
+          example: "10293847561029384756"
+        email:
+          type: string
+          nullable: true
+          example: user@example.com
+        emailVerified:
+          type: boolean
+          nullable: true
+          example: true
+        name:
+          type: string
+          nullable: true
+          example: Jane Doe
+        picture:
+          type: string
+          nullable: true
+          example: https://lh3.googleusercontent.com/a/example
+        givenName:
+          type: string
+          nullable: true
+          example: Jane
+        familyName:
+          type: string
+          nullable: true
+          example: Doe
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Invalid Google ID token

@@ -1,8 +1,9 @@
-package auth
+package com.pna.backend.services
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
+import domain.auth.GoogleUser
 
 class GoogleTokenVerifierService(clientId: String) {
     private val verifier = GoogleIdTokenVerifier.Builder(NetHttpTransport(), GsonFactory.getDefaultInstance())
