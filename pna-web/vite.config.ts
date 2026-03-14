@@ -10,7 +10,7 @@ export default defineConfig({
       target: "react",
       autoCodeSplitting: true,
       routesDirectory: "./src/routes",
-      generatedRouteTree: "./src/routeTree.gen.ts",
+      generatedRouteTree: "./.tanstack/routeTree.gen.ts",
     }),
     react(),
     tailwindcss(),

@@ -4,14 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host localhost --port 5173 --strictPort",
     "build": "vite build && tsc -b",
     "preview": "vite preview",
+    "pwa:preview": "pnpm build && vite preview --host localhost --port 5173 --strictPort",
     "lint": "biome check .",
     "format": "biome format --write .",
     "check": "biome check ."
   },
   "dependencies": {
+    "@react-oauth/google": "^0.13.4",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-router": "^1.166.7",
     "daisyui": "^5.5.19",

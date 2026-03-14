@@ -15,7 +15,15 @@ const queryClient = new QueryClient({
   },
 });
 
-registerSW({ immediate: true });
+if (import.meta.env.PROD) {
+  registerSW({ immediate: true });
+} else if ("serviceWorker" in navigator) {
+  void navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      void registration.unregister();
+    }
+  });
+}
 
 const rootElement = document.getElementById("root");
 

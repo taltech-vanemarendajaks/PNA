@@ -1,4 +1,5 @@
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { ThemeController } from "../components/ThemeController";
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -16,11 +17,9 @@ function RootLayout() {
           </div>
           <nav className="flex gap-2">
             <Link to="/" className="btn btn-ghost btn-sm">
-              Overview
+              Home
             </Link>
-            <Link to="/about" className="btn btn-ghost btn-sm">
-              Stack
-            </Link>
+            <ThemeController />
           </nav>
         </header>
 

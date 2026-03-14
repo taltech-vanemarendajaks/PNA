@@ -1,87 +1,56 @@
-# PNA Frontend Application
+# PNA Frontend
 
-# Tech Stack
+Vite + React + TypeScript frontend for PNA.
 
-This project uses Vite, React 19, and TypeScript as the application foundation.
-Routing is handled by TanStack Router, async state is handled by TanStack Query,
-UI examples use DaisyUI on top of Tailwind CSS v4, PWA support is provided by
-`vite-plugin-pwa`, and code quality is handled with Biome.
+## Stack
 
-# Project Structure
+- React 19
+- TypeScript
+- Vite
+- TanStack Router
+- TanStack Query
+- Tailwind CSS v4 + DaisyUI
+- `@react-oauth/google`
+- `vite-plugin-pwa`
+- Biome
 
-The main application entry is `src/main.tsx`, which mounts the React app and
-registers the PWA service worker. Routing is defined in `src/routes/`, shared
-router setup lives in `src/router.tsx`, the generated TanStack route tree lives
-in `src/routeTree.gen.ts`, and global styling is in `src/index.css`.
-
-# Routing
-
-Routing uses TanStack Router file-based routes. The root layout is defined in
-`src/routes/__root.tsx`, the home route is `src/routes/index.tsx`, and the
-secondary example route is `src/routes/about.tsx`.
-
-# Getting Started
-
-Make sure you have `pnpm` installed before running the commands below.
-
-## Install Dependencies
+## Quick Start
 
 ```bash
 pnpm install
-```
-
-## Start Development Server
-
-```bash
+cp .env.example .env
 pnpm dev
 ```
 
-# Testing
+Frontend runs at `http://localhost:5173`.
 
-There is currently no dedicated test runner or `test` script configured in
-`package.json`.
+## `.env`
 
-
-## Run Tests
-
-```bash
-# No test script is configured yet.
+```env
+VITE_GOOGLE_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
+VITE_API_BASE_URL=http://localhost:8080
 ```
 
-# Code Quality
+Google login requirements:
 
-Biome is used for formatting and lint-style checks in this project.
+- Add `http://localhost:5173` to Authorized JavaScript origins in Google Cloud.
+- Use the same client ID in backend `GOOGLE_CLIENT_ID`.
 
-## Run Linting
+## Scripts
+
+- `pnpm dev` - start dev server (`localhost:5173`)
+- `pnpm build` - production build + typecheck
+- `pnpm preview` - preview production build
+- `pnpm pwa:preview` - production preview for PWA testing (`localhost:5173`)
+- `pnpm lint` - Biome checks
+- `pnpm format` - format with Biome
+
+## PWA Testing
+
+Use:
 
 ```bash
-pnpm lint
+pnpm pwa:preview
 ```
 
-## Fix Lint Issues
-
-```bash
-pnpm exec biome check --write .
-```
-
-## Format Code
-
-```bash
-pnpm format
-```
-
-# Progressive Web App (PWA)
-
-The app is configured as a Progressive Web App with `vite-plugin-pwa`.
-Manifest metadata is configured in `vite.config.ts`, service worker
-registration happens in `src/main.tsx`, and the icon assets live in `public/`.
-
-
-# Available Scripts
-
-- `pnpm dev` - starts the Vite development server
-- `pnpm build` - builds the production app and runs TypeScript project checks
-- `pnpm preview` - serves the production build locally
-- `pnpm lint` - runs Biome checks
-- `pnpm format` - formats the codebase with Biome
-- `pnpm check` - runs the Biome check command
+Then open `http://localhost:5173` and test install/offline behavior.
