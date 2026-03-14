@@ -1,4 +1,4 @@
-# Backend Auth API
+# Backend
 
 - `GET /health`
 - `POST /api/v1/auth/google`
