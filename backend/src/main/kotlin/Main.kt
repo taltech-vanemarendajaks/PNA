@@ -1,6 +1,7 @@
 package com.pna.backend
 
 import com.pna.backend.routes.v1.auth.googleAuthRoutes
+import com.pna.backend.routes.v1.number.numberRoutes
 import com.pna.backend.config.AppConfig
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -55,5 +56,6 @@ fun Application.module(appConfig: AppConfig = AppConfig.load()) {
             call.respondText("ok")
         }
         googleAuthRoutes(appConfig.googleClientId)
+        numberRoutes(appConfig.googleClientId)
     }
 }
