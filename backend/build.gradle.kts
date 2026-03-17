@@ -17,6 +17,7 @@ repositories {
 }
 
 dependencies {
+    implementation("org.jsoup:jsoup:1.22.1")
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
