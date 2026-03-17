@@ -12,6 +12,7 @@ Vite + React + TypeScript frontend for PNA.
 - Tailwind CSS v4 + DaisyUI
 - `@react-oauth/google`
 - `vite-plugin-pwa`
+- Vitest
 - Biome
 
 ## Quick Start
@@ -40,10 +41,30 @@ Google login requirements:
 
 - `pnpm dev` - start dev server (`localhost:5173`)
 - `pnpm build` - production build + typecheck
+- `pnpm test` - run Vitest in watch mode
+- `pnpm test:run` - run Vitest once
 - `pnpm preview` - preview production build
 - `pnpm pwa:preview` - production preview for PWA testing (`localhost:5173`)
 - `pnpm lint` - Biome checks
 - `pnpm format` - format with Biome
+
+## Testing
+
+This project uses Vitest for unit tests.
+
+Use:
+
+```bash
+pnpm test
+```
+
+For a single non-watch run:
+
+```bash
+pnpm test:run
+```
+
+Test files currently follow the `src/**/*.test.ts` pattern configured in `vitest.config.ts`.
 
 ## PWA Testing
 

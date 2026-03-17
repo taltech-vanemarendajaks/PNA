@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-type ThemeName = "dim" | "cupcake";
+type ThemeName = "dim" | "emerald";
 
 const THEME_STORAGE_KEY = "pna.theme";
 
@@ -11,7 +11,7 @@ export function ThemeController() {
     }
 
     const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return storedTheme === "cupcake" ? "cupcake" : "dim";
+    return storedTheme === "emerald" ? "emerald" : "dim";
   });
 
   useEffect(() => {
@@ -39,9 +39,9 @@ export function ThemeController() {
         type="checkbox"
         className="toggle"
         aria-label="Toggle theme"
-        checked={theme === "cupcake"}
+        checked={theme === "emerald"}
         onChange={(event) => {
-          setTheme(event.currentTarget.checked ? "cupcake" : "dim");
+          setTheme(event.currentTarget.checked ? "emerald" : "dim");
         }}
       />
       <svg
