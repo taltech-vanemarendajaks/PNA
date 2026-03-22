@@ -1,68 +1,48 @@
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
+import { useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-
-type GoogleAuthResponse = {
-  subject: string;
-  email: string | null;
-  emailVerified: boolean | null;
-  name: string | null;
-  picture: string | null;
-  givenName: string | null;
-  familyName: string | null;
-};
-
-type ApiError = {
-  error?: string;
-};
-
-const USER_STORAGE_KEY = "pna.auth.googleUser";
+import { verifyLogin } from "../api/auth";
+import {
+  type AuthUser,
+  clearSession,
+  getStoredUser,
+  hasStoredSession,
+  saveSession,
+} from "../auth/session";
 
 export function GoogleLoginPanel() {
+  const navigate = useNavigate();
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  const apiBaseUrl =
-    (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ||
-    "http://localhost:8080";
   const resolvedClientId = googleClientId ?? null;
   const [error, setError] = useState<string | null>(null);
   const googleButtonHostRef = useRef<HTMLDivElement | null>(null);
-  const [user, setUser] = useState<GoogleAuthResponse | null>(() => {
-    const stored = window.localStorage.getItem(USER_STORAGE_KEY);
-    if (!stored) {
-      return null;
-    }
-
-    return JSON.parse(stored) as GoogleAuthResponse;
-  });
+  const [user, setUser] = useState<AuthUser | null>(() =>
+    hasStoredSession() ? getStoredUser() : null,
+  );
 
   const envReady = Boolean(resolvedClientId);
 
   async function verifyWithBackend(idToken: string) {
     setError(null);
 
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/v1/auth/google`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ idToken }),
-      });
+    const result = await verifyLogin({ idToken });
 
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => ({}))) as ApiError;
-        throw new Error(payload.error ?? "Login failed");
-      }
+    if (result.status === "success") {
+      saveSession(result.data, idToken);
+      setUser(result.data);
+      await navigate({ to: "/search" });
+      return;
+    }
 
-      const payload = (await response.json()) as GoogleAuthResponse;
-      window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(payload));
-      setUser(payload);
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Login failed");
+    if (result.status === "error") {
+      clearSession();
+      setUser(null);
+      setError(result.message);
     }
   }
 
   function logout() {
-    window.localStorage.removeItem(USER_STORAGE_KEY);
+    clearSession();
     setUser(null);
     setError(null);
   }
