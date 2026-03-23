@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity() {
 
         enableButton.setOnClickListener {
             openCallerIdSettings()
+            requestBatteryOptimizationDisable()
         }
 
         updateStatus(statusText)
@@ -68,6 +69,14 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             // Fallback: general settings
             val intent = Intent(Settings.ACTION_SETTINGS)
+            startActivity(intent)
+        }
+    }
+
+    fun requestBatteryOptimizationDisable() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            intent.data = android.net.Uri.parse("package:$packageName")
             startActivity(intent)
         }
     }
