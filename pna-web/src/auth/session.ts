@@ -8,10 +8,17 @@ export type AuthUser = {
   familyName: string | null;
 };
 
+const SESSION_CHANGE_EVENT = "pna.auth.session-change";
 const AUTH_USER_STORAGE_KEY = "pna.auth.user";
 const AUTH_ID_TOKEN_STORAGE_KEY = "pna.auth.idToken";
 const LEGACY_GOOGLE_USER_STORAGE_KEY = "pna.auth.googleUser";
 const LEGACY_GOOGLE_ID_TOKEN_STORAGE_KEY = "pna.auth.googleIdToken";
+
+function emitSessionChange() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(SESSION_CHANGE_EVENT));
+  }
+}
 
 function parseStoredUser(stored: string, storage: Storage, key: string): AuthUser | null {
   try {
@@ -71,6 +78,7 @@ export function saveSession(
 ): void {
   storage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
   storage.setItem(AUTH_ID_TOKEN_STORAGE_KEY, idToken);
+  emitSessionChange();
 }
 
 export function clearSession(storage: Storage = window.localStorage): void {
@@ -78,8 +86,27 @@ export function clearSession(storage: Storage = window.localStorage): void {
   storage.removeItem(AUTH_ID_TOKEN_STORAGE_KEY);
   storage.removeItem(LEGACY_GOOGLE_USER_STORAGE_KEY);
   storage.removeItem(LEGACY_GOOGLE_ID_TOKEN_STORAGE_KEY);
+  emitSessionChange();
 }
 
 export function hasStoredSession(storage: Storage = window.localStorage): boolean {
   return getStoredUser(storage) !== null && getStoredIdToken(storage) !== null;
+}
+
+export function subscribeToSessionChanges(callback: () => void): () => void {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handleSessionChange = () => {
+    callback();
+  };
+
+  window.addEventListener(SESSION_CHANGE_EVENT, handleSessionChange);
+  window.addEventListener("storage", handleSessionChange);
+
+  return () => {
+    window.removeEventListener(SESSION_CHANGE_EVENT, handleSessionChange);
+    window.removeEventListener("storage", handleSessionChange);
+  };
 }
