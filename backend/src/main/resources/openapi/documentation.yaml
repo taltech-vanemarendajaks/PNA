@@ -17,50 +17,17 @@ paths:
               schema:
                 type: string
                 example: ok
-  /api/v1/auth/google:
-    post:
-      summary: Verify Google ID token
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GoogleAuthRequest'
+  /api/v1/auth/google/redirect:
+    get:
+      summary: Start or finish Google OAuth login
+      description: Redirects the browser to Google OAuth, then handles the callback on the same route and creates the backend session cookie.
       responses:
+        '302':
+          description: Redirect to Google OAuth or back to the frontend when already authenticated
         '200':
-          description: Token is valid
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GoogleAuthResponse'
-        '400':
-          description: Missing or malformed request body
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Invalid Google ID token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Server misconfiguration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          description: HTML handoff back to the frontend after callback processing
 components:
   schemas:
-    GoogleAuthRequest:
-      type: object
-      required:
-        - idToken
-      properties:
-        idToken:
-          type: string
-          example: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...
     GoogleAuthResponse:
       type: object
       properties:

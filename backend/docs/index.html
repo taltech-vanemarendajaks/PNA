@@ -698,16 +698,6 @@
     }
   }
 };
-            defs["GoogleAuthRequest"] = {
-  "required" : [ "idToken" ],
-  "type" : "object",
-  "properties" : {
-    "idToken" : {
-      "type" : "string",
-      "example" : "eyJhbGciOiJSUzI1NiIsImtpZCI6Ij..."
-    }
-  }
-};
             defs["GoogleAuthResponse"] = {
   "type" : "object",
   "properties" : {
@@ -764,8 +754,8 @@
             <li class="nav-fixed nav-header active" data-group="_"><a href="#api-_">API Summary</a></li>
 
                   <li class="nav-header" data-group="Default"><a href="#api-Default">API Methods - Default</a></li>
-                    <li data-group="Default" data-name="apiV1AuthGooglePost" class="">
-                      <a href="#api-Default-apiV1AuthGooglePost">apiV1AuthGooglePost</a>
+                    <li data-group="Default" data-name="apiV1AuthGoogleRedirectGet" class="">
+                      <a href="#api-Default-apiV1AuthGoogleRedirectGet">apiV1AuthGoogleRedirectGet</a>
                     </li>
                     <li data-group="Default" data-name="healthGet" class="">
                       <a href="#api-Default-healthGet">healthGet</a>
@@ -791,44 +781,42 @@
         <div id="sections">
                 <section id="api-Default">
                   <h1>Default</h1>
-                    <div id="api-Default-apiV1AuthGooglePost">
-                      <article id="api-Default-apiV1AuthGooglePost-0" data-group="User" data-name="apiV1AuthGooglePost" data-version="0">
+                    <div id="api-Default-apiV1AuthGoogleRedirectGet">
+                      <article id="api-Default-apiV1AuthGoogleRedirectGet-0" data-group="User" data-name="apiV1AuthGoogleRedirectGet" data-version="0">
                         <div class="pull-left">
-                          <h1>apiV1AuthGooglePost</h1>
-                          <p>Verify Google ID token</p>
+                          <h1>apiV1AuthGoogleRedirectGet</h1>
+                          <p>Start or finish Google OAuth login</p>
                         </div>
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked"></p>
+                        <p class="marked">Redirects the browser to Google OAuth, then handles the callback on the same route and creates the backend session cookie.</p>
                         <p></p>
                         <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v1/auth/google</span></code></pre>
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v1/auth/google/redirect</span></code></pre>
                         <p>
                           <h3>Usage and SDK Samples</h3>
                         </p>
                         <ul class="nav nav-tabs nav-tabs-examples">
-                          <li class="active"><a href="#examples-Default-apiV1AuthGooglePost-0-curl">Curl</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-java">Java</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-android">Android</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-groovy">Groovy</a></li>-->
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-objc">Obj-C</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-javascript">JavaScript</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-angular">Angular</a></li>-->
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-csharp">C#</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-php">PHP</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-perl">Perl</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-python">Python</a></li>
+                          <li class="active"><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-python">Python</a></li>
                         </ul>
 
                         <div class="tab-content">
-                          <div class="tab-pane active" id="examples-Default-apiV1AuthGooglePost-0-curl">
-                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
--H "Accept: application/json"\
--H "Content-Type: application/json"\
-"http://localhost:8080/api/v1/auth/google"</code></pre>
+                          <div class="tab-pane active" id="examples-Default-apiV1AuthGoogleRedirectGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+"http://localhost:8080/api/v1/auth/google/redirect"</code></pre>
                           </div>
-                          <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-java">
+                          <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-java">
                             <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
 import io.swagger.client.auth.*;
 import io.swagger.client.model.*;
@@ -842,51 +830,43 @@ public class DefaultApiExample {
     public static void main(String[] args) {
         
         DefaultApi apiInstance = new DefaultApi();
-        GoogleAuthRequest body = ; // GoogleAuthRequest | 
         try {
-            GoogleAuthResponse result = apiInstance.apiV1AuthGooglePost(body);
-            System.out.println(result);
+            apiInstance.apiV1AuthGoogleRedirectGet();
         } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiV1AuthGooglePost");
+            System.err.println("Exception when calling DefaultApi#apiV1AuthGoogleRedirectGet");
             e.printStackTrace();
         }
     }
 }</code></pre>
                           </div>
 
-                          <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-android">
+                          <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-android">
                             <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
 
 public class DefaultApiExample {
 
     public static void main(String[] args) {
         DefaultApi apiInstance = new DefaultApi();
-        GoogleAuthRequest body = ; // GoogleAuthRequest | 
         try {
-            GoogleAuthResponse result = apiInstance.apiV1AuthGooglePost(body);
-            System.out.println(result);
+            apiInstance.apiV1AuthGoogleRedirectGet();
         } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiV1AuthGooglePost");
+            System.err.println("Exception when calling DefaultApi#apiV1AuthGoogleRedirectGet");
             e.printStackTrace();
         }
     }
 }</code></pre>
                           </div>
   <!--
-  <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-groovy">
+  <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-groovy">
   <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
   </div> -->
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-objc">
-                              <pre class="prettyprint"><code class="language-cpp">GoogleAuthRequest *body = ; // 
-
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
 DefaultApi *apiInstance = [[DefaultApi alloc] init];
 
-// Verify Google ID token
-[apiInstance apiV1AuthGooglePostWith:body
-              completionHandler: ^(GoogleAuthResponse output, NSError* error) {
-                            if (output) {
-                                NSLog(@"%@", output);
-                            }
+// Start or finish Google OAuth login
+[apiInstance apiV1AuthGoogleRedirectGetWithCompletionHandler: 
+              ^(NSError* error) {
                             if (error) {
                                 NSLog(@"Error: %@", error);
                             }
@@ -894,27 +874,25 @@ DefaultApi *apiInstance = [[DefaultApi alloc] init];
 </code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-javascript">
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-javascript">
                               <pre class="prettyprint"><code class="language-js">var PnaBackendAuthApi = require('pna_backend_auth_api');
 
 var api = new PnaBackendAuthApi.DefaultApi()
-var body = ; // {{GoogleAuthRequest}} 
-
 var callback = function(error, data, response) {
   if (error) {
     console.error(error);
   } else {
-    console.log('API called successfully. Returned data: ' + data);
+    console.log('API called successfully.');
   }
 };
-api.apiV1AuthGooglePost(body, callback);
+api.apiV1AuthGoogleRedirectGet(callback);
 </code></pre>
                             </div>
 
-                            <!--<div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-angular">
+                            <!--<div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-angular">
               <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
             </div>-->
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-csharp">
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-csharp">
                               <pre class="prettyprint"><code class="language-cs">using System;
 using System.Diagnostics;
 using IO.Swagger.Api;
@@ -923,23 +901,21 @@ using IO.Swagger.Model;
 
 namespace Example
 {
-    public class apiV1AuthGooglePostExample
+    public class apiV1AuthGoogleRedirectGetExample
     {
         public void main()
         {
 
             var apiInstance = new DefaultApi();
-            var body = new GoogleAuthRequest(); // GoogleAuthRequest | 
 
             try
             {
-                // Verify Google ID token
-                GoogleAuthResponse result = apiInstance.apiV1AuthGooglePost(body);
-                Debug.WriteLine(result);
+                // Start or finish Google OAuth login
+                apiInstance.apiV1AuthGoogleRedirectGet();
             }
             catch (Exception e)
             {
-                Debug.Print("Exception when calling DefaultApi.apiV1AuthGooglePost: " + e.Message );
+                Debug.Print("Exception when calling DefaultApi.apiV1AuthGoogleRedirectGet: " + e.Message );
             }
         }
     }
@@ -947,40 +923,36 @@ namespace Example
 </code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-php">
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-php">
                               <pre class="prettyprint"><code class="language-php"><&#63;php
 require_once(__DIR__ . '/vendor/autoload.php');
 
 $api_instance = new Swagger\Client\ApiDefaultApi();
-$body = ; // GoogleAuthRequest | 
 
 try {
-    $result = $api_instance->apiV1AuthGooglePost($body);
-    print_r($result);
+    $api_instance->apiV1AuthGoogleRedirectGet();
 } catch (Exception $e) {
-    echo 'Exception when calling DefaultApi->apiV1AuthGooglePost: ', $e->getMessage(), PHP_EOL;
+    echo 'Exception when calling DefaultApi->apiV1AuthGoogleRedirectGet: ', $e->getMessage(), PHP_EOL;
 }
 ?></code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-perl">
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-perl">
                               <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
 use WWW::SwaggerClient::Configuration;
 use WWW::SwaggerClient::DefaultApi;
 
 my $api_instance = WWW::SwaggerClient::DefaultApi->new();
-my $body = WWW::SwaggerClient::Object::GoogleAuthRequest->new(); # GoogleAuthRequest | 
 
 eval { 
-    my $result = $api_instance->apiV1AuthGooglePost(body => $body);
-    print Dumper($result);
+    $api_instance->apiV1AuthGoogleRedirectGet();
 };
 if ($@) {
-    warn "Exception when calling DefaultApi->apiV1AuthGooglePost: $@\n";
+    warn "Exception when calling DefaultApi->apiV1AuthGoogleRedirectGet: $@\n";
 }</code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-python">
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-python">
                               <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
 import time
 import swagger_client
@@ -989,14 +961,12 @@ from pprint import pprint
 
 # create an instance of the API class
 api_instance = swagger_client.DefaultApi()
-body =  # GoogleAuthRequest | 
 
 try: 
-    # Verify Google ID token
-    api_response = api_instance.api_v1_auth_google_post(body)
-    pprint(api_response)
+    # Start or finish Google OAuth login
+    api_instance.api_v1_auth_google_redirect_get()
 except ApiException as e:
-    print("Exception when calling DefaultApi->apiV1AuthGooglePost: %s\n" % e)</code></pre>
+    print("Exception when calling DefaultApi->apiV1AuthGoogleRedirectGet: %s\n" % e)</code></pre>
                             </div>
                           </div>
 
@@ -1004,243 +974,24 @@ except ApiException as e:
 
 
 
-                            <div class="methodsubtabletitle">Body parameters</div>
-                            <table id="methodsubtable">
-                              <tr>
-                                <th width="150px">Name</th>
-                                <th>Description</th>
-                              </tr>
-                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
-                                <td>
-                                
-                                
-                                <script>
-                                $(document).ready(function() {
-                                  var schemaWrapper = {
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/GoogleAuthRequest"
-      }
-    }
-  },
-  "required" : true
-};
-                                  var schema = schemaWrapper.content["application/json"].schema;
-                                  if (schema.$ref != null) {
-                                    schema = defsParser.$refs.get(schema.$ref);
-                                  } else {
-                                    schemaWrapper.components = {};
-                                    schemaWrapper.components.schemas = Object.assign({}, defs);
-                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
-                                      console.log(err);
-                                    });
-                                  }
-                                
-                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-                                  var result = $('#d2e199_apiV1AuthGooglePost_body');
-                                  result.empty();
-                                  result.append(view.render());
-                                });
-                                </script>
-                                <div id="d2e199_apiV1AuthGooglePost_body"></div>
-                                </td>
-                                </tr>
-                            </table>
 
 
 
                           <h2>Responses</h2>
-                            <h3> Status: 200 - Token is valid </h3>
+                            <h3> Status: 302 - Redirect to Google OAuth or back to the frontend when already authenticated </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
-                                <li class="active">
-                                  <a data-toggle="tab" href="#responses-apiV1AuthGooglePost-200-schema">Schema</a>
-                                </li>
-
                             </ul>
 
                             <div class="tab-content" style='margin-bottom: 10px;'>
-                                <div class="tab-pane active" id="responses-apiV1AuthGooglePost-200-schema">
-                                  <div id='responses-apiV1AuthGooglePost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
-                                    <script>
-                                      $(document).ready(function() {
-                                        var schemaWrapper = {
-  "description" : "Token is valid",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/GoogleAuthResponse"
-      }
-    }
-  }
-};
-                                        var schema = schemaWrapper.content["application/json"].schema;
-                                        if (schema.$ref != null) {
-                                          schema = defsParser.$refs.get(schema.$ref);
-                                        } else {
-                                          schemaWrapper.components = {};
-                                          schemaWrapper.components.schemas = Object.assign({}, defs);
-                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
-                                            console.log(err);
-                                          });
-                                        }
-
-                                        //console.log(JSON.stringify(schema));
-                                        var view = new JSONSchemaView(schema, 3);
-                                        $('#responses-apiV1AuthGooglePost-200-schema-data').val(stringify(schema));
-                                        var result = $('#responses-apiV1AuthGooglePost-200-schema-200');
-                                        result.empty();
-                                        result.append(view.render());
-                                      });
-                                    </script>
-                                  </div>
-                                  <input id='responses-apiV1AuthGooglePost-200-schema-data' type='hidden' value=''></input>
-                                </div>
                             </div>
 
-                            <h3> Status: 400 - Missing or malformed request body </h3>
+                            <h3> Status: 200 - HTML handoff back to the frontend after callback processing </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
-                                <li class="active">
-                                  <a data-toggle="tab" href="#responses-apiV1AuthGooglePost-400-schema">Schema</a>
-                                </li>
-
                             </ul>
 
                             <div class="tab-content" style='margin-bottom: 10px;'>
-                                <div class="tab-pane active" id="responses-apiV1AuthGooglePost-400-schema">
-                                  <div id='responses-apiV1AuthGooglePost-400-schema-400' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
-                                    <script>
-                                      $(document).ready(function() {
-                                        var schemaWrapper = {
-  "description" : "Missing or malformed request body",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/ErrorResponse"
-      }
-    }
-  }
-};
-                                        var schema = schemaWrapper.content["application/json"].schema;
-                                        if (schema.$ref != null) {
-                                          schema = defsParser.$refs.get(schema.$ref);
-                                        } else {
-                                          schemaWrapper.components = {};
-                                          schemaWrapper.components.schemas = Object.assign({}, defs);
-                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
-                                            console.log(err);
-                                          });
-                                        }
-
-                                        //console.log(JSON.stringify(schema));
-                                        var view = new JSONSchemaView(schema, 3);
-                                        $('#responses-apiV1AuthGooglePost-400-schema-data').val(stringify(schema));
-                                        var result = $('#responses-apiV1AuthGooglePost-400-schema-400');
-                                        result.empty();
-                                        result.append(view.render());
-                                      });
-                                    </script>
-                                  </div>
-                                  <input id='responses-apiV1AuthGooglePost-400-schema-data' type='hidden' value=''></input>
-                                </div>
-                            </div>
-
-                            <h3> Status: 401 - Invalid Google ID token </h3>
-
-                            <ul class="nav nav-tabs nav-tabs-examples" >
-                                <li class="active">
-                                  <a data-toggle="tab" href="#responses-apiV1AuthGooglePost-401-schema">Schema</a>
-                                </li>
-
-                            </ul>
-
-                            <div class="tab-content" style='margin-bottom: 10px;'>
-                                <div class="tab-pane active" id="responses-apiV1AuthGooglePost-401-schema">
-                                  <div id='responses-apiV1AuthGooglePost-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
-                                    <script>
-                                      $(document).ready(function() {
-                                        var schemaWrapper = {
-  "description" : "Invalid Google ID token",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/ErrorResponse"
-      }
-    }
-  }
-};
-                                        var schema = schemaWrapper.content["application/json"].schema;
-                                        if (schema.$ref != null) {
-                                          schema = defsParser.$refs.get(schema.$ref);
-                                        } else {
-                                          schemaWrapper.components = {};
-                                          schemaWrapper.components.schemas = Object.assign({}, defs);
-                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
-                                            console.log(err);
-                                          });
-                                        }
-
-                                        //console.log(JSON.stringify(schema));
-                                        var view = new JSONSchemaView(schema, 3);
-                                        $('#responses-apiV1AuthGooglePost-401-schema-data').val(stringify(schema));
-                                        var result = $('#responses-apiV1AuthGooglePost-401-schema-401');
-                                        result.empty();
-                                        result.append(view.render());
-                                      });
-                                    </script>
-                                  </div>
-                                  <input id='responses-apiV1AuthGooglePost-401-schema-data' type='hidden' value=''></input>
-                                </div>
-                            </div>
-
-                            <h3> Status: 500 - Server misconfiguration </h3>
-
-                            <ul class="nav nav-tabs nav-tabs-examples" >
-                                <li class="active">
-                                  <a data-toggle="tab" href="#responses-apiV1AuthGooglePost-500-schema">Schema</a>
-                                </li>
-
-                            </ul>
-
-                            <div class="tab-content" style='margin-bottom: 10px;'>
-                                <div class="tab-pane active" id="responses-apiV1AuthGooglePost-500-schema">
-                                  <div id='responses-apiV1AuthGooglePost-500-schema-500' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
-                                    <script>
-                                      $(document).ready(function() {
-                                        var schemaWrapper = {
-  "description" : "Server misconfiguration",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/ErrorResponse"
-      }
-    }
-  }
-};
-                                        var schema = schemaWrapper.content["application/json"].schema;
-                                        if (schema.$ref != null) {
-                                          schema = defsParser.$refs.get(schema.$ref);
-                                        } else {
-                                          schemaWrapper.components = {};
-                                          schemaWrapper.components.schemas = Object.assign({}, defs);
-                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
-                                            console.log(err);
-                                          });
-                                        }
-
-                                        //console.log(JSON.stringify(schema));
-                                        var view = new JSONSchemaView(schema, 3);
-                                        $('#responses-apiV1AuthGooglePost-500-schema-data').val(stringify(schema));
-                                        var result = $('#responses-apiV1AuthGooglePost-500-schema-500');
-                                        result.empty();
-                                        result.append(view.render());
-                                      });
-                                    </script>
-                                  </div>
-                                  <input id='responses-apiV1AuthGooglePost-500-schema-data' type='hidden' value=''></input>
-                                </div>
                             </div>
 
                         </article>
