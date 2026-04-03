@@ -2,9 +2,8 @@ package com.pna.backend.routes.v1.number
 
 import com.pna.backend.domain.auth.request.SearchNumberRequest
 import com.pna.backend.domain.auth.response.SearchNumberResponse
-import com.pna.backend.services.GoogleTokenVerifierService
-import domain.auth.GoogleUser
-import io.ktor.http.HttpHeaders
+import com.pna.backend.routes.v1.auth.AUTH_SESSION_COOKIE_NAME
+import com.pna.backend.services.AuthSessionService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.request.receive
@@ -13,35 +12,12 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
-fun Route.numberRoutes(
-    googleClientId: String?,
-    verifyToken: ((String) -> GoogleUser?)? = googleClientId
-        ?.takeIf { it.isNotBlank() }
-        ?.let { GoogleTokenVerifierService(it) }
-        ?.let { verifier -> { idToken -> verifier.verify(idToken) } }
-) {
-
+fun Route.numberRoutes(authSessionService: AuthSessionService) {
     route("/api/v1/number") {
         post("/search") {
-            if (verifyToken == null) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "GOOGLE_CLIENT_ID is not configured"))
-                return@post
-            }
-
-            val authHeader = call.request.headers[HttpHeaders.Authorization]
-            val idToken = authHeader
-                ?.takeIf { it.startsWith("Bearer ", ignoreCase = true) }
-                ?.removePrefix("Bearer ")
-                ?.trim()
-
-            if (idToken.isNullOrBlank()) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid Authorization Bearer token"))
-                return@post
-            }
-
-            val user = verifyToken(idToken)
+            val user = authSessionService.get(call.request.cookies[AUTH_SESSION_COOKIE_NAME])
             if (user == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid Google ID token"))
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
                 return@post
             }
 
