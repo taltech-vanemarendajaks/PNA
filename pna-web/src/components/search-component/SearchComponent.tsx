@@ -1,6 +1,6 @@
 import { type ChangeEvent, useState } from "react";
-import { validatePhoneNumber } from "./SearchComponent.validation";
 import { Alert } from "../common/Alert";
+import { validatePhoneNumber } from "./SearchComponent.validation";
 
 export function SearchComponent() {
   const [phoneNumber, setPhoneNumber] = useState("");
