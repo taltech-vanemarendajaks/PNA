@@ -10,7 +10,6 @@ Vite + React + TypeScript frontend for PNA.
 - TanStack Router
 - TanStack Query
 - Tailwind CSS v4 + DaisyUI
-- `@react-oauth/google`
 - `vite-plugin-pwa`
 - Vitest
 - Biome
@@ -28,14 +27,14 @@ Frontend runs at `http://localhost:5173`.
 ## `.env`
 
 ```env
-VITE_GOOGLE_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
 VITE_API_BASE_URL=http://localhost:8080
 ```
 
 Google login requirements:
 
-- Add `http://localhost:5173` to Authorized JavaScript origins in Google Cloud.
-- Use the same client ID in backend `GOOGLE_CLIENT_ID`.
+- Configure the Google OAuth web client redirect URI as `http://localhost:8080/api/v1/auth/google/redirect`.
+- Set backend `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+- Google login uses a same-window backend redirect flow; set backend `FRONTEND_BASE_URL` to the frontend origin so the browser returns to the app after authentication.
 
 ## Scripts
 

@@ -11,9 +11,6 @@ importers:
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@19.2.4)
-      '@react-oauth/google':
-        specifier: ^0.13.4
-        version: 0.13.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tanstack/react-query':
         specifier: ^5.95.2
         version: 5.95.2(react@19.2.4)
@@ -839,12 +836,6 @@ packages:
 
   '@oxc-project/types@0.122.0':
     resolution: {integrity: sha512-oLAl5kBpV4w69UtFZ9xqcmTi+GENWOcPF7FCrczTiBbmC0ibXxCwyvZGbO39rCVEuLGAZM84DH0pUIyyv/YJzA==}
-
-  '@react-oauth/google@0.13.4':
-    resolution: {integrity: sha512-hGKyNEH+/PK8M0sFEuo3MAEk0txtHpgs94tDQit+s2LXg7b6z53NtzHfqDvoB2X8O6lGB+FRg80hY//X6hfD+w==}
-    peerDependencies:
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
 
   '@rolldown/binding-android-arm64@1.0.0-rc.12':
     resolution: {integrity: sha512-pv1y2Fv0JybcykuiiD3qBOBdz6RteYojRFY1d+b95WVuzx211CRh+ytI/+9iVyWQ6koTh5dawe4S/yRfOFjgaA==}
@@ -3360,11 +3351,6 @@ snapshots:
     optional: true
 
   '@oxc-project/types@0.122.0': {}
-
-  '@react-oauth/google@0.13.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
-    dependencies:
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
 
   '@rolldown/binding-android-arm64@1.0.0-rc.12':
     optional: true
