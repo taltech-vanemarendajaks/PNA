@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
-  title: PNA Backend Auth API
+  title: PNA Backend API
   version: 1.0.0
-  description: Kotlin backend API for Google authentication.
+  description: Kotlin backend API for authentication and number lookup.
 servers:
-  - url: http://localhost:8080
+  - url: /
 paths:
   /health:
     get:
@@ -26,8 +26,51 @@ paths:
           description: Redirect to Google OAuth or back to the frontend when already authenticated
         '200':
           description: HTML handoff back to the frontend after callback processing
+  /api/v1/number/search:
+    post:
+      summary: Search number details
+      description: Looks up details for a phone number. Requires an authenticated session cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchNumberRequest'
+      responses:
+        '200':
+          description: Number lookup succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchNumberResponse'
+        '400':
+          description: Request body is invalid or number is empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid auth session cookie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
+    SearchNumberRequest:
+      type: object
+      required:
+        - number
+      properties:
+        number:
+          type: string
+          example: "+14155552671"
+    SearchNumberResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "country=Estonia, countryCode=372, regionCode=EE, numberType=Fixed line, internationalFormat=+372 607 3001, carrier=unknown, timeZones=Europe/Tallinn"
     GoogleAuthResponse:
       type: object
       properties:
