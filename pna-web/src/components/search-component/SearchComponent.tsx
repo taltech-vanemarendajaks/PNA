@@ -1,9 +1,26 @@
 import { type ChangeEvent, useState } from "react";
-import { Alert } from "../common/Alert";
+import { isAuthenticationError } from "../../api/command";
 import { searchNumber } from "../../api/requests";
+import { Alert } from "../common/Alert";
 import { validatePhoneNumber } from "./SearchComponent.validation";
 
-export function SearchComponent() {
+type SearchComponentProps = {
+  onUnauthenticated?: () => void;
+};
+
+export function getSearchErrorMessage(
+  searchError: unknown,
+  onUnauthenticated?: () => void,
+): string | null {
+  if (isAuthenticationError(searchError)) {
+    onUnauthenticated?.();
+    return null;
+  }
+
+  return searchError instanceof Error ? searchError.message : "Search failed.";
+}
+
+export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
@@ -29,17 +46,21 @@ export function SearchComponent() {
 
     setIsSubmitting(true);
 
-    const result = await searchNumber(phoneNumber);
+    try {
+      const result = await searchNumber(phoneNumber);
+      setResultMessage(result.message);
+    } catch (searchError: unknown) {
+      const searchErrorMessage = getSearchErrorMessage(searchError, onUnauthenticated);
 
-    if (result.status === "success") {
-      setResultMessage(result.data.message);
+      if (!searchErrorMessage) {
+        setError(null);
+        return;
+      }
+
+      setError(searchErrorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (result.status === "error") {
-      setError(result.message);
-    }
-
-    setIsSubmitting(false);
   };
 
   return (
