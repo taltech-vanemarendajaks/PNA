@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "vite --host localhost --port 5173 --strictPort",
     "build": "vite build && tsc -b",
@@ -10,7 +11,7 @@
     "test:run": "vitest run",
     "preview": "vite preview",
     "pwa:preview": "pnpm build && vite preview --host localhost --port 5173 --strictPort",
-    "lint": "biome check .",
+    "lint": "biome lint .",
     "format": "biome format --write .",
     "check": "biome check ."
   },

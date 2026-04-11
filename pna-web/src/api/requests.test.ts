@@ -8,7 +8,6 @@ vi.mock("./auth", () => ({
   requireAuthenticatedSession: requireAuthenticatedSessionSpy,
 }));
 
-import { ApiResponseError, hasApiResponseStatus } from "./command";
 import { searchNumber } from "./requests";
 
 afterEach(() => {
