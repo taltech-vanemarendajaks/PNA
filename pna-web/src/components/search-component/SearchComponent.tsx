@@ -1,10 +1,30 @@
 import { type ChangeEvent, useState } from "react";
+import { isAuthenticationError } from "../../api/command";
+import { searchNumber } from "../../api/requests";
 import { Alert } from "../common/Alert";
 import { validatePhoneNumber } from "./SearchComponent.validation";
 
-export function SearchComponent() {
+type SearchComponentProps = {
+  onUnauthenticated?: () => void;
+};
+
+export function getSearchErrorMessage(
+  searchError: unknown,
+  onUnauthenticated?: () => void,
+): string | null {
+  if (isAuthenticationError(searchError)) {
+    onUnauthenticated?.();
+    return null;
+  }
+
+  return searchError instanceof Error ? searchError.message : "Search failed.";
+}
+
+export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [resultMessage, setResultMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handlePhoneNumberChange(event: ChangeEvent<HTMLInputElement>) {
     const nextPhoneNumber = event.currentTarget.value;
@@ -15,12 +35,31 @@ export function SearchComponent() {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const validationError = validatePhoneNumber(phoneNumber);
     setError(validationError);
+    setResultMessage(null);
 
     if (validationError) {
       return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await searchNumber(phoneNumber);
+      setResultMessage(result.message);
+    } catch (searchError: unknown) {
+      const searchErrorMessage = getSearchErrorMessage(searchError, onUnauthenticated);
+
+      if (!searchErrorMessage) {
+        setError(null);
+        return;
+      }
+
+      setError(searchErrorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -29,6 +68,12 @@ export function SearchComponent() {
       <legend className="fieldset-legend text-2xl text-primary">Search</legend>
 
       {error ? <Alert type="error" message={error} /> : null}
+
+      {resultMessage ? (
+        <div role="status" className="alert alert-success mb-4">
+          <span>{resultMessage}</span>
+        </div>
+      ) : null}
 
       <input
         type="tel"
@@ -40,8 +85,15 @@ export function SearchComponent() {
         onChange={handlePhoneNumberChange}
       />
 
-      <button className="btn btn-primary mt-4" type="submit" onClick={handleSubmit}>
-        Look Up
+      <button
+        className="btn btn-primary mt-4"
+        type="button"
+        onClick={() => {
+          void handleSubmit();
+        }}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "Searching..." : "Look Up"}
       </button>
     </fieldset>
   );
