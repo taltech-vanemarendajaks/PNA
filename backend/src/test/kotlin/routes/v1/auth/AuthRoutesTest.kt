@@ -1,6 +1,7 @@
-package com.pna.backend.routes.v1.auth
+package routes.v1.auth
 
 import com.pna.backend.config.CorsOrigin
+import com.pna.backend.routes.v1.auth.googleAuthRoutes
 import com.pna.backend.services.AuthSessionService
 import domain.auth.GoogleUser
 import io.ktor.client.request.*

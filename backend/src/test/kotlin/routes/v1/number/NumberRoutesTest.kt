@@ -1,7 +1,8 @@
-package com.pna.backend.routes.v1.number
+package routes.v1.number
 
 import com.pna.backend.dal.repositories.NumberSearchRepository
 import com.pna.backend.routes.v1.auth.AUTH_SESSION_COOKIE_NAME
+import com.pna.backend.routes.v1.number.numberRoutes
 import com.pna.backend.services.AuthSessionService
 import com.pna.backend.services.NumberSearchService
 import com.pna.backend.services.PhoneLookupService

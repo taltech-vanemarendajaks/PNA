@@ -1,5 +1,7 @@
-package com.pna.backend.config
+package config
 
+import com.pna.backend.config.AppConfig
+import com.pna.backend.config.CorsOrigin
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
