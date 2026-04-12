@@ -12,13 +12,16 @@ import kotlinx.coroutines.launch
 
 class CallService : CallScreeningService() {
 
-    private val serviceScope = CoroutineScope(Dispatchers.IO)
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onScreenCall(callDetails: Call.Details) {
         Log.d("CALL_GRABBER", "Service triggered")
 
-        val phoneNumber = callDetails.handle?.schemeSpecificPart ?: "Unknown"
-        sendToServer(phoneNumber)
+        val phoneNumber = callDetails.handle?.schemeSpecificPart
+
+        if (!phoneNumber.isNullOrEmpty()) {
+            sendToServer(phoneNumber)
+        }
 
         val response = CallResponse.Builder()
             .setDisallowCall(false)
@@ -73,5 +76,9 @@ class CallService : CallScreeningService() {
         Handler(Looper.getMainLooper()).post {
             Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
         }
+    }
+    override fun onDestroy() {
+        serviceScope.cancel()
+        super.onDestroy()
     }
 }
