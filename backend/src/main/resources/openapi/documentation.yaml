@@ -55,6 +55,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/number/all:
+    get:
+      summary: Get all searched numbers
+      description: Returns all saved phone number searches. Requires an authenticated session cookie.
+      responses:
+        '200':
+          description: Saved number searches returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SavedNumberSearchResponse'
+        '401':
+          description: Missing or invalid auth session cookie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     SearchNumberRequest:
@@ -68,9 +87,58 @@ components:
     SearchNumberResponse:
       type: object
       properties:
-        message:
+        result:
+          $ref: '#/components/schemas/PhoneNumberLookupResult'
+    PhoneNumberLookupResult:
+      type: object
+      properties:
+        country:
           type: string
-          example: "country=Estonia, countryCode=372, regionCode=EE, numberType=Fixed line, internationalFormat=+372 607 3001, carrier=unknown, timeZones=Europe/Tallinn"
+          nullable: true
+          example: Estonia
+        countryCode:
+          type: integer
+          nullable: true
+          example: 372
+        regionCode:
+          type: string
+          nullable: true
+          example: EE
+        numberType:
+          type: string
+          nullable: true
+          example: Fixed line
+        internationalFormat:
+          type: string
+          nullable: true
+          example: "+372 607 3001"
+        carrier:
+          type: string
+          nullable: true
+          example: unknown
+        timeZones:
+          type: array
+          nullable: true
+          items:
+            type: string
+          example:
+            - Europe/Tallinn
+    SavedNumberSearchResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        number:
+          type: string
+          example: "+14155552671"
+        result:
+          $ref: '#/components/schemas/PhoneNumberLookupResult'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-04-12T10:00:00Z"
     GoogleAuthResponse:
       type: object
       properties:

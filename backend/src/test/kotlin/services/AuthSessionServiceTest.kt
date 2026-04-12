@@ -1,5 +1,6 @@
-package com.pna.backend.services
+package services
 
+import com.pna.backend.services.AuthSessionService
 import domain.auth.GoogleUser
 import kotlin.test.Test
 import kotlin.test.assertEquals
