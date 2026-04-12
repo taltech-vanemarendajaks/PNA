@@ -1,7 +1,9 @@
 package com.pna.backend
 
 import com.pna.backend.routes.v1.auth.googleAuthRoutes
+import com.pna.backend.routes.v1.number.numberRoutes
 import com.pna.backend.config.AppConfig
+import com.pna.backend.services.AuthSessionService
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.server.application.Application
@@ -29,22 +31,21 @@ fun main() {
 }
 
 fun Application.module(appConfig: AppConfig = AppConfig.load()) {
+    val authSessionService = AuthSessionService(ttlSeconds = appConfig.sessionTtlSeconds)
+
     install(CallLogging)
     install(ContentNegotiation) {
         json()
     }
     install(CORS) {
-        if (appConfig.allowAnyHost) {
-            anyHost()
-        } else {
-            appConfig.allowedOrigins.forEach { origin ->
-                allowHost(origin.host, schemes = origin.schemes)
-            }
+        appConfig.allowedOrigins.forEach { origin ->
+            allowHost(origin.host, schemes = origin.schemes)
         }
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Get)
         allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.Authorization)
+        allowCredentials = true
     }
 
     routing {
@@ -54,6 +55,17 @@ fun Application.module(appConfig: AppConfig = AppConfig.load()) {
         get("/health") {
             call.respondText("ok")
         }
-        googleAuthRoutes(appConfig.googleClientId)
+        googleAuthRoutes(
+            googleClientId = appConfig.googleClientId,
+            googleClientSecret = appConfig.googleClientSecret,
+            publicBackendBaseUrl = appConfig.publicBackendBaseUrl,
+            frontendBaseUrl = appConfig.frontendBaseUrl,
+            allowedOrigins = appConfig.allowedOrigins,
+            authSessionService = authSessionService,
+            sessionTtlSeconds = appConfig.sessionTtlSeconds,
+            authCookieSecure = appConfig.authCookieSecure,
+            authCookieSameSite = appConfig.authCookieSameSite
+        )
+        numberRoutes(authSessionService)
     }
 }
