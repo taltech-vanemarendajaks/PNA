@@ -28,8 +28,8 @@ fun Route.numberRoutes(authSessionService: AuthSessionService, lookupService: Ph
                 return@post
             }
 
-            val response = lookupService.lookup(request.number)
-            call.respond(HttpStatusCode.OK, SearchNumberResponse(message = response))
+            val result = lookupService.lookup(request.number)
+            call.respond(HttpStatusCode.OK, SearchNumberResponse(result = result))
         }
     }
 

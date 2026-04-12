@@ -1,5 +1,6 @@
 package com.pna.backend.services
 
+import com.pna.backend.domain.auth.response.PhoneNumberLookupResult
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberToCarrierMapper
 import com.google.i18n.phonenumbers.PhoneNumberToTimeZonesMapper
@@ -17,32 +18,16 @@ class PhoneLookupService(
     private val carrierMapper = PhoneNumberToCarrierMapper.getInstance()
     private val timeZonesMapper = PhoneNumberToTimeZonesMapper.getInstance()
 
-    fun lookup(phoneNumber: String): String {
+    fun lookup(phoneNumber: String): PhoneNumberLookupResult {
         val input = phoneNumber.trim()
         if (input.isBlank()) {
-            return formatSummary(
-                country = null,
-                countryCode = null,
-                regionCode = null,
-                numberType = null,
-                internationalFormat = null,
-                carrier = null,
-                timeZones = null
-            )
+            return PhoneNumberLookupResult()
         }
 
         val parsed = try {
             phoneNumberUtil.parse(input, defaultRegion)
         } catch (_: NumberParseException) {
-            return formatSummary(
-                country = null,
-                countryCode = null,
-                regionCode = null,
-                numberType = null,
-                internationalFormat = null,
-                carrier = null,
-                timeZones = null
-            )
+            return PhoneNumberLookupResult()
         }
 
         val regionCode = phoneNumberUtil.getRegionCodeForNumber(parsed)
@@ -64,36 +49,15 @@ class PhoneLookupService(
         val timeZones = timeZonesMapper.getTimeZonesForNumber(parsed)
             .filter { it.isNotBlank() }
             .takeIf { it.isNotEmpty() }
-            ?.joinToString(", ")
 
-        return formatSummary(
+        return PhoneNumberLookupResult(
             country = country,
-            countryCode = countryCode.toString(),
+            countryCode = countryCode,
             regionCode = regionCode,
             numberType = numberType,
             internationalFormat = internationalFormat,
             carrier = carrier,
             timeZones = timeZones
         )
-    }
-
-    private fun formatSummary(
-        country: String?,
-        countryCode: String?,
-        regionCode: String?,
-        numberType: String?,
-        internationalFormat: String?,
-        carrier: String?,
-        timeZones: String?
-    ): String {
-        return listOf(
-            "country=${country ?: "unknown"}",
-            "countryCode=${countryCode ?: "unknown"}",
-            "regionCode=${regionCode ?: "unknown"}",
-            "numberType=${numberType ?: "unknown"}",
-            "internationalFormat=${internationalFormat ?: "unknown"}",
-            "carrier=${carrier ?: "unknown"}",
-            "timeZones=${timeZones ?: "unknown"}"
-        ).joinToString(", ")
     }
 }

@@ -2,6 +2,7 @@ package com.pna.backend.routes.v1.number
 
 import com.pna.backend.routes.v1.auth.AUTH_SESSION_COOKIE_NAME
 import com.pna.backend.services.AuthSessionService
+import com.pna.backend.services.PhoneLookupService
 import domain.auth.GoogleUser
 import io.ktor.client.request.cookie
 import io.ktor.client.request.header
@@ -18,16 +19,18 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.testing.testApplication
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class NumberRoutesTest {
     @Test
     fun `search returns unauthorized when session cookie is missing`() = testApplication {
         val authSessionService = AuthSessionService()
+        val lookupService = PhoneLookupService()
 
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes(authSessionService)
+                numberRoutes(authSessionService, lookupService)
             }
         }
 
@@ -42,11 +45,12 @@ class NumberRoutesTest {
     @Test
     fun `search returns unauthorized when session is invalid`() = testApplication {
         val authSessionService = AuthSessionService()
+        val lookupService = PhoneLookupService()
 
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes(authSessionService)
+                numberRoutes(authSessionService, lookupService)
             }
         }
 
@@ -62,6 +66,7 @@ class NumberRoutesTest {
     @Test
     fun `search returns bad request when number is blank`() = testApplication {
         val authSessionService = AuthSessionService()
+        val lookupService = PhoneLookupService()
         val sessionId = authSessionService.create(
             GoogleUser("subject", "user@example.com", true, "Jane", null, "Jane", "Doe")
         )
@@ -69,7 +74,7 @@ class NumberRoutesTest {
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes(authSessionService)
+                numberRoutes(authSessionService, lookupService)
             }
         }
 
@@ -85,6 +90,7 @@ class NumberRoutesTest {
     @Test
     fun `search returns success message when request is valid`() = testApplication {
         val authSessionService = AuthSessionService()
+        val lookupService = PhoneLookupService()
         val sessionId = authSessionService.create(
             GoogleUser("subject", "user@example.com", true, "Jane", null, "Jane", "Doe")
         )
@@ -92,7 +98,7 @@ class NumberRoutesTest {
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes(authSessionService)
+                numberRoutes(authSessionService, lookupService)
             }
         }
 
@@ -103,6 +109,14 @@ class NumberRoutesTest {
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals("{\"message\":\"search was successful\"}", response.bodyAsText())
+        val body = response.bodyAsText()
+        assertTrue(body.contains("\"result\""))
+        assertTrue(body.contains("\"country\""))
+        assertTrue(body.contains("\"countryCode\""))
+        assertTrue(body.contains("\"regionCode\""))
+        assertTrue(body.contains("\"numberType\""))
+        assertTrue(body.contains("\"internationalFormat\""))
+        assertTrue(body.contains("\"carrier\""))
+        assertTrue(body.contains("\"timeZones\""))
     }
 }
