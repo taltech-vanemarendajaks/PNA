@@ -15,14 +15,14 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
         title = "Settings"
 
-        val ipEditText = findViewById<EditText>(R.id.ipEditText)
+        val serverAddressEditText = findViewById<EditText>(R.id.serverAddressEditText)
         val saveButton = findViewById<Button>(R.id.saveButton)
 
         val prefs = getSharedPreferences("AppSettings", MODE_PRIVATE)
-        ipEditText.setText(prefs.getString("server_ip", BuildConfig.DEFAULT_SERVER_URL))
+        serverAddressEditText.setText(prefs.getString("server_url", BuildConfig.DEFAULT_SERVER_URL))
 
         saveButton.setOnClickListener {
-            val newValue = ipEditText.text.toString().trim()
+            val newValue = serverAddressEditText.text.toString().trim()
 
             if (newValue.isBlank()) {
                 Toast.makeText(this, "Please enter a server address", Toast.LENGTH_SHORT).show()
