@@ -1,4 +1,7 @@
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { createRootRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
+import { logout } from "../api/auth/auth";
+import { isAuthenticationError } from "../api/command";
+import { MobileAuthDock } from "../components/MobileAuthDock";
 import { ThemeController } from "../components/ThemeController";
 
 export const Route = createRootRoute({
@@ -6,6 +9,25 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
+  const location = useLocation();
+  const isAuthenticatedRoute = location.pathname === "/search" || location.pathname === "/settings";
+
+  function leaveAuthenticatedFlow() {
+    window.location.assign("/");
+  }
+
+  async function handleLogout() {
+    try {
+      await logout();
+      leaveAuthenticatedFlow();
+    } catch (error: unknown) {
+      if (isAuthenticationError(error)) {
+        leaveAuthenticatedFlow();
+        return;
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen text-base-content">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-4 sm:px-6 lg:px-8">
@@ -23,10 +45,16 @@ function RootLayout() {
           </nav>
         </header>
 
-        <main className="flex-1 py-6 sm:py-10">
+        <main
+          className={
+            isAuthenticatedRoute ? "flex-1 pt-6 pb-24 sm:pt-10 md:pb-10" : "flex-1 py-6 sm:py-10"
+          }
+        >
           <Outlet />
         </main>
       </div>
+
+      {isAuthenticatedRoute ? <MobileAuthDock onLogout={() => void handleLogout()} /> : null}
     </div>
   );
 }

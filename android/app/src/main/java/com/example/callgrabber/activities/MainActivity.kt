@@ -172,7 +172,6 @@ class MainActivity : AppCompatActivity() {
 
                         val idToken = googleIdTokenCredential.idToken
                         val displayName = googleIdTokenCredential.displayName
-                        val email = googleIdTokenCredential.givenName
 
                         AuthStorage.saveLogin(this, idToken, displayName, email)
                         updateLoginUi()
@@ -195,7 +194,6 @@ class MainActivity : AppCompatActivity() {
     private fun updateLoginUi() {
         val token = AuthStorage.getToken(this)
         val userName = AuthStorage.getUserName(this)
-        val userEmail = AuthStorage.getUserEmail(this)
 
         val loginButton = findViewById<Button>(R.id.loginButton)
         val userText = findViewById<TextView>(R.id.userText)
@@ -206,10 +204,6 @@ class MainActivity : AppCompatActivity() {
 
         userText.text = if (isLoggedIn) {
             when {
-                !userName.isNullOrBlank() && !userEmail.isNullOrBlank() ->
-                    "Logged in as: $userName"
-                !userEmail.isNullOrBlank() ->
-                    "Logged in as: $userEmail"
                 !userName.isNullOrBlank() ->
                     "Logged in as: $userName"
                 else ->

@@ -4,6 +4,7 @@ import com.pna.backend.routes.v1.auth.googleAuthRoutes
 import com.pna.backend.routes.v1.number.numberRoutes
 import com.pna.backend.config.AppConfig
 import com.pna.backend.services.AuthSessionService
+import com.pna.backend.services.PhoneLookupService
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.server.application.Application
@@ -32,6 +33,7 @@ fun main() {
 
 fun Application.module(appConfig: AppConfig = AppConfig.load()) {
     val authSessionService = AuthSessionService(ttlSeconds = appConfig.sessionTtlSeconds)
+    val lookupService = PhoneLookupService()
 
     install(CallLogging)
     install(ContentNegotiation) {
@@ -66,6 +68,6 @@ fun Application.module(appConfig: AppConfig = AppConfig.load()) {
             authCookieSecure = appConfig.authCookieSecure,
             authCookieSameSite = appConfig.authCookieSameSite
         )
-        numberRoutes(authSessionService)
+        numberRoutes(authSessionService, lookupService)
     }
 }

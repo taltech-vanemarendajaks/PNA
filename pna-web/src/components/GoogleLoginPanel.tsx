@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSession, logout as logoutSession, startGoogleLoginWithRedirect } from "../api/auth";
-import type { GoogleAuthResponse } from "../lib/googleAuth";
+import { startGoogleLoginWithRedirect } from "../api/auth/auth";
 import { GoogleLoginButton } from "./GoogleLoginButton";
 
 function consumeAuthErrorFromQuery(): string | null {
@@ -19,50 +18,21 @@ function consumeAuthErrorFromQuery(): string | null {
 }
 
 export function GoogleLoginPanel() {
-  const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<GoogleAuthResponse | null>(null);
 
   useEffect(() => {
-    async function loadSession() {
-      const authError = consumeAuthErrorFromQuery();
+    const authError = consumeAuthErrorFromQuery();
 
-      if (authError) {
-        setError(authError);
-      }
-
-      try {
-        const session = await getSession();
-        setUser(session);
-      } catch (sessionError: unknown) {
-        setError(sessionError instanceof Error ? sessionError.message : "Failed to load session");
-      } finally {
-        setIsLoadingSession(false);
-      }
+    if (authError) {
+      setError(authError);
     }
-
-    void loadSession();
   }, []);
-
-  async function handleLogout() {
-    setError(null);
-    try {
-      await logoutSession();
-      setUser(null);
-    } catch (logoutError: unknown) {
-      setError(logoutError instanceof Error ? logoutError.message : "Logout failed");
-    }
-  }
 
   function prepareGoogleRedirectLogin() {
     setError(null);
-    setIsLoadingSession(true);
-    startGoogleLoginWithRedirect(
-      window.location,
-      (url) => {
-        window.location.assign(url);
-      },
-    );
+    startGoogleLoginWithRedirect(window.location, (url) => {
+      window.location.assign(url);
+    });
   }
 
   return (
@@ -72,28 +42,9 @@ export function GoogleLoginPanel() {
         <h1 className="text-4xl font-semibold sm:text-5xl">Login with Google</h1>
 
         <div className="mt-8 space-y-4">
-          {!user && !isLoadingSession ? (
-            <div className="flex justify-center">
-              <GoogleLoginButton onClick={prepareGoogleRedirectLogin} />
-            </div>
-          ) : null}
-
-          {user ? (
-            <article className="rounded-2xl border border-success/30 bg-success/10 p-5">
-              <h2 className="text-xl font-semibold text-success-content">Logged in</h2>
-              <p className="mt-2 text-sm text-base-content/80">
-                Signed in as <strong>{user.email ?? user.name ?? user.subject}</strong>
-              </p>
-              <p className="mt-2 break-all text-xs text-base-content/70">Subject: {user.subject}</p>
-              <button
-                type="button"
-                className="btn btn-outline btn-sm mt-4"
-                onClick={() => void handleLogout()}
-              >
-                Logout
-              </button>
-            </article>
-          ) : null}
+          <div className="flex justify-center">
+            <GoogleLoginButton onClick={prepareGoogleRedirectLogin} />
+          </div>
 
           {error ? (
             <div className="alert alert-error">
