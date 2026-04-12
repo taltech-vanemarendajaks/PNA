@@ -4,6 +4,8 @@
 - `GET /api/v1/auth/session`
 - `GET /api/v1/auth/google/redirect`
 - `POST /api/v1/auth/logout`
+- `POST /api/v1/number/search`
+- `GET /api/v1/number/all`
 - `GET /openapi`
 - `GET /swagger`
 
@@ -23,6 +25,7 @@ CORS_ALLOWED_ORIGINS=http://localhost:5173
 AUTH_SESSION_TTL_SECONDS=3600
 AUTH_COOKIE_SECURE=false
 AUTH_COOKIE_SAME_SITE=Lax
+NUMBER_SEARCH_DB_PATH=number-searches.db
 ```
 
 Notes:
@@ -36,6 +39,9 @@ Notes:
 - `POST /api/v1/auth/logout` clears the backend session cookie.
 - `AUTH_COOKIE_SAME_SITE=Strict` is allowed for the long-lived auth session cookie, but the temporary OAuth state/redirect-context cookies always use `Lax` so the Google callback can complete.
 - `AUTH_COOKIE_SAME_SITE=None` requires `AUTH_COOKIE_SECURE=true`.
+- `POST /api/v1/number/search` checks SQLite first; if the number already exists, the stored lookup result is returned. If not, a new lookup is performed and saved.
+- `GET /api/v1/number/all` returns all saved number searches.
+- `NUMBER_SEARCH_DB_PATH` controls where the SQLite file is stored (relative or absolute path).
 
 ## Run
 
