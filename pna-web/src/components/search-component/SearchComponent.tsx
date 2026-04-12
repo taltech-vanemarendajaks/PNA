@@ -1,7 +1,9 @@
 import { type ChangeEvent, useState } from "react";
 import { isAuthenticationError } from "../../api/command";
 import { searchNumber } from "../../api/requests";
+import type { NumberLogItem } from "../../lib/numberLog";
 import { Alert } from "../common/Alert";
+import { NumberLogComponent } from "../number-log/NumberLogComponent";
 import { validatePhoneNumber } from "./SearchComponent.validation";
 
 type SearchComponentProps = {
@@ -23,7 +25,7 @@ export function getSearchErrorMessage(
 export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [resultMessage, setResultMessage] = useState<string | null>(null);
+  const [resultMessage, setResultMessage] = useState<NumberLogItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handlePhoneNumberChange(event: ChangeEvent<HTMLInputElement>) {
@@ -48,7 +50,7 @@ export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
 
     try {
       const result = await searchNumber(phoneNumber);
-      setResultMessage(result.message);
+      setResultMessage(result);
     } catch (searchError: unknown) {
       const searchErrorMessage = getSearchErrorMessage(searchError, onUnauthenticated);
 
@@ -64,43 +66,36 @@ export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
   };
 
   return (
-    <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-full border p-4">
-      <legend className="fieldset-legend text-2xl text-primary">Search</legend>
+    <>
+      <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-full border p-4 mb-4">
+        <legend className="fieldset-legend text-2xl text-primary">Search</legend>
 
-      {error ? <Alert type="error" message={error} /> : null}
+        {error ? <Alert type="error" message={error} /> : null}
 
-      {resultMessage ? (
-        <div role="status" className="alert alert-success mb-4">
-          <span>{resultMessage}</span>
-        </div>
-      ) : null}
+        <input
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          className="input w-full"
+          placeholder="Phone Number"
+          value={phoneNumber}
+          onChange={handlePhoneNumberChange}
+        />
 
-      {resultMessage ? (
-        <div role="status" className="alert alert-success mb-4">
-          <span>{resultMessage}</span>
-        </div>
-      ) : null}
-
-      <input
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel"
-        className="input w-full"
-        placeholder="Phone Number"
-        value={phoneNumber}
-        onChange={handlePhoneNumberChange}
-      />
-
-      <button
-        className="btn btn-primary mt-4"
-        type="button"
-        onClick={() => {
-          void handleSubmit();
-        }}
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? "Searching..." : "Look Up"}
-      </button>
-    </fieldset>
+        <button
+          className="btn btn-primary mt-4"
+          type="button"
+          onClick={() => {
+            void handleSubmit();
+          }}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Searching..." : "Look Up"}
+        </button>
+      </fieldset>
+      <div>
+        <NumberLogComponent log={resultMessage} />
+      </div>
+    </>
   );
 }

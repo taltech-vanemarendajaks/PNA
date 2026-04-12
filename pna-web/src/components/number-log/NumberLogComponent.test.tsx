@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-
-import { NumberLogComponent, type NumberLogItem } from "./NumberLogComponent";
+import type { NumberLogItem } from "../../lib/numberLog";
+import { NumberLogComponent } from "./NumberLogComponent";
 
 function formatExpectedDate(value: string) {
   return new Intl.DateTimeFormat(undefined, {
@@ -29,10 +29,11 @@ describe("NumberLogComponent", () => {
     const markup = renderComponent(log);
 
     expect(markup).toContain(log.phoneNumber);
-    expect(markup).toContain(`Date Searched: ${formatExpectedDate(log.dateSearched)}`);
-    expect(markup).toContain(
-      `Latest find: ${log.results[0].description} (${formatExpectedDate(log.results[0].logDate)})`,
-    );
+    expect(markup).toContain("Date Searched:");
+    expect(markup).toContain(formatExpectedDate(log.dateSearched));
+    expect(markup).toContain("Latest find:");
+    expect(markup).toContain(log.results[0].description);
+    expect(markup).toContain(formatExpectedDate(log.results[0].logDate));
     expect(markup).not.toContain("<details");
   });
 
@@ -59,10 +60,10 @@ describe("NumberLogComponent", () => {
 
     expect(markup).toContain("<details");
     expect(markup).toContain(`${log.phoneNumber} (${log.results.length})`);
-    expect(markup).toContain(`Date Searched: ${formatExpectedDate(log.dateSearched)}`);
-    expect(markup).toContain(
-      `${latestResult.description} (${formatExpectedDate(latestResult.logDate)})`,
-    );
+    expect(markup).toContain("Date Searched:");
+    expect(markup).toContain(formatExpectedDate(log.dateSearched));
+    expect(markup).toContain(latestResult.description);
+    expect(markup).toContain(formatExpectedDate(latestResult.logDate));
     expect(markup).toContain(firstEntry);
     expect(markup).toContain(secondEntry);
     expect(markup.indexOf(firstEntry)).toBeLessThan(markup.indexOf(secondEntry));

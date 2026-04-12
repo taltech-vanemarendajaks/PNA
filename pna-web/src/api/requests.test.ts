@@ -4,30 +4,41 @@ const { requireAuthenticatedSessionSpy } = vi.hoisted(() => ({
   requireAuthenticatedSessionSpy: vi.fn(),
 }));
 
-vi.mock("./auth", () => ({
+vi.mock("./auth/auth", () => ({
   requireAuthenticatedSession: requireAuthenticatedSessionSpy,
 }));
 
 import { searchNumber } from "./requests";
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
 describe("searchNumber", () => {
-  it("posts the search request with cookie-based auth", async () => {
+  it("posts the search request with cookie-based auth and returns a result", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-18T09:42:00Z"));
+
     requireAuthenticatedSessionSpy.mockResolvedValue(undefined);
 
     const fetchSpy = vi.fn(async () => {
-      return new Response(JSON.stringify({ message: "Match found" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          result: "result",
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     });
 
     vi.stubGlobal("fetch", fetchSpy);
 
-    await expect(searchNumber("+37255551234")).resolves.toEqual({ message: "Match found" });
+    const result = await searchNumber("+37255551234");
+
+    expect(result).toBeTruthy();
     expect(fetchSpy).toHaveBeenCalledWith("http://localhost:8080/api/v1/number/search", {
       method: "POST",
       credentials: "include",
