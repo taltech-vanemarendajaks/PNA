@@ -1,4 +1,5 @@
-import type { SearchNumberResult } from "../api/requests";
+import type { SavedNumberSearchResponse, SearchNumberResult } from "../api/requests";
+import type { NumberLogItem } from "./numberLog";
 
 export function buildDescription(result: SearchNumberResult): string {
   let description = "";
@@ -20,4 +21,17 @@ export function buildDescription(result: SearchNumberResult): string {
   }
 
   return description;
+}
+
+export function buildNumberLogItem(search: SavedNumberSearchResponse): NumberLogItem {
+  return {
+    phoneNumber: search.result.internationalFormat ?? search.number,
+    dateSearched: search.createdAt,
+    results: [
+      {
+        description: buildDescription(search.result),
+        logDate: search.createdAt,
+      },
+    ],
+  };
 }

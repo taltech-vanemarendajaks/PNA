@@ -1,7 +1,7 @@
 import type { NumberLogItem } from "../lib/numberLog";
-import { buildDescription } from "../lib/numberLogFormat";
+import { buildDescription, buildNumberLogItem } from "../lib/numberLogFormat";
 import { requireAuthenticatedSession } from "./auth/auth";
-import { executeApiActionWithResponse } from "./command";
+import { executeApiActionWithResponse, executeApiQuery } from "./command";
 
 type SearchNumberRequest = {
   number: string;
@@ -20,6 +20,22 @@ export type SearchNumberResult = {
 export type SearchNumberResponse = {
   result: SearchNumberResult;
 };
+
+export type SavedNumberSearchResponse = {
+  id: number;
+  number: string;
+  result: SearchNumberResult;
+  createdAt: string;
+};
+
+export async function getAllNumberSearches(): Promise<NumberLogItem[]> {
+  const response = await executeApiQuery<SavedNumberSearchResponse[]>({
+    path: "/api/v1/number/all",
+    preflight: requireAuthenticatedSession,
+  });
+
+  return response.map(buildNumberLogItem);
+}
 
 export async function searchNumber(number: string): Promise<NumberLogItem> {
   const response = await executeApiActionWithResponse<SearchNumberResponse, SearchNumberRequest>({

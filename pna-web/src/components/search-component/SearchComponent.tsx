@@ -1,6 +1,6 @@
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { isAuthenticationError } from "../../api/command";
-import { searchNumber } from "../../api/requests";
+import { getAllNumberSearches, searchNumber } from "../../api/requests";
 import type { NumberLogItem } from "../../lib/numberLog";
 import { Alert } from "../common/Alert";
 import { NumberLogComponent } from "../number-log/NumberLogComponent";
@@ -26,7 +26,26 @@ export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [resultMessage, setResultMessage] = useState<NumberLogItem | null>(null);
+  const [history, setHistory] = useState<NumberLogItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const onUnauthenticatedRef = useRef(onUnauthenticated);
+
+  useEffect(() => {
+    onUnauthenticatedRef.current = onUnauthenticated;
+  }, [onUnauthenticated]);
+
+  useEffect(() => {
+    async function loadHistory() {
+      try {
+        const searches = await getAllNumberSearches();
+        setHistory(searches);
+      } catch (historyLoadError: unknown) {
+        getSearchErrorMessage(historyLoadError, onUnauthenticatedRef.current);
+      }
+    }
+
+    void loadHistory();
+  }, []);
 
   function handlePhoneNumberChange(event: ChangeEvent<HTMLInputElement>) {
     const nextPhoneNumber = event.currentTarget.value;
@@ -51,6 +70,13 @@ export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
     try {
       const result = await searchNumber(phoneNumber);
       setResultMessage(result);
+
+      try {
+        const searches = await getAllNumberSearches();
+        setHistory(searches);
+      } catch (historyLoadError: unknown) {
+        getSearchErrorMessage(historyLoadError, onUnauthenticated);
+      }
     } catch (searchError: unknown) {
       const searchErrorMessage = getSearchErrorMessage(searchError, onUnauthenticated);
 
@@ -96,6 +122,17 @@ export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
       <div>
         <NumberLogComponent log={resultMessage} />
       </div>
+
+      {history.length > 0 ? (
+        <div>
+          <p className="text-2xl text-primary font-semibold">History</p>
+          <div className="mt-4 space-y-4">
+            {history.map((log) => (
+              <NumberLogComponent key={`${log.phoneNumber}-${log.dateSearched}`} log={log} />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

@@ -57,3 +57,6 @@ dist-ssr
 
 # TanStack generated files
 .tanstack/
+
+# Database files
+*.db
