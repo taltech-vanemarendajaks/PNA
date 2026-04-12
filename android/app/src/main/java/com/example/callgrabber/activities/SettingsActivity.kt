@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.callgrabber.R
 import com.example.callgrabber.BuildConfig
 import androidx.core.content.edit
+import com.example.callgrabber.ApiProvider
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +31,7 @@ class SettingsActivity : AppCompatActivity() {
             }
 
             prefs.edit { putString("server_ip", newValue) }
+            ApiProvider.clearCache()
 
             Toast.makeText(this, "Settings saved", Toast.LENGTH_SHORT).show()
             finish()
