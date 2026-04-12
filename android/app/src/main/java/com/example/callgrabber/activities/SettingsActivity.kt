@@ -20,7 +20,7 @@ class SettingsActivity : AppCompatActivity() {
         val saveButton = findViewById<Button>(R.id.saveButton)
 
         val prefs = getSharedPreferences("AppSettings", MODE_PRIVATE)
-        ipEditText.setText(prefs.getString("server_ip", BuildConfig.DEFAULT_SERVER_URL))
+        ipEditText.setText(prefs.getString("server_url", BuildConfig.DEFAULT_SERVER_URL))
 
         saveButton.setOnClickListener {
             val newValue = ipEditText.text.toString().trim()
@@ -30,7 +30,7 @@ class SettingsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            prefs.edit { putString("server_ip", newValue) }
+            prefs.edit { putString("server_url", newValue) }
             ApiProvider.clearCache()
 
             Toast.makeText(this, "Settings saved", Toast.LENGTH_SHORT).show()

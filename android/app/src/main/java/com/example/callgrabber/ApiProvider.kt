@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiProvider {
 
     private const val PREFS_NAME = "AppSettings"
-    private const val KEY_SERVER_IP = "server_ip"
+    private const val KEY_SERVER_URL = "server_url"
 
     @Volatile
     private var cachedBaseUrl: String? = null
@@ -58,7 +58,7 @@ object ApiProvider {
 
     private fun getServerAddress(context: Context): String {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val raw = prefs.getString(KEY_SERVER_IP, BuildConfig.DEFAULT_SERVER_URL)?.trim().orEmpty()
+        val raw = prefs.getString(KEY_SERVER_URL, BuildConfig.DEFAULT_SERVER_URL)?.trim().orEmpty()
 
         val withScheme = when {
             raw.startsWith("http://", ignoreCase = true) -> raw
