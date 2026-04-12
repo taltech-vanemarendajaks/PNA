@@ -1,4 +1,7 @@
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { createRootRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { useSyncExternalStore } from "react";
+import { clearSession, hasStoredSession, subscribeToSessionChanges } from "../auth/session";
+import { MobileAuthDock } from "../components/MobileAuthDock";
 import { ThemeController } from "../components/ThemeController";
 
 export const Route = createRootRoute({
@@ -6,6 +9,18 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
+  const navigate = useNavigate();
+  const isAuthenticated = useSyncExternalStore(
+    subscribeToSessionChanges,
+    hasStoredSession,
+    () => false,
+  );
+
+  async function logout() {
+    clearSession();
+    await navigate({ to: "/" });
+  }
+
   return (
     <div className="min-h-screen text-base-content">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-4 sm:px-6 lg:px-8">
@@ -23,10 +38,16 @@ function RootLayout() {
           </nav>
         </header>
 
-        <main className="flex-1 py-6 sm:py-10">
+        <main
+          className={
+            isAuthenticated ? "flex-1 pt-6 pb-24 sm:pt-10 md:pb-10" : "flex-1 py-6 sm:py-10"
+          }
+        >
           <Outlet />
         </main>
       </div>
+
+      {isAuthenticated ? <MobileAuthDock onLogout={() => void logout()} /> : null}
     </div>
   );
 }

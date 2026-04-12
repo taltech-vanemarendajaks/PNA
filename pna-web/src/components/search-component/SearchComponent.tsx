@@ -75,6 +75,12 @@ export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
         </div>
       ) : null}
 
+      {resultMessage ? (
+        <div role="status" className="alert alert-success mb-4">
+          <span>{resultMessage}</span>
+        </div>
+      ) : null}
+
       <input
         type="tel"
         inputMode="tel"
