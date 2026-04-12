@@ -1,12 +1,18 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { hasStoredSession } from "../auth/session";
+import { getSession } from "../api/auth/auth";
+
+async function requireAuthenticatedSession() {
+  const session = await getSession();
+
+  if (!session) {
+    throw redirect({ to: "/" });
+  }
+
+  return session;
+}
 
 export const Route = createFileRoute("/settings")({
-  beforeLoad: () => {
-    if (!hasStoredSession()) {
-      throw redirect({ to: "/" });
-    }
-  },
+  beforeLoad: async () => requireAuthenticatedSession(),
   component: SettingsRoute,
 });
 

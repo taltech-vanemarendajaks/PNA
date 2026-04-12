@@ -57,7 +57,7 @@ function SearchRoute() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 hidden justify-end md:flex">
         <button
           type="button"
           className="btn btn-outline btn-sm"
