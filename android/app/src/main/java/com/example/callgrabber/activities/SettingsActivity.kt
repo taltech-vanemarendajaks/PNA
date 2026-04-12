@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.callgrabber.R
 import com.example.callgrabber.BuildConfig
 import androidx.core.content.edit
+import com.example.callgrabber.ApiProvider
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,6 +20,7 @@ class SettingsActivity : AppCompatActivity() {
         val saveButton = findViewById<Button>(R.id.saveButton)
 
         val prefs = getSharedPreferences("AppSettings", MODE_PRIVATE)
+
         serverAddressEditText.setText(prefs.getString("server_url", BuildConfig.DEFAULT_SERVER_URL))
 
         saveButton.setOnClickListener {
@@ -29,7 +31,8 @@ class SettingsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            prefs.edit { putString("server_ip", newValue) }
+            prefs.edit { putString("server_url", newValue) }
+            ApiProvider.clearCache()
 
             Toast.makeText(this, "Settings saved", Toast.LENGTH_SHORT).show()
             finish()
