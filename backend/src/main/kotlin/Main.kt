@@ -1,28 +1,24 @@
 package com.pna.backend
 
-import com.pna.backend.routes.v1.auth.googleAuthRoutes
-import com.pna.backend.routes.v1.number.numberRoutes
 import com.pna.backend.config.AppConfig
 import com.pna.backend.dal.repositories.NumberSearchRepository
+import com.pna.backend.routes.v1.auth.googleAuthRoutes
+import com.pna.backend.routes.v1.number.numberRoutes
 import com.pna.backend.services.AuthSessionService
 import com.pna.backend.services.NumberSearchService
 import com.pna.backend.services.PhoneLookupService
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.server.application.Application
-import io.ktor.server.application.call
-import io.ktor.server.application.install
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.callloging.CallLogging
-import io.ktor.server.plugins.cors.routing.CORS
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.openapi.openAPI
-import io.ktor.server.plugins.swagger.swaggerUI
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.get
-import io.ktor.server.routing.routing
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.openapi.*
+import io.ktor.server.plugins.swagger.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 fun main() {
     val appConfig = AppConfig.load()

@@ -7,23 +7,15 @@ import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
 import domain.auth.GoogleUser
 import domain.auth.response.GoogleAuthResponse
-import io.ktor.http.Cookie
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
-import io.ktor.server.response.respond
-import io.ktor.server.response.respondRedirect
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.route
-import io.ktor.util.date.GMTDate
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.util.date.*
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
-import java.util.Base64
+import java.util.*
 
 private const val FRONTEND_ORIGIN_COOKIE_NAME = "pna_frontend_origin"
 private const val RETURN_PATH_COOKIE_NAME = "pna_return_path"

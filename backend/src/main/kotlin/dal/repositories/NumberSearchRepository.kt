@@ -2,11 +2,10 @@ package com.pna.backend.dal.repositories
 
 import com.pna.backend.domain.auth.response.PhoneNumberLookupResult
 import com.pna.backend.domain.auth.response.SavedNumberSearchResponse
-import java.sql.DriverManager
-import java.time.Instant
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.sql.DriverManager
+import java.time.Instant
 
 class NumberSearchRepository(
     databasePath: String = System.getenv("NUMBER_SEARCH_DB_PATH")
