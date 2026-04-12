@@ -1,6 +1,6 @@
-import { createRootRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
-import { useSyncExternalStore } from "react";
-import { clearSession, hasStoredSession, subscribeToSessionChanges } from "../auth/session";
+import { createRootRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
+import { logout } from "../api/auth/auth";
+import { isAuthenticationError } from "../api/command";
 import { MobileAuthDock } from "../components/MobileAuthDock";
 import { ThemeController } from "../components/ThemeController";
 
@@ -9,16 +9,23 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
-  const navigate = useNavigate();
-  const isAuthenticated = useSyncExternalStore(
-    subscribeToSessionChanges,
-    hasStoredSession,
-    () => false,
-  );
+  const location = useLocation();
+  const isAuthenticatedRoute = location.pathname === "/search" || location.pathname === "/settings";
 
-  async function logout() {
-    clearSession();
-    await navigate({ to: "/" });
+  function leaveAuthenticatedFlow() {
+    window.location.assign("/");
+  }
+
+  async function handleLogout() {
+    try {
+      await logout();
+      leaveAuthenticatedFlow();
+    } catch (error: unknown) {
+      if (isAuthenticationError(error)) {
+        leaveAuthenticatedFlow();
+        return;
+      }
+    }
   }
 
   return (
@@ -40,14 +47,14 @@ function RootLayout() {
 
         <main
           className={
-            isAuthenticated ? "flex-1 pt-6 pb-24 sm:pt-10 md:pb-10" : "flex-1 py-6 sm:py-10"
+            isAuthenticatedRoute ? "flex-1 pt-6 pb-24 sm:pt-10 md:pb-10" : "flex-1 py-6 sm:py-10"
           }
         >
           <Outlet />
         </main>
       </div>
 
-      {isAuthenticated ? <MobileAuthDock onLogout={() => void logout()} /> : null}
+      {isAuthenticatedRoute ? <MobileAuthDock onLogout={() => void handleLogout()} /> : null}
     </div>
   );
 }
