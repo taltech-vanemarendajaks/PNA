@@ -1,16 +1,7 @@
-export type NumberResult = {
-  description: string;
-  logDate: string;
-};
-
-export type NumberLogItem = {
-  phoneNumber: string;
-  dateSearched: string;
-  results: NumberResult[];
-};
+import type { NumberLogItem, NumberResult } from "../../lib/numberLog";
 
 type NumberLogComponentProps = {
-  log: NumberLogItem;
+  log: NumberLogItem | null;
 };
 
 function formatLocalDateTime(value: string) {
@@ -30,6 +21,10 @@ function formatResult(result: NumberResult) {
 }
 
 export function NumberLogComponent({ log }: NumberLogComponentProps) {
+  if (!log) {
+    return;
+  }
+
   const latestResult = log.results[0];
   const resultCount = log.results.length;
 
@@ -37,8 +32,18 @@ export function NumberLogComponent({ log }: NumberLogComponentProps) {
     return (
       <div className="bg-base-100 border-base-300 border rounded-box p-4">
         <h3 className="font-semibold text-xl text-accent">{log.phoneNumber}</h3>
-        <p className="text-sm">Date Searched: {formatLocalDateTime(log.dateSearched)}</p>
-        {latestResult && <p className="text-sm">Latest find: {formatResult(latestResult)}</p>}
+        <div className="text-sm">
+          <span className="font-semibold">Date Searched: </span>
+          <span>{formatLocalDateTime(log.dateSearched)}</span>
+        </div>
+        <div className="text-sm">
+          {latestResult && (
+            <>
+              <span className="font-semibold">Latest find: </span>
+              <span>{formatResult(latestResult)}</span>
+            </>
+          )}
+        </div>
       </div>
     );
   }
@@ -47,8 +52,13 @@ export function NumberLogComponent({ log }: NumberLogComponentProps) {
     <details className="group collapse collapse-arrow bg-base-100 border-base-300 border">
       <summary className="collapse-title">
         <h3 className="font-semibold text-xl text-accent">{`${log.phoneNumber} (${resultCount})`}</h3>
-        <p className="text-sm">Date Searched: {formatLocalDateTime(log.dateSearched)}</p>
-        {latestResult && <p className="group-open:hidden text-sm">{formatResult(latestResult)}</p>}
+        <div className="text-sm">
+          <span className="font-semibold">Date Searched: </span>
+          <span>{formatLocalDateTime(log.dateSearched)}</span>
+        </div>
+        {latestResult && (
+          <span className="group-open:hidden text-sm">{formatResult(latestResult)}</span>
+        )}
       </summary>
       <div className="collapse-content text-sm">
         {log.results.map((result, index) => (

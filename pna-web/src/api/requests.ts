@@ -1,3 +1,5 @@
+import type { NumberLogItem } from "../lib/numberLog";
+import { buildDescription } from "../lib/numberLogFormat";
 import { requireAuthenticatedSession } from "./auth/auth";
 import { executeApiActionWithResponse } from "./command";
 
@@ -5,14 +7,39 @@ type SearchNumberRequest = {
   number: string;
 };
 
-export type SearchNumberResponse = {
-  message: string;
+export type SearchNumberResult = {
+  country: string | null;
+  countryCode: number | null;
+  regionCode: string | null;
+  numberType: string | null;
+  internationalFormat: string | null;
+  carrier: string | null;
+  timeZones: string[] | null;
 };
 
-export async function searchNumber(number: string): Promise<SearchNumberResponse> {
-  return executeApiActionWithResponse<SearchNumberResponse, SearchNumberRequest>({
+export type SearchNumberResponse = {
+  result: SearchNumberResult;
+};
+
+export async function searchNumber(number: string): Promise<NumberLogItem> {
+  const response = await executeApiActionWithResponse<SearchNumberResponse, SearchNumberRequest>({
     path: "/api/v1/number/search",
     body: { number },
     preflight: requireAuthenticatedSession,
   });
+
+  const result = response.result;
+  const description = buildDescription(result);
+  const timestamp = new Date().toISOString();
+
+  return {
+    phoneNumber: result.internationalFormat ?? number,
+    dateSearched: timestamp,
+    results: [
+      {
+        description,
+        logDate: timestamp,
+      },
+    ],
+  };
 }
