@@ -3,6 +3,7 @@
 - `GET /health`
 - `GET /api/v1/auth/session`
 - `GET /api/v1/auth/google/redirect`
+- `POST /api/v1/auth/logout`
 - `POST /api/v1/number/search`
 - `GET /api/v1/number/all`
 - `GET /openapi`
@@ -36,13 +37,14 @@ Notes:
 - `FRONTEND_BASE_URL` is used by the backend-owned Google redirect flow to send the browser back to the frontend page.
 - `GET /api/v1/auth/google/redirect` starts the Google OAuth authorization-code flow and also handles the callback from Google on the same route.
 - `GOOGLE_CLIENT_SECRET` is required for the backend to exchange the Google authorization code for tokens.
-- After Google login succeeds, the backend issues a short-lived app access JWT and redirects the browser back to the frontend with the token in the URL fragment.
+- After Google login succeeds, the backend issues a short-lived app access JWT in an `HttpOnly` cookie and redirects the browser back to the frontend.
 - `JWT_TTL_SECONDS` controls the access JWT lifetime.
-- `GET /api/v1/auth/session` returns the authenticated user for a valid bearer access JWT.
+- `GET /api/v1/auth/session` returns the authenticated user for a valid auth cookie or bearer access JWT.
+- `POST /api/v1/auth/logout` clears the auth cookie.
 - The temporary OAuth state/redirect-context cookies always use `Lax` so the Google callback can complete.
 - `AUTH_COOKIE_SAME_SITE=None` requires `AUTH_COOKIE_SECURE=true`.
-- `POST /api/v1/number/search` checks SQLite first; if the number already exists, the stored lookup result is returned. If not, a new lookup is performed and saved.
-- `GET /api/v1/number/all` returns all saved number searches.
+- `POST /api/v1/number/search` checks SQLite first; if the number already exists, the stored lookup result is returned. If not, a new lookup is performed and saved. Requests may authenticate with the auth cookie or a bearer token header.
+- `GET /api/v1/number/all` returns all saved number searches and accepts the auth cookie or a bearer token header.
 - `NUMBER_SEARCH_DB_PATH` controls where the SQLite file is stored (relative or absolute path).
 
 ## Run

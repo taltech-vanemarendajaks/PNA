@@ -3,6 +3,7 @@ package routes.v1.auth
 import com.pna.backend.config.AppConfig
 import com.pna.backend.config.CorsOrigin
 import com.pna.backend.plugins.configureSecurity
+import com.pna.backend.routes.v1.auth.AUTH_ACCESS_COOKIE_NAME
 import com.pna.backend.routes.v1.auth.googleAuthRoutes
 import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.GoogleAuthCodeService
@@ -54,7 +55,7 @@ class AuthRoutesTest {
     }
 
     @Test
-    fun `google redirect callback exchanges code and redirects back to stored frontend context with access token fragment`() = testApplication {
+    fun `google redirect callback exchanges code and redirects back to stored frontend context with auth cookie`() = testApplication {
         application {
             install(ContentNegotiation) { json() }
             installAuthRoutes()
@@ -68,8 +69,9 @@ class AuthRoutesTest {
 
         assertEquals(HttpStatusCode.OK, response.status)
         val location = response.headers[HttpHeaders.Location] ?: error("Missing redirect location")
-        assertTrue(location.startsWith("http://localhost:5173/numbers?q=123#accessToken="))
-        assertTrue(response.bodyAsText().contains("window.location.replace(\"http://localhost:5173/numbers?q=123#accessToken="))
+        assertEquals("http://localhost:5173/numbers?q=123", location)
+        assertTrue(response.headers.getAll(HttpHeaders.SetCookie)?.any { it.contains("$AUTH_ACCESS_COOKIE_NAME=") } == true)
+        assertTrue(response.bodyAsText().contains("window.location.replace(\"http://localhost:5173/numbers?q=123\")"))
     }
 
     @Test
@@ -164,6 +166,30 @@ class AuthRoutesTest {
     }
 
     @Test
+    fun `session returns authenticated user for valid auth cookie`() = testApplication {
+        val jwtService = newJwtService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            configureSecurity(
+                accessTokenService = jwtService,
+                issuer = "test-issuer",
+                audience = "test-audience"
+            )
+            installAuthRoutes(accessTokenService = jwtService)
+        }
+
+        val token = jwtService.issueAccessToken(user())
+
+        val response = client.get("/api/v1/auth/session") {
+            cookie(AUTH_ACCESS_COOKIE_NAME, token)
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertTrue(response.bodyAsText().contains("\"subject\":\"subject\""))
+    }
+
+    @Test
     fun `session accepts lowercase bearer auth scheme`() = testApplication {
         val jwtService = newJwtService()
 
@@ -203,6 +229,24 @@ class AuthRoutesTest {
         val response = client.get("/api/v1/auth/session")
 
         assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    @Test
+    fun `logout clears auth cookie`() = testApplication {
+        application {
+            install(ContentNegotiation) { json() }
+            installAuthRoutes()
+        }
+
+        val response = client.post("/api/v1/auth/logout")
+
+        assertEquals(HttpStatusCode.NoContent, response.status)
+        assertTrue(response.headers.getAll(HttpHeaders.SetCookie)?.any {
+            it.contains("$AUTH_ACCESS_COOKIE_NAME=") && (
+                it.contains("Max-Age=0") ||
+                    it.contains("Expires=Thu, 01 Jan 1970")
+                )
+        } == true)
     }
 
     private fun Application.installAuthRoutes(

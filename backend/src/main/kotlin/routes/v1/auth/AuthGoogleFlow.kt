@@ -105,11 +105,11 @@ private suspend fun ApplicationCall.handleGoogleRedirectCallback(
     }
 
     val accessToken = accessTokenService.issueAccessToken(user)
+    appendAuthAccessCookie(accessToken, appConfig)
     respondFrontendRedirect(
         buildFrontendRedirect(
             frontendBaseUrl = redirectContext.redirectBaseUrl,
-            returnPath = redirectContext.returnPath,
-            accessToken = accessToken
+            returnPath = redirectContext.returnPath
         )
     )
 }

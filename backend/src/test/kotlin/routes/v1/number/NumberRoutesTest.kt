@@ -1,6 +1,7 @@
 package routes.v1.number
 
 import com.pna.backend.dal.repositories.NumberSearchRepository
+import com.pna.backend.routes.v1.auth.AUTH_ACCESS_COOKIE_NAME
 import com.pna.backend.routes.v1.number.numberRoutes
 import com.pna.backend.services.NumberSearchService
 import com.pna.backend.services.PhoneLookupService
@@ -126,6 +127,27 @@ class NumberRoutesTest {
         val response = client.post("/api/v1/number/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             header(HttpHeaders.Authorization, "bearer valid-token")
+            setBody("""{"number":"1234567890"}""")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+    }
+
+    @Test
+    fun `search accepts auth cookie`() = testApplication {
+        val lookupService = PhoneLookupService()
+        val searchService = newSearchService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            routing {
+                numberRoutes(::verifyAccessToken, lookupService, searchService)
+            }
+        }
+
+        val response = client.post("/api/v1/number/search") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            cookie(AUTH_ACCESS_COOKIE_NAME, "valid-token")
             setBody("""{"number":"1234567890"}""")
         }
 

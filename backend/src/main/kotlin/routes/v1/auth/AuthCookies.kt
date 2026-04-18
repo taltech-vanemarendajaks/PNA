@@ -10,8 +10,31 @@ internal const val RETURN_PATH_COOKIE_NAME = "pna_return_path"
 internal const val FRONTEND_ORIGIN_QUERY_PARAMETER = "frontendOrigin"
 internal const val RETURN_PATH_QUERY_PARAMETER = "returnPath"
 internal const val GOOGLE_OAUTH_STATE_COOKIE_NAME = "pna_google_oauth_state"
+internal const val AUTH_ACCESS_COOKIE_NAME = "pna_access_token"
 internal const val GOOGLE_AUTH_SCOPE = "openid email profile"
 internal const val GOOGLE_REDIRECT_PATH = "/api/v1/auth/google/redirect"
+private const val AUTH_COOKIE_PATH = "/api"
+
+internal fun ApplicationCall.appendAuthAccessCookie(
+    accessToken: String,
+    appConfig: AppConfig
+) {
+    appendCookie(
+        name = AUTH_ACCESS_COOKIE_NAME,
+        value = accessToken,
+        path = AUTH_COOKIE_PATH,
+        maxAge = appConfig.jwtTtlSeconds.toInt(),
+        appConfig = appConfig
+    )
+}
+
+internal fun ApplicationCall.clearAuthAccessCookie(appConfig: AppConfig) {
+    clearCookie(
+        name = AUTH_ACCESS_COOKIE_NAME,
+        path = AUTH_COOKIE_PATH,
+        appConfig = appConfig
+    )
+}
 
 internal fun ApplicationCall.appendGoogleOauthStateCookie(
     state: String,

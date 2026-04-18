@@ -83,18 +83,13 @@ private fun buildFrontendRedirectPage(location: String): String {
 internal fun buildFrontendRedirect(
     frontendBaseUrl: String,
     returnPath: String? = null,
-    error: String? = null,
-    accessToken: String? = null
+    error: String? = null
 ): String {
     val safePath = sanitizeReturnPath(returnPath)
     val baseRedirectUrl = "$frontendBaseUrl$safePath"
 
     if (error.isNullOrBlank()) {
-        return if (accessToken.isNullOrBlank()) {
-            baseRedirectUrl
-        } else {
-            "$baseRedirectUrl#accessToken=${urlEncode(accessToken)}"
-        }
+        return baseRedirectUrl
     }
 
     val separator = if ('?' in safePath) '&' else '?'

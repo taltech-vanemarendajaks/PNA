@@ -1,5 +1,6 @@
 package com.pna.backend.routes.v1
 
+import com.pna.backend.routes.v1.auth.AUTH_ACCESS_COOKIE_NAME
 import domain.auth.GoogleUser
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -7,8 +8,11 @@ import io.ktor.server.application.*
 fun ApplicationCall.readAuthenticatedUser(
     verifyAccessToken: (String) -> GoogleUser?
 ): GoogleUser? {
-    val authHeader = request.headers[HttpHeaders.Authorization] ?: return null
-    val token = extractBearerToken(authHeader)
+    val token = request.cookies[AUTH_ACCESS_COOKIE_NAME]
+        ?.takeIf { it.isNotBlank() }
+        ?: request.headers[HttpHeaders.Authorization]?.let(::extractBearerToken)
+        ?: return null
+
     if (token.isBlank()) {
         return null
     }

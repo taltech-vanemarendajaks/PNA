@@ -710,30 +710,80 @@
       "nullable" : true,
       "example" : "user@example.com"
     },
-    "emailVerified" : {
-      "type" : "boolean",
-      "nullable" : true,
-      "example" : true
-    },
     "name" : {
       "type" : "string",
       "nullable" : true,
       "example" : "Jane Doe"
     },
-    "picture" : {
-      "type" : "string",
-      "nullable" : true,
-      "example" : "https://lh3.googleusercontent.com/a/example"
-    },
     "givenName" : {
       "type" : "string",
       "nullable" : true,
       "example" : "Jane"
-    },
-    "familyName" : {
+    }
+  }
+};
+            defs["PhoneNumberLookupResult"] = {
+  "type" : "object",
+  "properties" : {
+    "country" : {
       "type" : "string",
       "nullable" : true,
-      "example" : "Doe"
+      "example" : "Estonia"
+    },
+    "countryCode" : {
+      "type" : "integer",
+      "nullable" : true,
+      "example" : 372
+    },
+    "regionCode" : {
+      "type" : "string",
+      "nullable" : true,
+      "example" : "EE"
+    },
+    "numberType" : {
+      "type" : "string",
+      "nullable" : true,
+      "example" : "Fixed line"
+    },
+    "internationalFormat" : {
+      "type" : "string",
+      "nullable" : true,
+      "example" : "+372 607 3001"
+    },
+    "carrier" : {
+      "type" : "string",
+      "nullable" : true,
+      "example" : "unknown"
+    },
+    "timeZones" : {
+      "type" : "array",
+      "nullable" : true,
+      "example" : [ "Europe/Tallinn" ],
+      "items" : {
+        "type" : "string"
+      }
+    }
+  }
+};
+            defs["SavedNumberSearchResponse"] = {
+  "type" : "object",
+  "properties" : {
+    "id" : {
+      "type" : "integer",
+      "format" : "int64",
+      "example" : 1
+    },
+    "number" : {
+      "type" : "string",
+      "example" : "+14155552671"
+    },
+    "result" : {
+      "$ref" : "#/components/schemas/PhoneNumberLookupResult"
+    },
+    "createdAt" : {
+      "type" : "string",
+      "format" : "date-time",
+      "example" : "2026-04-12T10:00:00Z"
     }
   }
 };
@@ -750,9 +800,8 @@
             defs["SearchNumberResponse"] = {
   "type" : "object",
   "properties" : {
-    "message" : {
-      "type" : "string",
-      "example" : "country=Estonia, countryCode=372, regionCode=EE, numberType=Fixed line, internationalFormat=+372 607 3001, carrier=unknown, timeZones=Europe/Tallinn"
+    "result" : {
+      "$ref" : "#/components/schemas/PhoneNumberLookupResult"
     }
   }
 };
@@ -775,6 +824,15 @@
                   <li class="nav-header" data-group="Default"><a href="#api-Default">API Methods - Default</a></li>
                     <li data-group="Default" data-name="apiV1AuthGoogleRedirectGet" class="">
                       <a href="#api-Default-apiV1AuthGoogleRedirectGet">apiV1AuthGoogleRedirectGet</a>
+                    </li>
+                    <li data-group="Default" data-name="apiV1AuthLogoutPost" class="">
+                      <a href="#api-Default-apiV1AuthLogoutPost">apiV1AuthLogoutPost</a>
+                    </li>
+                    <li data-group="Default" data-name="apiV1AuthSessionGet" class="">
+                      <a href="#api-Default-apiV1AuthSessionGet">apiV1AuthSessionGet</a>
+                    </li>
+                    <li data-group="Default" data-name="apiV1NumberAllGet" class="">
+                      <a href="#api-Default-apiV1NumberAllGet">apiV1NumberAllGet</a>
                     </li>
                     <li data-group="Default" data-name="apiV1NumberSearchPost" class="">
                       <a href="#api-Default-apiV1NumberSearchPost">apiV1NumberSearchPost</a>
@@ -812,7 +870,7 @@
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Redirects the browser to Google OAuth, then handles the callback on the same route and creates the backend session cookie.</p>
+                        <p class="marked">Redirects the browser to Google OAuth, then handles the callback on the same route and establishes an authenticated HttpOnly access-token cookie before returning the browser to the frontend.</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v1/auth/google/redirect</span></code></pre>
@@ -1000,7 +1058,7 @@ except ApiException as e:
 
 
                           <h2>Responses</h2>
-                            <h3> Status: 302 - Redirect to Google OAuth or back to the frontend when already authenticated </h3>
+                            <h3> Status: 302 - Redirect to Google OAuth </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
                             </ul>
@@ -1019,6 +1077,830 @@ except ApiException as e:
                         </article>
                       </div>
                       <hr>
+                    <div id="api-Default-apiV1AuthLogoutPost">
+                      <article id="api-Default-apiV1AuthLogoutPost-0" data-group="User" data-name="apiV1AuthLogoutPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV1AuthLogoutPost</h1>
+                          <p>Clear authenticated session</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Clears the authenticated HttpOnly access-token cookie.</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v1/auth/logout</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Default-apiV1AuthLogoutPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthLogoutPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthLogoutPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1AuthLogoutPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1AuthLogoutPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthLogoutPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1AuthLogoutPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1AuthLogoutPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthLogoutPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthLogoutPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthLogoutPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Default-apiV1AuthLogoutPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+"//api/v1/auth/logout"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Default-apiV1AuthLogoutPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.DefaultApi;
+
+import java.io.File;
+import java.util.*;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            apiInstance.apiV1AuthLogoutPost();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1AuthLogoutPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Default-apiV1AuthLogoutPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            apiInstance.apiV1AuthLogoutPost();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1AuthLogoutPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Default-apiV1AuthLogoutPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Default-apiV1AuthLogoutPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+DefaultApi *apiInstance = [[DefaultApi alloc] init];
+
+// Clear authenticated session
+[apiInstance apiV1AuthLogoutPostWithCompletionHandler: 
+              ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthLogoutPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var PnaBackendApi = require('pna_backend_api');
+
+var api = new PnaBackendApi.DefaultApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.apiV1AuthLogoutPost(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Default-apiV1AuthLogoutPost-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Default-apiV1AuthLogoutPost-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV1AuthLogoutPostExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new DefaultApi();
+
+            try
+            {
+                // Clear authenticated session
+                apiInstance.apiV1AuthLogoutPost();
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling DefaultApi.apiV1AuthLogoutPost: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthLogoutPost-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiDefaultApi();
+
+try {
+    $api_instance->apiV1AuthLogoutPost();
+} catch (Exception $e) {
+    echo 'Exception when calling DefaultApi->apiV1AuthLogoutPost: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthLogoutPost-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::DefaultApi;
+
+my $api_instance = WWW::SwaggerClient::DefaultApi->new();
+
+eval { 
+    $api_instance->apiV1AuthLogoutPost();
+};
+if ($@) {
+    warn "Exception when calling DefaultApi->apiV1AuthLogoutPost: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthLogoutPost-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.DefaultApi()
+
+try: 
+    # Clear authenticated session
+    api_instance.api_v1_auth_logout_post()
+except ApiException as e:
+    print("Exception when calling DefaultApi->apiV1AuthLogoutPost: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 204 - Auth cookie cleared </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Default-apiV1AuthSessionGet">
+                      <article id="api-Default-apiV1AuthSessionGet-0" data-group="User" data-name="apiV1AuthSessionGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV1AuthSessionGet</h1>
+                          <p>Get authenticated user</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Returns the authenticated user for a valid access JWT presented by auth cookie or bearer header.</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v1/auth/session</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Default-apiV1AuthSessionGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthSessionGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthSessionGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1AuthSessionGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1AuthSessionGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthSessionGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1AuthSessionGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1AuthSessionGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthSessionGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthSessionGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthSessionGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Default-apiV1AuthSessionGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+-H "Accept: application/json"\
+"//api/v1/auth/session"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Default-apiV1AuthSessionGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.DefaultApi;
+
+import java.io.File;
+import java.util.*;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            GoogleAuthResponse result = apiInstance.apiV1AuthSessionGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1AuthSessionGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Default-apiV1AuthSessionGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            GoogleAuthResponse result = apiInstance.apiV1AuthSessionGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1AuthSessionGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Default-apiV1AuthSessionGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Default-apiV1AuthSessionGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+DefaultApi *apiInstance = [[DefaultApi alloc] init];
+
+// Get authenticated user
+[apiInstance apiV1AuthSessionGetWithCompletionHandler: 
+              ^(GoogleAuthResponse output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthSessionGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var PnaBackendApi = require('pna_backend_api');
+
+var api = new PnaBackendApi.DefaultApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV1AuthSessionGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Default-apiV1AuthSessionGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Default-apiV1AuthSessionGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV1AuthSessionGetExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new DefaultApi();
+
+            try
+            {
+                // Get authenticated user
+                GoogleAuthResponse result = apiInstance.apiV1AuthSessionGet();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling DefaultApi.apiV1AuthSessionGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthSessionGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiDefaultApi();
+
+try {
+    $result = $api_instance->apiV1AuthSessionGet();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling DefaultApi->apiV1AuthSessionGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthSessionGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::DefaultApi;
+
+my $api_instance = WWW::SwaggerClient::DefaultApi->new();
+
+eval { 
+    my $result = $api_instance->apiV1AuthSessionGet();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling DefaultApi->apiV1AuthSessionGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthSessionGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.DefaultApi()
+
+try: 
+    # Get authenticated user
+    api_response = api_instance.api_v1_auth_session_get()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling DefaultApi->apiV1AuthSessionGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Authenticated user returned </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV1AuthSessionGet-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV1AuthSessionGet-200-schema">
+                                  <div id='responses-apiV1AuthSessionGet-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Authenticated user returned",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/GoogleAuthResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV1AuthSessionGet-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1AuthSessionGet-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV1AuthSessionGet-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 401 - Missing or invalid bearer access JWT </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV1AuthSessionGet-401-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV1AuthSessionGet-401-schema">
+                                  <div id='responses-apiV1AuthSessionGet-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Missing or invalid bearer access JWT",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV1AuthSessionGet-401-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1AuthSessionGet-401-schema-401');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV1AuthSessionGet-401-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Default-apiV1NumberAllGet">
+                      <article id="api-Default-apiV1NumberAllGet-0" data-group="User" data-name="apiV1NumberAllGet" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV1NumberAllGet</h1>
+                          <p>Get all searched numbers</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Returns all saved phone number searches. Requires an authenticated access JWT presented by auth cookie or bearer header.</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v1/number/all</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Default-apiV1NumberAllGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1NumberAllGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1NumberAllGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1NumberAllGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1NumberAllGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllGet-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Default-apiV1NumberAllGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+-H "Accept: application/json"\
+"//api/v1/number/all"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Default-apiV1NumberAllGet-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.DefaultApi;
+
+import java.io.File;
+import java.util.*;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            array[SavedNumberSearchResponse] result = apiInstance.apiV1NumberAllGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1NumberAllGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Default-apiV1NumberAllGet-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            array[SavedNumberSearchResponse] result = apiInstance.apiV1NumberAllGet();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1NumberAllGet");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Default-apiV1NumberAllGet-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+DefaultApi *apiInstance = [[DefaultApi alloc] init];
+
+// Get all searched numbers
+[apiInstance apiV1NumberAllGetWithCompletionHandler: 
+              ^(array[SavedNumberSearchResponse] output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var PnaBackendApi = require('pna_backend_api');
+
+var api = new PnaBackendApi.DefaultApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.apiV1NumberAllGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Default-apiV1NumberAllGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV1NumberAllGetExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new DefaultApi();
+
+            try
+            {
+                // Get all searched numbers
+                array[SavedNumberSearchResponse] result = apiInstance.apiV1NumberAllGet();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling DefaultApi.apiV1NumberAllGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiDefaultApi();
+
+try {
+    $result = $api_instance->apiV1NumberAllGet();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling DefaultApi->apiV1NumberAllGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::DefaultApi;
+
+my $api_instance = WWW::SwaggerClient::DefaultApi->new();
+
+eval { 
+    my $result = $api_instance->apiV1NumberAllGet();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling DefaultApi->apiV1NumberAllGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.DefaultApi()
+
+try: 
+    # Get all searched numbers
+    api_response = api_instance.api_v1_number_all_get()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling DefaultApi->apiV1NumberAllGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 - Saved number searches returned </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV1NumberAllGet-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV1NumberAllGet-200-schema">
+                                  <div id='responses-apiV1NumberAllGet-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Saved number searches returned",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "type" : "array",
+        "items" : {
+          "$ref" : "#/components/schemas/SavedNumberSearchResponse"
+        },
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV1NumberAllGet-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1NumberAllGet-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV1NumberAllGet-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 401 - Missing or invalid access JWT </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV1NumberAllGet-401-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV1NumberAllGet-401-schema">
+                                  <div id='responses-apiV1NumberAllGet-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Missing or invalid access JWT",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV1NumberAllGet-401-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1NumberAllGet-401-schema-401');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV1NumberAllGet-401-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
                     <div id="api-Default-apiV1NumberSearchPost">
                       <article id="api-Default-apiV1NumberSearchPost-0" data-group="User" data-name="apiV1NumberSearchPost" data-version="0">
                         <div class="pull-left">
@@ -1028,7 +1910,7 @@ except ApiException as e:
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Looks up details for a phone number. Requires an authenticated session cookie.</p>
+                        <p class="marked">Looks up details for a phone number. Requires an authenticated access JWT presented by auth cookie or bearer header.</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v1/number/search</span></code></pre>
@@ -1375,7 +2257,7 @@ except ApiException as e:
                                 </div>
                             </div>
 
-                            <h3> Status: 401 - Missing or invalid auth session cookie </h3>
+                            <h3> Status: 401 - Missing or invalid access JWT </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
                                 <li class="active">
@@ -1390,7 +2272,7 @@ except ApiException as e:
                                     <script>
                                       $(document).ready(function() {
                                         var schemaWrapper = {
-  "description" : "Missing or invalid auth session cookie",
+  "description" : "Missing or invalid access JWT",
   "content" : {
     "application/json" : {
       "schema" : {

@@ -35,6 +35,11 @@ fun Route.googleAuthRoutes(
                 call.respond(HttpStatusCode.OK, principal.toGoogleAuthResponse())
             }
         }
+
+        post("/logout") {
+            call.clearAuthAccessCookie(appConfig)
+            call.respond(HttpStatusCode.NoContent)
+        }
     }
 }
 
