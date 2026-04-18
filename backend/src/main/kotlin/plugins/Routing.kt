@@ -8,6 +8,7 @@ import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
 import com.pna.backend.services.NumberSearchService
 import com.pna.backend.services.PhoneLookupService
+import com.pna.backend.services.RefreshTokenService
 import io.ktor.server.application.*
 import io.ktor.server.plugins.openapi.*
 import io.ktor.server.plugins.swagger.*
@@ -17,6 +18,7 @@ import io.ktor.server.routing.*
 fun Application.configureRouting(
     appConfig: AppConfig,
     accessTokenService: AppJwtService,
+    refreshTokenService: RefreshTokenService,
     googleTokenVerifierService: GoogleTokenVerifierService,
     googleAuthCodeService: GoogleAuthCodeService,
     lookupService: PhoneLookupService,
@@ -33,6 +35,7 @@ fun Application.configureRouting(
         googleAuthRoutes(
             appConfig,
             accessTokenService,
+            refreshTokenService,
             googleTokenVerifierService,
             googleAuthCodeService
         )
