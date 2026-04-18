@@ -882,7 +882,7 @@
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Redirects the browser to Google OAuth, then handles the callback on the same route, sets an HttpOnly refresh-token cookie, and redirects back to the frontend.</p>
+                        <p class="marked">Redirects the browser to Google OAuth, then handles the callback on the same route, sets HttpOnly auth and refresh cookies, and redirects back to the frontend.</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v1/auth/google/redirect</span></code></pre>
@@ -1098,7 +1098,7 @@ except ApiException as e:
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Revokes the current refresh-token session and clears the HttpOnly refresh-token cookie.</p>
+                        <p class="marked">Revokes the current refresh-token session and clears the HttpOnly refresh-token and auth cookies.</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v1/auth/logout</span></code></pre>
@@ -1612,7 +1612,7 @@ except ApiException as e:
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Returns the authenticated user for a valid bearer access JWT.</p>
+                        <p class="marked">Returns the authenticated user for a valid access JWT presented by auth cookie or bearer header.</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v1/auth/session</span></code></pre>
@@ -1918,7 +1918,7 @@ except ApiException as e:
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Returns all saved phone number searches. Requires an authenticated bearer access JWT.</p>
+                        <p class="marked">Returns all saved phone number searches. Requires an authenticated access JWT presented by auth cookie or bearer header.</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v1/number/all</span></code></pre>
@@ -2168,7 +2168,7 @@ except ApiException as e:
                                 </div>
                             </div>
 
-                            <h3> Status: 401 - Missing or invalid bearer access JWT </h3>
+                            <h3> Status: 401 - Missing or invalid access JWT </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
                                 <li class="active">
@@ -2183,7 +2183,7 @@ except ApiException as e:
                                     <script>
                                       $(document).ready(function() {
                                         var schemaWrapper = {
-  "description" : "Missing or invalid bearer access JWT",
+  "description" : "Missing or invalid access JWT",
   "content" : {
     "application/json" : {
       "schema" : {
@@ -2228,7 +2228,7 @@ except ApiException as e:
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Looks up details for a phone number. Requires an authenticated bearer access JWT.</p>
+                        <p class="marked">Looks up details for a phone number. Requires an authenticated access JWT presented by auth cookie or bearer header.</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v1/number/search</span></code></pre>
@@ -2575,7 +2575,7 @@ except ApiException as e:
                                 </div>
                             </div>
 
-                            <h3> Status: 401 - Missing or invalid bearer access JWT </h3>
+                            <h3> Status: 401 - Missing or invalid access JWT </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
                                 <li class="active">
@@ -2590,7 +2590,7 @@ except ApiException as e:
                                     <script>
                                       $(document).ready(function() {
                                         var schemaWrapper = {
-  "description" : "Missing or invalid bearer access JWT",
+  "description" : "Missing or invalid access JWT",
   "content" : {
     "application/json" : {
       "schema" : {

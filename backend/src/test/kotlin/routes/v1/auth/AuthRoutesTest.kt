@@ -260,7 +260,7 @@ class AuthRoutesTest {
     }
 
     @Test
-    fun `refresh returns a new access token and rotates the refresh cookie`() = testApplication {
+    fun `refresh rotates the refresh cookie and reissues the auth access cookie`() = testApplication {
         val refreshTokenService = newRefreshTokenService()
 
         application {
@@ -280,9 +280,36 @@ class AuthRoutesTest {
 
         val setCookies = response.headers.getAll(HttpHeaders.SetCookie) ?: emptyList()
 
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertTrue(response.bodyAsText().contains("accessToken"))
+        assertEquals(HttpStatusCode.NoContent, response.status)
+        assertTrue(setCookies.any { it.contains("$AUTH_ACCESS_COOKIE_NAME=") })
         assertTrue(setCookies.any { it.contains("$REFRESH_TOKEN_COOKIE_NAME=") })
+    }
+
+    @Test
+    fun `refresh clears auth cookies when refresh token is invalid`() = testApplication {
+        application {
+            install(ContentNegotiation) { json() }
+            installAuthRoutes(refreshTokenService = newRefreshTokenService())
+        }
+
+        val response = client.post("/api/v1/auth/refresh") {
+            header(HttpHeaders.Origin, "http://localhost:5173")
+            cookie(REFRESH_TOKEN_COOKIE_NAME, "invalid-refresh-token")
+        }
+
+        val setCookies = response.headers.getAll(HttpHeaders.SetCookie) ?: emptyList()
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertTrue(
+            setCookies.any {
+                it.contains("$REFRESH_TOKEN_COOKIE_NAME=") && (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
+            }
+        )
+        assertTrue(
+            setCookies.any {
+                it.contains("$AUTH_ACCESS_COOKIE_NAME=") && (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
+            }
+        )
     }
 
     @Test

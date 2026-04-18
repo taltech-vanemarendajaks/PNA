@@ -44,7 +44,7 @@ Notes:
 - `JWT_TTL_SECONDS` controls the access JWT lifetime.
 - `REFRESH_TOKEN_TTL_SECONDS` controls the refresh-token cookie/session lifetime.
 - `GET /api/v1/auth/session` returns the authenticated user for a valid auth cookie or bearer access JWT.
-- `POST /api/v1/auth/refresh` rotates the refresh token cookie and returns a fresh access JWT.
+- `POST /api/v1/auth/refresh` rotates the refresh token cookie and reissues a fresh auth access cookie.
 - `POST /api/v1/auth/logout` revokes the current refresh-token session and clears both the refresh cookie and the auth cookie.
 - Refresh-token storage keeps only the fields needed for family revocation, refresh replay detection, and the current session payload; older rows are migrated automatically on startup.
 - `AUTH_COOKIE_SAME_SITE=Strict` is allowed for the auth and refresh cookies, but the temporary OAuth state/redirect-context cookies always use `Lax` so the Google callback can complete.

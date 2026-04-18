@@ -73,13 +73,15 @@ private suspend fun ApplicationCall.handleRefresh(
     )
 
     if (rotation == null) {
+        clearAuthAccessCookie(appConfig)
         clearRefreshTokenCookie(appConfig)
         respond(HttpStatusCode.Unauthorized, mapOf("error" to "Refresh token is invalid or expired"))
         return
     }
 
+    appendAuthAccessCookie(accessTokenService.issueAccessToken(rotation.user), appConfig)
     appendRefreshTokenCookie(rotation.refreshToken, appConfig)
-    respond(HttpStatusCode.OK, accessTokenResponse(accessTokenService.issueAccessToken(rotation.user)))
+    respond(HttpStatusCode.NoContent)
 }
 
 private suspend fun ApplicationCall.handleLogout(

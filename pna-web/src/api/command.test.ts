@@ -7,10 +7,8 @@ import {
   hasApiResponseStatus,
   isAuthenticationError,
 } from "./command";
-import { clearStoredAccessToken, storeAccessToken } from "./auth/tokenStorage";
 
 afterEach(() => {
-  clearStoredAccessToken();
   vi.restoreAllMocks();
 });
 
@@ -123,31 +121,7 @@ describe("API response errors", () => {
     });
   });
 
-  it("attaches bearer auth from token storage", async () => {
-    storeAccessToken("jwt-token");
-
-    const fetchSpy = vi.fn(async () => {
-      return new Response(JSON.stringify({ subject: "subject" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    });
-
-    vi.stubGlobal("fetch", fetchSpy);
-
-    await executeApiQuery({ path: "/api/v1/auth/session" });
-
-    expect(fetchSpy).toHaveBeenCalledWith("http://localhost:8080/api/v1/auth/session", {
-      method: "GET",
-      headers: { Authorization: "Bearer jwt-token" },
-      body: undefined,
-      credentials: "include",
-    });
-  });
-
   it("refreshes once after an authentication failure and retries the request", async () => {
-    storeAccessToken("expired-token");
-
     const fetchSpy = vi
       .fn<(_: string, __?: RequestInit) => Promise<Response>>()
       .mockImplementationOnce(async () => {
@@ -157,10 +131,7 @@ describe("API response errors", () => {
         });
       })
       .mockImplementationOnce(async () => {
-        return new Response(JSON.stringify({ accessToken: "fresh-token" }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
+        return new Response(null, { status: 204 });
       })
       .mockImplementationOnce(async () => {
         return new Response(JSON.stringify({ subject: "subject" }), {
@@ -181,7 +152,7 @@ describe("API response errors", () => {
     });
     expect(fetchSpy).toHaveBeenNthCalledWith(3, "http://localhost:8080/api/v1/auth/session", {
       method: "GET",
-      headers: { Authorization: "Bearer fresh-token" },
+      headers: undefined,
       body: undefined,
       credentials: "include",
     });

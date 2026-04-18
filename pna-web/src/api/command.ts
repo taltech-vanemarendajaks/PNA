@@ -1,10 +1,5 @@
 import type { ApiError } from "../lib/googleAuth";
 import { LOGOUT_PATH, REFRESH_PATH } from "./auth/authPaths";
-import {
-  clearStoredAccessToken,
-  getStoredAccessToken,
-  storeAccessToken,
-} from "./auth/tokenStorage";
 
 export class ApiResponseError extends Error {
   status: number;
@@ -47,11 +42,7 @@ type RequestOptions<TRequest> = {
   allowAuthRefresh?: boolean;
 };
 
-type AccessTokenResponse = {
-  accessToken: string;
-};
-
-let inFlightRefresh: Promise<string | null> | null = null;
+let inFlightRefresh: Promise<boolean> | null = null;
 
 export function getApiBaseUrl() {
   return (
@@ -77,16 +68,10 @@ async function executeRequest<TRequest>({
   allowAuthRefresh = true,
 }: RequestOptions<TRequest>): Promise<Response> {
   await preflight?.();
-
-  const token = getStoredAccessToken();
   const headers: Record<string, string> = {};
 
   if (body !== undefined) {
     headers["Content-Type"] = "application/json";
-  }
-
-  if (token && shouldAttachBearerToken(path)) {
-    headers.Authorization = `Bearer ${token}`;
   }
 
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
@@ -100,8 +85,8 @@ async function executeRequest<TRequest>({
     return response;
   }
 
-  const refreshedToken = await refreshAccessToken();
-  if (!refreshedToken) {
+  const refreshedSession = await refreshAccessToken();
+  if (!refreshedSession) {
     return response;
   }
 
@@ -136,15 +121,11 @@ export async function executeApiActionWithResponse<TResponse, TRequest = never>(
   return parseApiResponse<TResponse>(response);
 }
 
-function shouldAttachBearerToken(path: string): boolean {
-  return path !== REFRESH_PATH && path !== LOGOUT_PATH;
-}
-
 function shouldAttemptRefresh(path: string): boolean {
   return path !== REFRESH_PATH && path !== LOGOUT_PATH;
 }
 
-async function refreshAccessToken(): Promise<string | null> {
+async function refreshAccessToken(): Promise<boolean> {
   if (inFlightRefresh) {
     return inFlightRefresh;
   }
@@ -156,13 +137,15 @@ async function refreshAccessToken(): Promise<string | null> {
     });
 
     if ([401, 403].includes(response.status)) {
-      clearStoredAccessToken();
-      return null;
+      return false;
     }
 
-    const payload = await parseApiResponse<AccessTokenResponse>(response);
-    storeAccessToken(payload.accessToken);
-    return payload.accessToken;
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as ApiError;
+      throw new ApiResponseError(response.status, payload);
+    }
+
+    return true;
   })();
 
   try {

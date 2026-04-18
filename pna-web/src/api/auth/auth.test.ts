@@ -1,16 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { hasApiResponseStatus } from "../command";
 import {
-  consumeAccessTokenFromRedirect,
   getSession,
   logout,
   requireAuthenticatedSession,
   startGoogleLoginWithRedirect,
 } from "./auth";
-import { clearStoredAccessToken, getStoredAccessToken, storeAccessToken } from "./tokenStorage";
 
 afterEach(() => {
-  clearStoredAccessToken();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -129,7 +126,7 @@ describe("google redirect auth helpers", () => {
     await expect(requireAuthenticatedSession()).rejects.toThrow("Backend unavailable");
   });
 
-  it("bootstraps a session through refresh when no bearer token is stored", async () => {
+  it("bootstraps a session through refresh when the auth cookie needs renewal", async () => {
     const fetchSpy = vi
       .fn<(_: string, __?: RequestInit) => Promise<Response>>()
       .mockImplementationOnce(async () => {
@@ -139,10 +136,7 @@ describe("google redirect auth helpers", () => {
         });
       })
       .mockImplementationOnce(async () => {
-        return new Response(JSON.stringify({ accessToken: "fresh-token" }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
+        return new Response(null, { status: 204 });
       })
       .mockImplementationOnce(async () => {
         return new Response(JSON.stringify({ subject: "subject-1" }), {
@@ -154,30 +148,9 @@ describe("google redirect auth helpers", () => {
     vi.stubGlobal("fetch", fetchSpy);
 
     await expect(getSession()).resolves.toEqual({ subject: "subject-1" });
-    expect(getStoredAccessToken()).toBe("fresh-token");
   });
 
-  it("clears a stored token when the backend rejects it", async () => {
-    storeAccessToken("stale-token");
-
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(
-        async () =>
-          new Response(JSON.stringify({ error: "Not authenticated" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          }),
-      ),
-    );
-
-    await expect(getSession()).resolves.toBeNull();
-    expect(getStoredAccessToken()).toBeNull();
-  });
-
-  it("refreshes the access token when session checking gets an auth failure", async () => {
-    storeAccessToken("expired-token");
-
+  it("refreshes the auth cookie when session checking gets an auth failure", async () => {
     const fetchSpy = vi
       .fn<(_: string, __?: RequestInit) => Promise<Response>>()
       .mockImplementationOnce(async () => {
@@ -187,10 +160,7 @@ describe("google redirect auth helpers", () => {
         });
       })
       .mockImplementationOnce(async () => {
-        return new Response(JSON.stringify({ accessToken: "fresh-token" }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
+        return new Response(null, { status: 204 });
       })
       .mockImplementationOnce(async () => {
         return new Response(
@@ -215,7 +185,6 @@ describe("google redirect auth helpers", () => {
       name: "Jane Doe",
       givenName: "Jane",
     });
-    expect(getStoredAccessToken()).toBe("fresh-token");
   });
 
   it("skips the backend redirect when already authenticated", async () => {
@@ -245,43 +214,7 @@ describe("google redirect auth helpers", () => {
     expect(navigate).toHaveBeenCalledWith("/search");
   });
 
-  it("consumes an access token from the redirect fragment and clears it from the url", () => {
-    const replaceState = vi.fn();
-    const values = new Map<string, string>();
-    const localStorage = {
-      getItem: vi.fn((key: string) => values.get(key) ?? null),
-      setItem: vi.fn((key: string, value: string) => {
-        values.set(key, value);
-      }),
-      removeItem: vi.fn((key: string) => {
-        values.delete(key);
-      }),
-      clear: vi.fn(() => {
-        values.clear();
-      }),
-      key: vi.fn(() => null),
-      length: 0,
-    };
-    vi.stubGlobal("window", {
-      history: { replaceState },
-      localStorage,
-    });
-    vi.stubGlobal("document", { title: "PNA" });
-
-    expect(
-      consumeAccessTokenFromRedirect({
-        pathname: "/search",
-        search: "",
-        hash: "#accessToken=fresh-token",
-      } as Pick<Location, "hash" | "search" | "pathname">),
-    ).toBe("fresh-token");
-    expect(getStoredAccessToken()).toBe("fresh-token");
-    expect(replaceState).toHaveBeenCalledWith({}, "PNA", "/search");
-  });
-
-  it("clears the stored token after logout succeeds", async () => {
-    storeAccessToken("jwt-token");
-
+  it("logs out through the cookie-backed endpoint", async () => {
     const fetchSpy = vi.fn(
       async () =>
         new Response(null, {
@@ -298,24 +231,5 @@ describe("google redirect auth helpers", () => {
       body: undefined,
       credentials: "include",
     });
-    expect(getStoredAccessToken()).toBeNull();
-  });
-
-  it("clears the stored token even when logout fails", async () => {
-    storeAccessToken("jwt-token");
-
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(
-        async () =>
-          new Response(JSON.stringify({ error: "Backend unavailable" }), {
-            status: 503,
-            headers: { "Content-Type": "application/json" },
-          }),
-      ),
-    );
-
-    await expect(logout()).rejects.toThrow("Backend unavailable");
-    expect(getStoredAccessToken()).toBeNull();
   });
 });

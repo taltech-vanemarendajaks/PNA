@@ -2,7 +2,6 @@ package com.pna.backend.routes.v1.auth
 
 import com.pna.backend.config.AppConfig
 import com.pna.backend.config.CorsOrigin
-import domain.auth.response.AccessTokenResponse
 import io.ktor.http.Cookie
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -131,10 +130,6 @@ internal suspend fun ApplicationCall.ensureAllowedOrigin(allowedOrigins: List<Co
 
     respond(HttpStatusCode.Forbidden, mapOf("error" to "Origin is not allowed"))
     return false
-}
-
-internal fun accessTokenResponse(accessToken: String): AccessTokenResponse {
-    return AccessTokenResponse(accessToken = accessToken)
 }
 
 private fun ApplicationCall.appendCookie(
