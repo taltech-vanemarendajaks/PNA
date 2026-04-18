@@ -4,6 +4,7 @@ import com.pna.backend.config.AppConfig
 import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
+import com.pna.backend.services.RefreshTokenService
 import domain.auth.GoogleUser
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -30,7 +31,8 @@ internal suspend fun ApplicationCall.handleGoogleRedirectRequest(
     appConfig: AppConfig,
     accessTokenService: AppJwtService,
     googleAuthCodeService: GoogleAuthCodeService,
-    googleTokenVerifierService: GoogleTokenVerifierService
+    googleTokenVerifierService: GoogleTokenVerifierService,
+    refreshTokenService: RefreshTokenService
 ) {
     val callbackParams = readGoogleRedirectCallbackParams()
     if (callbackParams != null) {
@@ -40,10 +42,11 @@ internal suspend fun ApplicationCall.handleGoogleRedirectRequest(
                 frontendBaseUrl = appConfig.frontendBaseUrl,
                 allowedOrigins = appConfig.allowedOrigins
             ),
-            accessTokenService = accessTokenService,
             callbackParams = callbackParams,
+            accessTokenService = accessTokenService,
             googleAuthCodeService = googleAuthCodeService,
-            googleTokenVerifierService = googleTokenVerifierService
+            googleTokenVerifierService = googleTokenVerifierService,
+            refreshTokenService = refreshTokenService
         )
         return
     }
@@ -59,10 +62,11 @@ internal suspend fun ApplicationCall.handleGoogleRedirectRequest(
 private suspend fun ApplicationCall.handleGoogleRedirectCallback(
     appConfig: AppConfig,
     redirectContext: FrontendRedirectContext,
-    accessTokenService: AppJwtService,
     callbackParams: GoogleRedirectCallbackParams,
+    accessTokenService: AppJwtService,
     googleAuthCodeService: GoogleAuthCodeService,
-    googleTokenVerifierService: GoogleTokenVerifierService
+    googleTokenVerifierService: GoogleTokenVerifierService,
+    refreshTokenService: RefreshTokenService
 ) {
     val storedState = request.cookies[GOOGLE_OAUTH_STATE_COOKIE_NAME]
 
@@ -106,12 +110,9 @@ private suspend fun ApplicationCall.handleGoogleRedirectCallback(
 
     val accessToken = accessTokenService.issueAccessToken(user)
     appendAuthAccessCookie(accessToken, appConfig)
-    respondFrontendRedirect(
-        buildFrontendRedirect(
-            frontendBaseUrl = redirectContext.redirectBaseUrl,
-            returnPath = redirectContext.returnPath
-        )
-    )
+    val refreshToken = refreshTokenService.createRefreshToken(user)
+    appendRefreshTokenCookie(refreshToken, appConfig)
+    respondFrontendRedirect(buildFrontendRedirect(redirectContext.redirectBaseUrl, redirectContext.returnPath))
 }
 
 private fun ApplicationCall.readGoogleRedirectCallbackParams(): GoogleRedirectCallbackParams? {

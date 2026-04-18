@@ -26,6 +26,7 @@ fun Route.googleAuthRoutes(
         get("/google/redirect") {
             call.handleGoogleRedirectRequest(
                 appConfig = appConfig,
+                accessTokenService = accessTokenService,
                 googleAuthCodeService = googleAuthCodeService,
                 googleTokenVerifierService = googleTokenVerifierService,
                 refreshTokenService = refreshTokenService
