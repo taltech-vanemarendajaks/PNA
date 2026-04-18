@@ -9,9 +9,11 @@ vi.mock("./auth", () => ({
 
 describe("redirectUnauthenticatedUser", () => {
   it("allows authenticated users to continue", async () => {
+    vi.stubGlobal("window", { location: { hash: "", search: "", pathname: "/" } });
     getSessionMock.mockResolvedValue({ subject: "subject-1" });
 
     await expect(redirectUnauthenticatedUser()).resolves.toBeUndefined();
+    expect(consumeAccessTokenFromRedirectMock).toHaveBeenCalled();
   });
 
   it("redirects unauthenticated users to the login page", async () => {

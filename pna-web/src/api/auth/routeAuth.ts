@@ -1,7 +1,11 @@
 import { redirect } from "@tanstack/react-router";
-import { getSession } from "./auth";
+import { consumeAccessTokenFromRedirect, getSession } from "./auth";
 
 export async function redirectUnauthenticatedUser() {
+  if (typeof window !== "undefined") {
+    consumeAccessTokenFromRedirect(window.location);
+  }
+
   const session = await getSession();
 
   if (!session) {
