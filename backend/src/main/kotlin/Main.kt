@@ -2,6 +2,7 @@ package com.pna.backend
 
 import com.pna.backend.config.AppConfig
 import com.pna.backend.dal.repositories.NumberSearchRepository
+import com.pna.backend.dal.repositories.RefreshTokenRepository
 import com.pna.backend.plugins.configureHttp
 import com.pna.backend.plugins.configureRouting
 import com.pna.backend.plugins.configureSecurity
@@ -10,6 +11,7 @@ import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
 import com.pna.backend.services.NumberSearchService
 import com.pna.backend.services.PhoneLookupService
+import com.pna.backend.services.RefreshTokenService
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -43,6 +45,12 @@ fun Application.module(appConfig: AppConfig = AppConfig.load()) {
         clientSecret = appConfig.googleClientSecret
     )
 
+    val refreshTokenRepository = RefreshTokenRepository()
+    val refreshTokenService = RefreshTokenService(
+        repository = refreshTokenRepository,
+        ttlSeconds = appConfig.refreshTokenTtlSeconds,
+    )
+
     val lookupService = PhoneLookupService()
     val numberSearchRepository = NumberSearchRepository()
     val numberSearchService = NumberSearchService(numberSearchRepository)
@@ -64,6 +72,7 @@ fun Application.module(appConfig: AppConfig = AppConfig.load()) {
     configureRouting(
         appConfig,
         accessTokenService,
+        refreshTokenService,
         googleTokenVerifierService,
         googleAuthCodeService,
         lookupService,
