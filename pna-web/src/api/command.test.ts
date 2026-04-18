@@ -6,10 +6,8 @@ import {
   hasApiResponseStatus,
   isAuthenticationError,
 } from "./command";
-import { clearStoredAccessToken, storeAccessToken } from "./auth/tokenStorage";
 
 afterEach(() => {
-  clearStoredAccessToken();
   vi.restoreAllMocks();
 });
 
@@ -102,9 +100,7 @@ describe("API response errors", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("attaches bearer auth from token storage", async () => {
-    storeAccessToken("jwt-token");
-
+  it("includes credentials for cookie-based auth requests", async () => {
     const fetchSpy = vi.fn(async () => {
       return new Response(JSON.stringify({ subject: "subject" }), {
         status: 200,
@@ -118,9 +114,9 @@ describe("API response errors", () => {
 
     expect(fetchSpy).toHaveBeenCalledWith("http://localhost:8080/api/v1/auth/session", {
       method: "GET",
-      headers: { Authorization: "Bearer jwt-token" },
+      headers: undefined,
       body: undefined,
-      credentials: undefined,
+      credentials: "include",
     });
   });
 });

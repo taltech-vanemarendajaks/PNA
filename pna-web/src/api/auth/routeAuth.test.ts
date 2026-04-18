@@ -2,10 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { redirectUnauthenticatedUser } from "./routeAuth";
 
 const getSessionMock = vi.hoisted(() => vi.fn());
-const consumeAccessTokenFromRedirectMock = vi.hoisted(() => vi.fn());
 
 vi.mock("./auth", () => ({
-  consumeAccessTokenFromRedirect: consumeAccessTokenFromRedirectMock,
   getSession: getSessionMock,
 }));
 

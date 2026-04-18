@@ -1,17 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { hasApiResponseStatus } from "../command";
-import {
-  consumeAccessTokenFromRedirect,
-  getSession,
-  logout,
-  requireAuthenticatedSession,
-  startGoogleLoginWithRedirect,
-} from "./auth";
-import { clearStoredAccessToken, getStoredAccessToken, storeAccessToken } from "./tokenStorage";
+import { getSession, logout, requireAuthenticatedSession, startGoogleLoginWithRedirect } from "./auth";
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  clearStoredAccessToken();
   vi.restoreAllMocks();
 });
 
@@ -129,9 +121,7 @@ describe("google redirect auth helpers", () => {
     await expect(requireAuthenticatedSession()).rejects.toThrow("Backend unavailable");
   });
 
-  it("clears a stored token when the backend rejects it", async () => {
-    storeAccessToken("stale-token");
-
+  it("returns null when the backend rejects the current auth cookie", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(
@@ -144,7 +134,6 @@ describe("google redirect auth helpers", () => {
     );
 
     await expect(getSession()).resolves.toBeNull();
-    expect(getStoredAccessToken()).toBeNull();
   });
 
   it("skips the backend redirect when already authenticated", async () => {
@@ -174,45 +163,17 @@ describe("google redirect auth helpers", () => {
     expect(navigate).toHaveBeenCalledWith("/search");
   });
 
-  it("consumes an access token from the redirect fragment and clears it from the url", () => {
-    const replaceState = vi.fn();
-    const values = new Map<string, string>();
-    const localStorage = {
-      getItem: vi.fn((key: string) => values.get(key) ?? null),
-      setItem: vi.fn((key: string, value: string) => {
-        values.set(key, value);
-      }),
-      removeItem: vi.fn((key: string) => {
-        values.delete(key);
-      }),
-      clear: vi.fn(() => {
-        values.clear();
-      }),
-      key: vi.fn(() => null),
-      length: 0,
-    };
-    vi.stubGlobal("window", {
-      history: { replaceState },
-      localStorage,
-    });
-    vi.stubGlobal("document", { title: "PNA" });
-
-    expect(
-      consumeAccessTokenFromRedirect({
-        pathname: "/search",
-        search: "",
-        hash: "#accessToken=fresh-token",
-      } as Pick<Location, "hash" | "search" | "pathname">),
-    ).toBe("fresh-token");
-    expect(getStoredAccessToken()).toBe("fresh-token");
-    expect(replaceState).toHaveBeenCalledWith({}, "PNA", "/search");
-  });
-
-  it("clears the stored token during logout", async () => {
-    storeAccessToken("jwt-token");
+  it("calls the backend logout endpoint", async () => {
+    const fetchSpy = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchSpy);
 
     await logout();
 
-    expect(getStoredAccessToken()).toBeNull();
+    expect(fetchSpy).toHaveBeenCalledWith("http://localhost:8080/api/v1/auth/logout", {
+      method: "POST",
+      headers: undefined,
+      body: undefined,
+      credentials: "include",
+    });
   });
 });
