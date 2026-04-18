@@ -1,9 +1,7 @@
 package routes.v1.number
 
 import com.pna.backend.dal.repositories.NumberSearchRepository
-import com.pna.backend.routes.v1.auth.AUTH_SESSION_COOKIE_NAME
 import com.pna.backend.routes.v1.number.numberRoutes
-import com.pna.backend.services.AuthSessionService
 import com.pna.backend.services.NumberSearchService
 import com.pna.backend.services.PhoneLookupService
 import domain.auth.GoogleUser
@@ -22,15 +20,14 @@ import kotlin.test.assertTrue
 
 class NumberRoutesTest {
     @Test
-    fun `search returns unauthorized when session cookie is missing`() = testApplication {
-        val authSessionService = AuthSessionService()
+    fun `search returns unauthorized when bearer token is missing`() = testApplication {
         val lookupService = PhoneLookupService()
         val searchService = newSearchService()
 
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes(authSessionService, lookupService, searchService)
+                numberRoutes(::verifyAccessToken, lookupService, searchService)
             }
         }
 
@@ -43,21 +40,20 @@ class NumberRoutesTest {
     }
 
     @Test
-    fun `search returns unauthorized when session is invalid`() = testApplication {
-        val authSessionService = AuthSessionService()
+    fun `search returns unauthorized when bearer token is invalid`() = testApplication {
         val lookupService = PhoneLookupService()
         val searchService = newSearchService()
 
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes(authSessionService, lookupService, searchService)
+                numberRoutes(::verifyAccessToken, lookupService, searchService)
             }
         }
 
         val response = client.post("/api/v1/number/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            cookie(AUTH_SESSION_COOKIE_NAME, "missing-session")
+            header(HttpHeaders.Authorization, "Bearer invalid-token")
             setBody("""{"number":"1234567890"}""")
         }
 
@@ -66,23 +62,19 @@ class NumberRoutesTest {
 
     @Test
     fun `search returns bad request when number is blank`() = testApplication {
-        val authSessionService = AuthSessionService()
         val lookupService = PhoneLookupService()
         val searchService = newSearchService()
-        val sessionId = authSessionService.create(
-            GoogleUser("subject", "user@example.com", true, "Jane", null, "Jane", "Doe")
-        )
 
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes(authSessionService, lookupService, searchService)
+                numberRoutes(::verifyAccessToken, lookupService, searchService)
             }
         }
 
         val response = client.post("/api/v1/number/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            cookie(AUTH_SESSION_COOKIE_NAME, sessionId)
+            header(HttpHeaders.Authorization, "Bearer valid-token")
             setBody("""{"number":""}""")
         }
 
@@ -91,23 +83,19 @@ class NumberRoutesTest {
 
     @Test
     fun `search returns success message when request is valid`() = testApplication {
-        val authSessionService = AuthSessionService()
         val lookupService = PhoneLookupService()
         val searchService = newSearchService()
-        val sessionId = authSessionService.create(
-            GoogleUser("subject", "user@example.com", true, "Jane", null, "Jane", "Doe")
-        )
 
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes(authSessionService, lookupService, searchService)
+                numberRoutes(::verifyAccessToken, lookupService, searchService)
             }
         }
 
         val response = client.post("/api/v1/number/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            cookie(AUTH_SESSION_COOKIE_NAME, sessionId)
+            header(HttpHeaders.Authorization, "Bearer valid-token")
             setBody("""{"number":"1234567890"}""")
         }
 
@@ -124,18 +112,35 @@ class NumberRoutesTest {
     }
 
     @Test
-    fun `search persists and searches endpoint returns saved numbers`() = testApplication {
-        val authSessionService = AuthSessionService()
+    fun `search accepts lowercase bearer auth scheme`() = testApplication {
         val lookupService = PhoneLookupService()
         val searchService = newSearchService()
-        val sessionId = authSessionService.create(
-            GoogleUser("subject", "user@example.com", true, "Jane", null, "Jane", "Doe")
-        )
 
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes(authSessionService, lookupService, searchService)
+                numberRoutes(::verifyAccessToken, lookupService, searchService)
+            }
+        }
+
+        val response = client.post("/api/v1/number/search") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "bearer valid-token")
+            setBody("""{"number":"1234567890"}""")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+    }
+
+    @Test
+    fun `search persists and searches endpoint returns saved numbers`() = testApplication {
+        val lookupService = PhoneLookupService()
+        val searchService = newSearchService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            routing {
+                numberRoutes(::verifyAccessToken, lookupService, searchService)
             }
         }
 
@@ -143,20 +148,20 @@ class NumberRoutesTest {
 
         val searchResponse = client.post("/api/v1/number/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            cookie(AUTH_SESSION_COOKIE_NAME, sessionId)
+            header(HttpHeaders.Authorization, "Bearer valid-token")
             setBody("""{"number":"$searchedNumber"}""")
         }
         assertEquals(HttpStatusCode.OK, searchResponse.status)
 
         val secondSearchResponse = client.post("/api/v1/number/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            cookie(AUTH_SESSION_COOKIE_NAME, sessionId)
+            header(HttpHeaders.Authorization, "Bearer valid-token")
             setBody("""{"number":"$searchedNumber"}""")
         }
         assertEquals(HttpStatusCode.OK, secondSearchResponse.status)
 
         val searchesResponse = client.get("/api/v1/number/all") {
-            cookie(AUTH_SESSION_COOKIE_NAME, sessionId)
+            header(HttpHeaders.Authorization, "Bearer valid-token")
         }
 
         assertEquals(HttpStatusCode.OK, searchesResponse.status)
@@ -168,20 +173,27 @@ class NumberRoutesTest {
     }
 
     @Test
-    fun `searches returns unauthorized when session cookie is missing`() = testApplication {
-        val authSessionService = AuthSessionService()
+    fun `searches returns unauthorized when bearer token is missing`() = testApplication {
         val lookupService = PhoneLookupService()
         val searchService = newSearchService()
 
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes(authSessionService, lookupService, searchService)
+                numberRoutes(::verifyAccessToken, lookupService, searchService)
             }
         }
 
         val response = client.get("/api/v1/number/all")
         assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    private fun verifyAccessToken(token: String): GoogleUser? {
+        return if (token == "valid-token") {
+            GoogleUser("subject", "user@example.com", "Jane", "Jane")
+        } else {
+            null
+        }
     }
 
     private fun newSearchService(): NumberSearchService {

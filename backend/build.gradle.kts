@@ -25,6 +25,7 @@ dependencies {
     implementation("io.ktor:ktor-server-cors-jvm")
     implementation("io.ktor:ktor-server-openapi-jvm")
     implementation("io.ktor:ktor-server-swagger-jvm")
+    implementation("io.ktor:ktor-server-auth-jwt")
 
     implementation("com.google.api-client:google-api-client:2.7.0")
     implementation("com.googlecode.libphonenumber:libphonenumber:8.13.55")
@@ -32,8 +33,7 @@ dependencies {
     implementation("com.googlecode.libphonenumber:geocoder:2.249")
     implementation("org.xerial:sqlite-jdbc:3.46.0.0")
     implementation("io.github.cdimascio:dotenv-java:3.0.0")
-
-    implementation("ch.qos.logback:logback-classic:1.5.6")
+    implementation("com.auth0:java-jwt:4.5.1")
 
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-server-tests-jvm")

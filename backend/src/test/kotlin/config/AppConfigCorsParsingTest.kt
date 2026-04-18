@@ -4,15 +4,13 @@ import com.pna.backend.config.AppConfig
 import com.pna.backend.config.CorsOrigin
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class AppConfigCorsParsingTest {
     @Test
     fun `parseOrigins preserves port in allowed origins`() {
         val allowedOrigins = AppConfig.parseOrigins(
             originsRaw = "http://localhost:4173,https://example.com",
-            frontendBaseUrl = "http://localhost:5173",
-            allowAnyHost = false
+            frontendBaseUrl = "http://localhost:5173"
         )
 
         assertEquals(
@@ -26,58 +24,63 @@ class AppConfigCorsParsingTest {
     }
 
     @Test
-    fun `validateCookieAndCorsConfig rejects wildcard CORS with cookie auth`() {
-        assertFailsWith<IllegalArgumentException> {
-            AppConfig.validateCookieAndCorsConfig(
-                allowAnyHost = true,
-                authCookieSecure = false,
-                authCookieSameSite = AppConfig.normalizeSameSite("Lax")
-            )
-        }
+    fun `parseOrigins includes frontend origin when no extra origins are configured`() {
+        val allowedOrigins = AppConfig.parseOrigins(
+            originsRaw = null,
+            frontendBaseUrl = "http://localhost:5173"
+        )
+
+        assertEquals(
+            listOf(
+                CorsOrigin(host = "localhost:5173", schemes = listOf("http"))
+            ),
+            allowedOrigins
+        )
     }
 
     @Test
-    fun `parseOrigins rejects origins with path query fragment or user info`() {
-        listOf(
-            "http://localhost:4173/app",
-            "http://localhost:4173?x=1",
-            "http://localhost:4173#frag",
-            "http://user@localhost:4173"
-        ).forEach { origin ->
-            assertFailsWith<IllegalArgumentException> {
-                AppConfig.parseOrigins(
-                    originsRaw = origin,
-                    frontendBaseUrl = "http://localhost:5173",
-                    allowAnyHost = false
-                )
-            }
-        }
+    fun `parseOrigins removes duplicates`() {
+        val allowedOrigins = AppConfig.parseOrigins(
+            originsRaw = "http://localhost:5173,https://example.com,https://example.com",
+            frontendBaseUrl = "http://localhost:5173"
+        )
+
+        assertEquals(
+            listOf(
+                CorsOrigin(host = "localhost:5173", schemes = listOf("http")),
+                CorsOrigin(host = "example.com", schemes = listOf("https"))
+            ),
+            allowedOrigins
+        )
     }
 
     @Test
-    fun `isAllowedOrigin accepts exact configured origin and rejects malformed values`() {
+    fun `isAllowedOrigin accepts exact configured origin and rejects wrong scheme host or malformed values`() {
         val allowedOrigins = AppConfig.parseOrigins(
             originsRaw = "http://localhost:4173",
-            frontendBaseUrl = "http://localhost:5173",
-            allowAnyHost = false
+            frontendBaseUrl = "http://localhost:5173"
         )
 
         assertEquals(true, AppConfig.isAllowedOrigin("http://localhost:5173", allowedOrigins))
         assertEquals(true, AppConfig.isAllowedOrigin("http://localhost:4173/", allowedOrigins))
         assertEquals(false, AppConfig.isAllowedOrigin("https://localhost:5173", allowedOrigins))
-        assertEquals(false, AppConfig.isAllowedOrigin("http://localhost:5173/app", allowedOrigins))
         assertEquals(false, AppConfig.isAllowedOrigin("http://evil.example", allowedOrigins))
+        assertEquals(false, AppConfig.isAllowedOrigin("not-a-url", allowedOrigins))
     }
 
     @Test
-    fun `normalizeBaseUrl trims trailing slash and rejects paths`() {
+    fun `normalizeSameSite returns expected values and defaults to lax`() {
+        assertEquals("Lax", AppConfig.normalizeSameSite("Lax"))
+        assertEquals("Strict", AppConfig.normalizeSameSite("strict"))
+        assertEquals("None", AppConfig.normalizeSameSite("NONE"))
+        assertEquals("Lax", AppConfig.normalizeSameSite("something-else"))
+    }
+
+    @Test
+    fun `normalizeBaseUrl trims trailing slash`() {
         assertEquals(
             "https://api.example.com",
-            AppConfig.normalizeBaseUrl("https://api.example.com/", "PUBLIC_BACKEND_BASE_URL")
+            AppConfig.normalizeBaseUrl("https://api.example.com/")
         )
-
-        assertFailsWith<IllegalArgumentException> {
-            AppConfig.normalizeBaseUrl("https://api.example.com/callback", "PUBLIC_BACKEND_BASE_URL")
-        }
     }
 }

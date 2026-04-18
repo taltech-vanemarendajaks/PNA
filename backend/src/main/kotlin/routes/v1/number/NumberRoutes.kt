@@ -2,10 +2,10 @@ package com.pna.backend.routes.v1.number
 
 import com.pna.backend.domain.auth.request.SearchNumberRequest
 import com.pna.backend.domain.auth.response.SearchNumberResponse
-import com.pna.backend.routes.v1.auth.AUTH_SESSION_COOKIE_NAME
-import com.pna.backend.services.AuthSessionService
+import com.pna.backend.routes.v1.readAuthenticatedUser
 import com.pna.backend.services.NumberSearchService
 import com.pna.backend.services.PhoneLookupService
+import domain.auth.GoogleUser
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -13,13 +13,13 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Route.numberRoutes(
-    authSessionService: AuthSessionService,
+    verifyAccessToken: (String) -> GoogleUser?,
     lookupService: PhoneLookupService,
     numberSearchService: NumberSearchService
 ) {
     route("/api/v1/number") {
         post("/search") {
-            val user = authSessionService.get(call.request.cookies[AUTH_SESSION_COOKIE_NAME])
+            val user = call.readAuthenticatedUser(verifyAccessToken)
             if (user == null) {
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
                 return@post
@@ -38,7 +38,7 @@ fun Route.numberRoutes(
         }
 
         get("/all") {
-            val user = authSessionService.get(call.request.cookies[AUTH_SESSION_COOKIE_NAME])
+            val user = call.readAuthenticatedUser(verifyAccessToken)
             if (user == null) {
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
                 return@get
