@@ -1,5 +1,11 @@
 import type { GoogleAuthResponse } from "../../lib/googleAuth";
-import { ApiResponseError, executeApiAction, executeApiQuery, getApiBaseUrl, isAuthenticationError } from "../command";
+import {
+  ApiResponseError,
+  executeApiAction,
+  executeApiQuery,
+  getApiBaseUrl,
+  isAuthenticationError,
+} from "../command";
 import { AUTH_LOGOUT_PATH, AUTH_SESSION_PATH, GOOGLE_REDIRECT_PATH } from "./authPaths";
 
 const FRONTEND_ORIGIN_QUERY_PARAMETER = "frontendOrigin";

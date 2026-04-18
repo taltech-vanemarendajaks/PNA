@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { hasApiResponseStatus } from "../command";
-import { getSession, logout, requireAuthenticatedSession, startGoogleLoginWithRedirect } from "./auth";
+import {
+  getSession,
+  logout,
+  requireAuthenticatedSession,
+  startGoogleLoginWithRedirect,
+} from "./auth";
 
 afterEach(() => {
   vi.unstubAllGlobals();
