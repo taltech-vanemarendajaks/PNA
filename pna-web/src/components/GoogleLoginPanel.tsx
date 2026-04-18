@@ -28,9 +28,9 @@ export function GoogleLoginPanel() {
     }
   }, []);
 
-  function prepareGoogleRedirectLogin() {
+  async function prepareGoogleRedirectLogin() {
     setError(null);
-    startGoogleLoginWithRedirect(window.location, (url) => {
+    await startGoogleLoginWithRedirect(window.location, (url) => {
       window.location.assign(url);
     });
   }
@@ -43,7 +43,7 @@ export function GoogleLoginPanel() {
 
         <div className="mt-8 space-y-4">
           <div className="flex justify-center">
-            <GoogleLoginButton onClick={prepareGoogleRedirectLogin} />
+            <GoogleLoginButton onClick={() => void prepareGoogleRedirectLogin()} />
           </div>
 
           {error ? (

@@ -1,21 +1,12 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { getSession, logout } from "../api/auth/auth";
+import { logout } from "../api/auth/auth";
+import { redirectUnauthenticatedUser } from "../api/auth/routeAuth";
 import { isAuthenticationError } from "../api/command";
 import { SearchComponent } from "../components/search-component/SearchComponent";
 
-export async function requireAuthenticatedSession() {
-  const session = await getSession();
-
-  if (!session) {
-    throw redirect({ to: "/" });
-  }
-
-  return session;
-}
-
 export const Route = createFileRoute("/search")({
-  beforeLoad: async () => requireAuthenticatedSession(),
+  beforeLoad: () => redirectUnauthenticatedUser(),
   component: SearchRoute,
 });
 

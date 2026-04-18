@@ -1,4 +1,5 @@
 import type { ApiError } from "../lib/googleAuth";
+import { getStoredAccessToken } from "./auth/tokenStorage";
 
 export class ApiResponseError extends Error {
   status: number;
@@ -64,11 +65,22 @@ async function executeRequest<TRequest>({
 }: RequestOptions<TRequest>): Promise<Response> {
   await preflight?.();
 
+  const token = getStoredAccessToken();
+  const headers: Record<string, string> = {};
+
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   return fetch(`${getApiBaseUrl()}${path}`, {
     method,
-    credentials: "include",
-    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+    headers: Object.keys(headers).length > 0 ? headers : undefined,
     body: body === undefined ? undefined : JSON.stringify(body),
+    credentials: undefined,
   });
 }
 
