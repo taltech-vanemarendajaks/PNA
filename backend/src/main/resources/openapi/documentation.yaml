@@ -20,7 +20,7 @@ paths:
   /api/v1/auth/google/redirect:
     get:
       summary: Start or finish Google OAuth login
-      description: Redirects the browser to Google OAuth, then handles the callback on the same route and establishes an authenticated HttpOnly access-token cookie before returning the browser to the frontend.
+      description: Redirects the browser to Google OAuth, then handles the callback on the same route, sets HttpOnly auth and refresh cookies, and redirects back to the frontend.
       responses:
         '302':
           description: Redirect to Google OAuth
@@ -43,6 +43,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/auth/refresh:
+    post:
+      summary: Rotate refresh token and mint a new access JWT
+      description: Reads the HttpOnly refresh-token cookie, rotates it, and returns a fresh access JWT.
+      responses:
+        '200':
+          description: Access token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+        '401':
+          description: Missing, expired, or invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/auth/logout:
+    post:
+      summary: Revoke refresh token session
+      description: Revokes the current refresh-token session and clears the HttpOnly refresh-token and auth cookies.
+      responses:
+        '204':
+          description: Logged out
   /api/v1/number/search:
     post:
       summary: Search number details
@@ -91,13 +115,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/v1/auth/logout:
-    post:
-      summary: Clear authenticated session
-      description: Clears the authenticated HttpOnly access-token cookie.
-      responses:
-        '204':
-          description: Auth cookie cleared
 components:
   schemas:
     SearchNumberRequest:
@@ -181,6 +198,12 @@ components:
           type: string
           nullable: true
           example: Jane
+    AccessTokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiJ9...
     ErrorResponse:
       type: object
       properties:
