@@ -12,7 +12,7 @@ function getStorage(): Storage {
 
 export function getStoredAccessToken(storage: Storage = getStorage()): string | null {
   const token = storage.getItem(ACCESS_TOKEN_STORAGE_KEY);
-  return token && token.trim() ? token : null;
+  return token?.trim() ? token : null;
 }
 
 export function storeAccessToken(token: string, storage: Storage = getStorage()): void {

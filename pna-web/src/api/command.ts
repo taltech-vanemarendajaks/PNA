@@ -1,6 +1,10 @@
 import type { ApiError } from "../lib/googleAuth";
-import { AUTH_SESSION_PATH, LOGOUT_PATH, REFRESH_PATH } from "./auth/authPaths";
-import { clearStoredAccessToken, getStoredAccessToken, storeAccessToken } from "./auth/tokenStorage";
+import { LOGOUT_PATH, REFRESH_PATH } from "./auth/authPaths";
+import {
+  clearStoredAccessToken,
+  getStoredAccessToken,
+  storeAccessToken,
+} from "./auth/tokenStorage";
 
 export class ApiResponseError extends Error {
   status: number;
@@ -81,7 +85,7 @@ async function executeRequest<TRequest>({
     headers["Content-Type"] = "application/json";
   }
 
-  if (token) {
+  if (token && shouldAttachBearerToken(path)) {
     headers.Authorization = `Bearer ${token}`;
   }
 
@@ -89,7 +93,7 @@ async function executeRequest<TRequest>({
     method,
     headers: Object.keys(headers).length > 0 ? headers : undefined,
     body: body === undefined ? undefined : JSON.stringify(body),
-    credentials: shouldIncludeCredentials(path) ? "include" : undefined,
+    credentials: "include",
   });
 
   if (!allowAuthRefresh || ![401, 403].includes(response.status) || !shouldAttemptRefresh(path)) {
@@ -132,8 +136,8 @@ export async function executeApiActionWithResponse<TResponse, TRequest = never>(
   return parseApiResponse<TResponse>(response);
 }
 
-function shouldIncludeCredentials(path: string): boolean {
-  return path === AUTH_SESSION_PATH || path === REFRESH_PATH || path === LOGOUT_PATH;
+function shouldAttachBearerToken(path: string): boolean {
+  return path !== REFRESH_PATH && path !== LOGOUT_PATH;
 }
 
 function shouldAttemptRefresh(path: string): boolean {

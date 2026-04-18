@@ -64,11 +64,14 @@ export function buildGoogleRedirectLoginUriWithContext(
   return `${buildGoogleRedirectLoginUri(apiBaseUrl)}?${query.toString()}`;
 }
 
-export function consumeAccessTokenFromRedirect(location: Pick<Location, "hash" | "search" | "pathname">): string | null {
+export function consumeAccessTokenFromRedirect(
+  location: Pick<Location, "hash" | "search" | "pathname">,
+): string | null {
   const fragment = location.hash.startsWith("#") ? location.hash.slice(1) : location.hash;
   const fragmentParams = new URLSearchParams(fragment);
   const queryParams = new URLSearchParams(location.search);
-  const accessToken = fragmentParams.get(ACCESS_TOKEN_PARAMETER) ?? queryParams.get(ACCESS_TOKEN_PARAMETER);
+  const accessToken =
+    fragmentParams.get(ACCESS_TOKEN_PARAMETER) ?? queryParams.get(ACCESS_TOKEN_PARAMETER);
 
   if (!accessToken?.trim()) {
     return null;

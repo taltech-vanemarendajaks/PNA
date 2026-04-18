@@ -171,7 +171,9 @@ describe("API response errors", () => {
 
     vi.stubGlobal("fetch", fetchSpy);
 
-    await expect(executeApiQuery({ path: "/api/v1/auth/session" })).resolves.toEqual({ subject: "subject" });
+    await expect(executeApiQuery({ path: "/api/v1/auth/session" })).resolves.toEqual({
+      subject: "subject",
+    });
 
     expect(fetchSpy).toHaveBeenNthCalledWith(2, "http://localhost:8080/api/v1/auth/refresh", {
       method: "POST",
