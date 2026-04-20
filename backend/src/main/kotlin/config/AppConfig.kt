@@ -20,6 +20,7 @@ data class AppConfig(
     val jwtIssuer: String,
     val jwtAudience: String,
     val jwtTtlSeconds: Long,
+    val refreshTokenTtlSeconds: Long,
     val authCookieSecure: Boolean,
     val authCookieSameSite: String,
     val googleOauthStateTtlSeconds: Int,
@@ -48,6 +49,7 @@ data class AppConfig(
             val jwtIssuer = readValue("JWT_ISSUER", dotenv)?.takeIf { it.isNotBlank() } ?: publicBackendBaseUrl
             val jwtAudience = readValue("JWT_AUDIENCE", dotenv)?.takeIf { it.isNotBlank() } ?: "pna-clients"
             val jwtTtlSeconds = readValue("JWT_TTL_SECONDS", dotenv)?.toLongOrNull() ?: 900L
+            val refreshTokenTtlSeconds = readValue("REFRESH_TOKEN_TTL_SECONDS", dotenv)?.toLongOrNull() ?: 2592000L
 
             val authCookieSecure = readValue("AUTH_COOKIE_SECURE", dotenv)?.toBooleanStrictOrNull()
                 ?: frontendBaseUrl.startsWith("https://")
@@ -85,6 +87,7 @@ data class AppConfig(
                 jwtIssuer = jwtIssuer,
                 jwtAudience = jwtAudience,
                 jwtTtlSeconds = jwtTtlSeconds,
+                refreshTokenTtlSeconds = refreshTokenTtlSeconds,
                 authCookieSecure = authCookieSecure,
                 authCookieSameSite = authCookieSameSite,
                 googleOauthStateTtlSeconds = googleOauthStateTtlSeconds,

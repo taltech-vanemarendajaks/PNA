@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ApiResponseError,
+  executeApiAction,
   executeApiActionWithResponse,
   executeApiQuery,
   hasApiResponseStatus,
@@ -114,6 +115,57 @@ describe("API response errors", () => {
 
     expect(fetchSpy).toHaveBeenCalledWith("http://localhost:8080/api/v1/auth/session", {
       method: "GET",
+      headers: undefined,
+      body: undefined,
+      credentials: "include",
+    });
+  });
+
+  it("refreshes once after an authentication failure and retries the request", async () => {
+    const fetchSpy = vi
+      .fn<(_: string, __?: RequestInit) => Promise<Response>>()
+      .mockImplementationOnce(async () => {
+        return new Response(JSON.stringify({ error: "expired" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        });
+      })
+      .mockImplementationOnce(async () => {
+        return new Response(null, { status: 204 });
+      })
+      .mockImplementationOnce(async () => {
+        return new Response(JSON.stringify({ subject: "subject" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      });
+
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await expect(executeApiQuery({ path: "/api/v1/auth/session" })).resolves.toEqual({
+      subject: "subject",
+    });
+
+    expect(fetchSpy).toHaveBeenNthCalledWith(2, "http://localhost:8080/api/v1/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+    });
+    expect(fetchSpy).toHaveBeenNthCalledWith(3, "http://localhost:8080/api/v1/auth/session", {
+      method: "GET",
+      headers: undefined,
+      body: undefined,
+      credentials: "include",
+    });
+  });
+
+  it("sends cookies for logout requests", async () => {
+    const fetchSpy = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await executeApiAction({ path: "/api/v1/auth/logout" });
+
+    expect(fetchSpy).toHaveBeenCalledWith("http://localhost:8080/api/v1/auth/logout", {
+      method: "POST",
       headers: undefined,
       body: undefined,
       credentials: "include",

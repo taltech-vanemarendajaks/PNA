@@ -1,4 +1,5 @@
 import type { ApiError } from "../lib/googleAuth";
+import { LOGOUT_PATH, REFRESH_PATH } from "./auth/authPaths";
 
 export class ApiResponseError extends Error {
   status: number;
@@ -38,7 +39,10 @@ type RequestOptions<TRequest> = {
   method: "GET" | "POST";
   body?: TRequest;
   preflight?: ApiRequestPreflight;
+  allowAuthRefresh?: boolean;
 };
+
+let inFlightRefresh: Promise<boolean> | null = null;
 
 export function getApiBaseUrl() {
   return (
@@ -61,21 +65,32 @@ async function executeRequest<TRequest>({
   method,
   body,
   preflight,
+  allowAuthRefresh = true,
 }: RequestOptions<TRequest>): Promise<Response> {
   await preflight?.();
-
   const headers: Record<string, string> = {};
 
   if (body !== undefined) {
     headers["Content-Type"] = "application/json";
   }
 
-  return fetch(`${getApiBaseUrl()}${path}`, {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
     method,
     headers: Object.keys(headers).length > 0 ? headers : undefined,
     body: body === undefined ? undefined : JSON.stringify(body),
     credentials: "include",
   });
+
+  if (!allowAuthRefresh || ![401, 403].includes(response.status) || !shouldAttemptRefresh(path)) {
+    return response;
+  }
+
+  const refreshedSession = await refreshAccessToken();
+  if (!refreshedSession) {
+    return response;
+  }
+
+  return executeRequest({ path, method, body, preflight: undefined, allowAuthRefresh: false });
 }
 
 export async function executeApiQuery<TResponse>({
@@ -104,4 +119,38 @@ export async function executeApiActionWithResponse<TResponse, TRequest = never>(
   const response = await executeRequest({ path, method: "POST", body, preflight });
 
   return parseApiResponse<TResponse>(response);
+}
+
+function shouldAttemptRefresh(path: string): boolean {
+  return path !== REFRESH_PATH && path !== LOGOUT_PATH;
+}
+
+async function refreshAccessToken(): Promise<boolean> {
+  if (inFlightRefresh) {
+    return inFlightRefresh;
+  }
+
+  inFlightRefresh = (async () => {
+    const response = await fetch(`${getApiBaseUrl()}${REFRESH_PATH}`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if ([401, 403].includes(response.status)) {
+      return false;
+    }
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as ApiError;
+      throw new ApiResponseError(response.status, payload);
+    }
+
+    return true;
+  })();
+
+  try {
+    return await inFlightRefresh;
+  } finally {
+    inFlightRefresh = null;
+  }
 }

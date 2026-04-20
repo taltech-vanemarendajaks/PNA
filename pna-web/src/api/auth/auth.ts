@@ -6,10 +6,11 @@ import {
   getApiBaseUrl,
   isAuthenticationError,
 } from "../command";
-import { AUTH_LOGOUT_PATH, AUTH_SESSION_PATH, GOOGLE_REDIRECT_PATH } from "./authPaths";
+import { AUTH_SESSION_PATH, GOOGLE_REDIRECT_PATH, LOGOUT_PATH } from "./authPaths";
 
 const FRONTEND_ORIGIN_QUERY_PARAMETER = "frontendOrigin";
 const RETURN_PATH_QUERY_PARAMETER = "returnPath";
+
 type RedirectLoginLocation = Pick<Location, "origin" | "pathname" | "search" | "protocol">;
 
 export async function getSession(): Promise<GoogleAuthResponse | null> {
@@ -75,5 +76,5 @@ export async function startGoogleLoginWithRedirect(
 }
 
 export async function logout(): Promise<void> {
-  await executeApiAction({ path: AUTH_LOGOUT_PATH });
+  await executeApiAction({ path: LOGOUT_PATH });
 }

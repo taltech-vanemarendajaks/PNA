@@ -271,6 +271,7 @@ class NumberRoutesTest {
             authCookieSameSite = "Lax",
             googleOauthStateTtlSeconds = 600,
             redirectContextTtlSeconds = 600,
+            refreshTokenTtlSeconds = 600,
             oauthFlowCookieSameSite = "Lax"
         )
     }

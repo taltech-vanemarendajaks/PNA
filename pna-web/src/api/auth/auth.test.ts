@@ -8,8 +8,8 @@ import {
 } from "./auth";
 
 afterEach(() => {
-  vi.unstubAllGlobals();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("google redirect auth helpers", () => {
@@ -126,19 +126,65 @@ describe("google redirect auth helpers", () => {
     await expect(requireAuthenticatedSession()).rejects.toThrow("Backend unavailable");
   });
 
-  it("returns null when the backend rejects the current auth cookie", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(
-        async () =>
-          new Response(JSON.stringify({ error: "Not authenticated" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          }),
-      ),
-    );
+  it("bootstraps a session through refresh when the auth cookie needs renewal", async () => {
+    const fetchSpy = vi
+      .fn<(_: string, __?: RequestInit) => Promise<Response>>()
+      .mockImplementationOnce(async () => {
+        return new Response(JSON.stringify({ error: "Not authenticated" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        });
+      })
+      .mockImplementationOnce(async () => {
+        return new Response(null, { status: 204 });
+      })
+      .mockImplementationOnce(async () => {
+        return new Response(JSON.stringify({ subject: "subject-1" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      });
 
-    await expect(getSession()).resolves.toBeNull();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await expect(getSession()).resolves.toEqual({ subject: "subject-1" });
+  });
+
+  it("refreshes the auth cookie when session checking gets an auth failure", async () => {
+    const fetchSpy = vi
+      .fn<(_: string, __?: RequestInit) => Promise<Response>>()
+      .mockImplementationOnce(async () => {
+        return new Response(JSON.stringify({ error: "expired" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        });
+      })
+      .mockImplementationOnce(async () => {
+        return new Response(null, { status: 204 });
+      })
+      .mockImplementationOnce(async () => {
+        return new Response(
+          JSON.stringify({
+            subject: "subject-1",
+            email: "user@example.com",
+            name: "Jane Doe",
+            givenName: "Jane",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      });
+
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await expect(getSession()).resolves.toEqual({
+      subject: "subject-1",
+      email: "user@example.com",
+      name: "Jane Doe",
+      givenName: "Jane",
+    });
   });
 
   it("skips the backend redirect when already authenticated", async () => {
@@ -168,8 +214,13 @@ describe("google redirect auth helpers", () => {
     expect(navigate).toHaveBeenCalledWith("/search");
   });
 
-  it("calls the backend logout endpoint", async () => {
-    const fetchSpy = vi.fn(async () => new Response(null, { status: 204 }));
+  it("logs out through the cookie-backed endpoint", async () => {
+    const fetchSpy = vi.fn(
+      async () =>
+        new Response(null, {
+          status: 204,
+        }),
+    );
     vi.stubGlobal("fetch", fetchSpy);
 
     await logout();

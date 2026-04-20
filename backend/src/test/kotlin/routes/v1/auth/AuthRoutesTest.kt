@@ -2,12 +2,15 @@ package routes.v1.auth
 
 import com.pna.backend.config.AppConfig
 import com.pna.backend.config.CorsOrigin
+import com.pna.backend.dal.repositories.RefreshTokenRepository
 import com.pna.backend.plugins.configureSecurity
 import com.pna.backend.routes.v1.auth.AUTH_ACCESS_COOKIE_NAME
+import com.pna.backend.routes.v1.auth.REFRESH_TOKEN_COOKIE_NAME
 import com.pna.backend.routes.v1.auth.googleAuthRoutes
 import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
+import com.pna.backend.services.RefreshTokenService
 import domain.auth.GoogleUser
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -18,6 +21,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
+import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -55,7 +59,7 @@ class AuthRoutesTest {
     }
 
     @Test
-    fun `google redirect callback exchanges code and redirects back to stored frontend context with auth cookie`() = testApplication {
+    fun `google redirect callback exchanges code and redirects back to stored frontend context with auth and refresh cookies`() = testApplication {
         application {
             install(ContentNegotiation) { json() }
             installAuthRoutes()
@@ -67,11 +71,14 @@ class AuthRoutesTest {
             cookie("pna_return_path", "%2Fnumbers%3Fq%3D123")
         }
 
+        val setCookies = response.headers.getAll(HttpHeaders.SetCookie) ?: emptyList()
+
         assertEquals(HttpStatusCode.OK, response.status)
         val location = response.headers[HttpHeaders.Location] ?: error("Missing redirect location")
         assertEquals("http://localhost:5173/numbers?q=123", location)
-        assertTrue(response.headers.getAll(HttpHeaders.SetCookie)?.any { it.contains("$AUTH_ACCESS_COOKIE_NAME=") } == true)
         assertTrue(response.bodyAsText().contains("window.location.replace(\"http://localhost:5173/numbers?q=123\")"))
+        assertTrue(setCookies.any { it.contains("$AUTH_ACCESS_COOKIE_NAME=") })
+        assertTrue(setCookies.any { it.contains("$REFRESH_TOKEN_COOKIE_NAME=") })
     }
 
     @Test
@@ -233,57 +240,118 @@ class AuthRoutesTest {
     }
 
     @Test
-    fun `logout clears auth cookie`() = testApplication {
+    fun `logout rejects disallowed origin`() = testApplication {
+        val accessTokenService = newJwtService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            installAuthRoutes(
+                accessTokenService = accessTokenService
+            )
+        }
+
+        val token = accessTokenService.issueAccessToken(user())
+
+        val response = client.post("/api/v1/auth/logout") {
+            header(HttpHeaders.Origin, "https://evil.example")
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.Forbidden, response.status)
+        assertTrue(response.bodyAsText().contains("Origin is not allowed"))
+    }
+
+    @Test
+    fun `refresh rotates the refresh cookie and reissues the auth access cookie`() = testApplication {
+        val refreshTokenService = newRefreshTokenService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            installAuthRoutes(
+                refreshTokenService = refreshTokenService,
+                accessTokenService = newJwtService()
+            )
+        }
+
+        val refreshToken = refreshTokenService.createRefreshToken(user())
+
+        val response = client.post("/api/v1/auth/refresh") {
+            header(HttpHeaders.Origin, "http://localhost:5173")
+            cookie("pna_refresh_token", refreshToken)
+        }
+
+        val setCookies = response.headers.getAll(HttpHeaders.SetCookie) ?: emptyList()
+
+        assertEquals(HttpStatusCode.NoContent, response.status)
+        assertTrue(setCookies.any { it.contains("$AUTH_ACCESS_COOKIE_NAME=") })
+        assertTrue(setCookies.any { it.contains("$REFRESH_TOKEN_COOKIE_NAME=") })
+    }
+
+    @Test
+    fun `refresh clears auth cookies when refresh token is invalid`() = testApplication {
+        application {
+            install(ContentNegotiation) { json() }
+            installAuthRoutes(refreshTokenService = newRefreshTokenService())
+        }
+
+        val response = client.post("/api/v1/auth/refresh") {
+            header(HttpHeaders.Origin, "http://localhost:5173")
+            cookie(REFRESH_TOKEN_COOKIE_NAME, "invalid-refresh-token")
+        }
+
+        val setCookies = response.headers.getAll(HttpHeaders.SetCookie) ?: emptyList()
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertTrue(
+            setCookies.any {
+                it.contains("$REFRESH_TOKEN_COOKIE_NAME=") && (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
+            }
+        )
+        assertTrue(
+            setCookies.any {
+                it.contains("$AUTH_ACCESS_COOKIE_NAME=") && (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
+            }
+        )
+    }
+
+    @Test
+    fun `logout clears auth and refresh cookies`() = testApplication {
+        val refreshTokenService = newRefreshTokenService()
         val jwtService = newJwtService()
 
         application {
             install(ContentNegotiation) { json() }
-            configureSecurity(
-                jwtService,
-                "test-issuer",
-                "test-audience"
-            )
-            installAuthRoutes(accessTokenService = jwtService)
+            installAuthRoutes(refreshTokenService = refreshTokenService, accessTokenService = jwtService)
         }
 
-        val token = jwtService.issueAccessToken(user())
+        val refreshToken = refreshTokenService.createRefreshToken(user())
+        var token = jwtService.issueAccessToken(user())
 
         val response = client.post("/api/v1/auth/logout") {
             header(HttpHeaders.Origin, "http://localhost:5173")
-            header(HttpHeaders.Authorization, "bearer $token")
+            cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
+            cookie(AUTH_ACCESS_COOKIE_NAME, token)
         }
+
+        val setCookies = response.headers.getAll(HttpHeaders.SetCookie) ?: emptyList()
 
         assertEquals(HttpStatusCode.NoContent, response.status)
-
-        val setCookies = response.headers.getAll(HttpHeaders.SetCookie).orEmpty()
-        val authCookie = setCookies.firstOrNull { it.contains("$AUTH_ACCESS_COOKIE_NAME=") }
-
-        assertNotNull(authCookie)
         assertTrue(
-            authCookie.contains("Max-Age=0") ||
-                    authCookie.contains("Expires=Thu, 01 Jan 1970")
+            setCookies.any {
+                it.contains("$REFRESH_TOKEN_COOKIE_NAME=") && (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
+            }
         )
-        assertTrue(authCookie.contains("Path=/"))
-    }
-
-    @Test
-    fun `logout rejects disallowed origin`() = testApplication {
-        application {
-            install(ContentNegotiation) { json() }
-            installAuthRoutes()
-        }
-
-        val response = client.post("/api/v1/auth/logout") {
-            header(HttpHeaders.Origin, "https://evil.example")
-        }
-
-        assertEquals(HttpStatusCode.Forbidden, response.status)
-        assertTrue(response.bodyAsText().contains("Invalid origin"))
+        assertTrue(
+            setCookies.any {
+                it.contains("$AUTH_ACCESS_COOKIE_NAME=") && (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
+            }
+        )
     }
 
     private fun Application.installAuthRoutes(
         appConfig: AppConfig = testAppConfig(),
         accessTokenService: AppJwtService = newJwtService(),
+        refreshTokenService: RefreshTokenService = newRefreshTokenService(),
         verifyGoogleCredential: (String) -> GoogleUser? = { user() },
         exchangeGoogleAuthCode: (String, String) -> String? = { _, _ -> "id-token" }
     ) {
@@ -299,6 +367,7 @@ class AuthRoutesTest {
             googleAuthRoutes(
                 appConfig,
                 accessTokenService,
+                refreshTokenService,
                 FakeGoogleTokenVerifierService(verifyGoogleCredential),
                 FakeGoogleAuthCodeService(exchangeGoogleAuthCode)
             )
@@ -313,6 +382,7 @@ class AuthRoutesTest {
         allowedOrigins: List<CorsOrigin> = listOf(CorsOrigin(host = "localhost:5173", schemes = listOf("http"))),
         authCookieSecure: Boolean = false,
         authCookieSameSite: String = "Lax",
+        refreshTokenTtlSeconds: Long = 2592000L,
         googleOauthStateTtlSeconds: Int = 600,
         redirectContextTtlSeconds: Int = 600,
         oauthFlowCookieSameSite: String = "Lax"
@@ -329,6 +399,7 @@ class AuthRoutesTest {
             jwtIssuer = "test-issuer",
             jwtAudience = "test-audience",
             jwtTtlSeconds = 900L,
+            refreshTokenTtlSeconds = refreshTokenTtlSeconds,
             authCookieSecure = authCookieSecure,
             authCookieSameSite = authCookieSameSite,
             googleOauthStateTtlSeconds = googleOauthStateTtlSeconds,
@@ -344,6 +415,11 @@ class AuthRoutesTest {
             secret = "test-secret",
             ttlSeconds = 900L
         )
+    }
+
+    private fun newRefreshTokenService(): RefreshTokenService {
+        val dbPath = Files.createTempFile("refresh-token-routes-test", ".db").toString()
+        return RefreshTokenService(RefreshTokenRepository(dbPath), 2592000L)
     }
 
     private fun user(): GoogleUser = GoogleUser("subject", "user@example.com", "Jane", "Jane")
