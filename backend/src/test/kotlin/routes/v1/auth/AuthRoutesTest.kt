@@ -241,18 +241,20 @@ class AuthRoutesTest {
 
     @Test
     fun `logout rejects disallowed origin`() = testApplication {
-        val refreshTokenService = newRefreshTokenService()
+        val accessTokenService = newJwtService()
 
         application {
             install(ContentNegotiation) { json() }
             installAuthRoutes(
-                refreshTokenService = refreshTokenService,
-                accessTokenService = newJwtService()
+                accessTokenService = accessTokenService
             )
         }
-        
+
+        val token = accessTokenService.issueAccessToken(user())
+
         val response = client.post("/api/v1/auth/logout") {
             header(HttpHeaders.Origin, "https://evil.example")
+            header(HttpHeaders.Authorization, "Bearer $token")
         }
 
         assertEquals(HttpStatusCode.Forbidden, response.status)

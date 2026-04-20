@@ -50,11 +50,13 @@ fun Route.googleAuthRoutes(
             )
         }
 
-        post("/logout") {
-            call.handleLogout(
-                appConfig = appConfig,
-                refreshTokenService = refreshTokenService
-            )
+        authenticate("auth-jwt") {
+            post("/logout") {
+                call.handleLogout(
+                    appConfig = appConfig,
+                    refreshTokenService = refreshTokenService
+                )
+            }
         }
     }
 }

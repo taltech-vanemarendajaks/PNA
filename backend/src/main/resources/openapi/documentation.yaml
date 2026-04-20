@@ -48,12 +48,8 @@ paths:
       summary: Rotate refresh token and mint a new access JWT
       description: Reads the HttpOnly refresh-token cookie, rotates it, and returns a fresh access JWT.
       responses:
-        '200':
-          description: Access token refreshed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccessTokenResponse'
+        '204':
+          description: Refresh token rotated and authentication cookies updated
         '401':
           description: Missing, expired, or invalid refresh token
           content:
