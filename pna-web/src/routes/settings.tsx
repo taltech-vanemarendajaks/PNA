@@ -1,18 +1,8 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getSession } from "../api/auth/auth";
-
-async function requireAuthenticatedSession() {
-  const session = await getSession();
-
-  if (!session) {
-    throw redirect({ to: "/" });
-  }
-
-  return session;
-}
+import { createFileRoute } from "@tanstack/react-router";
+import { redirectUnauthenticatedUser } from "../api/auth/routeAuth";
 
 export const Route = createFileRoute("/settings")({
-  beforeLoad: async () => requireAuthenticatedSession(),
+  beforeLoad: () => redirectUnauthenticatedUser(),
   component: SettingsRoute,
 });
 

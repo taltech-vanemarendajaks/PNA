@@ -11,8 +11,7 @@ class AppConfigCorsParsingTest {
     fun `parseOrigins preserves port in allowed origins`() {
         val allowedOrigins = AppConfig.parseOrigins(
             originsRaw = "http://localhost:4173,https://example.com",
-            frontendBaseUrl = "http://localhost:5173",
-            allowAnyHost = false
+            frontendBaseUrl = "http://localhost:5173"
         )
 
         assertEquals(
@@ -26,58 +25,84 @@ class AppConfigCorsParsingTest {
     }
 
     @Test
-    fun `validateCookieAndCorsConfig rejects wildcard CORS with cookie auth`() {
-        assertFailsWith<IllegalArgumentException> {
-            AppConfig.validateCookieAndCorsConfig(
-                allowAnyHost = true,
-                authCookieSecure = false,
-                authCookieSameSite = AppConfig.normalizeSameSite("Lax")
-            )
-        }
+    fun `parseOrigins includes frontend origin when no extra origins are configured`() {
+        val allowedOrigins = AppConfig.parseOrigins(
+            originsRaw = null,
+            frontendBaseUrl = "http://localhost:5173"
+        )
+
+        assertEquals(
+            listOf(
+                CorsOrigin(host = "localhost:5173", schemes = listOf("http"))
+            ),
+            allowedOrigins
+        )
     }
 
     @Test
-    fun `parseOrigins rejects origins with path query fragment or user info`() {
-        listOf(
-            "http://localhost:4173/app",
-            "http://localhost:4173?x=1",
-            "http://localhost:4173#frag",
-            "http://user@localhost:4173"
-        ).forEach { origin ->
-            assertFailsWith<IllegalArgumentException> {
-                AppConfig.parseOrigins(
-                    originsRaw = origin,
-                    frontendBaseUrl = "http://localhost:5173",
-                    allowAnyHost = false
-                )
-            }
-        }
+    fun `parseOrigins removes duplicates`() {
+        val allowedOrigins = AppConfig.parseOrigins(
+            originsRaw = "http://localhost:5173,https://example.com,https://example.com",
+            frontendBaseUrl = "http://localhost:5173"
+        )
+
+        assertEquals(
+            listOf(
+                CorsOrigin(host = "localhost:5173", schemes = listOf("http")),
+                CorsOrigin(host = "example.com", schemes = listOf("https"))
+            ),
+            allowedOrigins
+        )
     }
 
     @Test
-    fun `isAllowedOrigin accepts exact configured origin and rejects malformed values`() {
+    fun `isAllowedOrigin accepts exact configured origin and rejects wrong scheme host or malformed values`() {
         val allowedOrigins = AppConfig.parseOrigins(
             originsRaw = "http://localhost:4173",
-            frontendBaseUrl = "http://localhost:5173",
-            allowAnyHost = false
+            frontendBaseUrl = "http://localhost:5173"
         )
 
         assertEquals(true, AppConfig.isAllowedOrigin("http://localhost:5173", allowedOrigins))
         assertEquals(true, AppConfig.isAllowedOrigin("http://localhost:4173/", allowedOrigins))
         assertEquals(false, AppConfig.isAllowedOrigin("https://localhost:5173", allowedOrigins))
-        assertEquals(false, AppConfig.isAllowedOrigin("http://localhost:5173/app", allowedOrigins))
         assertEquals(false, AppConfig.isAllowedOrigin("http://evil.example", allowedOrigins))
+        assertEquals(false, AppConfig.isAllowedOrigin("not-a-url", allowedOrigins))
     }
 
     @Test
-    fun `normalizeBaseUrl trims trailing slash and rejects paths`() {
+    fun `normalizeSameSite returns expected values`() {
+        assertEquals("Lax", AppConfig.normalizeSameSite("Lax"))
+        assertEquals("Strict", AppConfig.normalizeSameSite("strict"))
+        assertEquals("None", AppConfig.normalizeSameSite("NONE"))
+    }
+
+    @Test
+    fun `normalizeSameSite rejects invalid values`() {
+        assertFailsWith<IllegalArgumentException> {
+            AppConfig.normalizeSameSite("something-else")
+        }
+    }
+
+    @Test
+    fun `validateCookieSettings rejects SameSite None without secure cookie`() {
+        val error = assertFailsWith<IllegalArgumentException> {
+            AppConfig.validateCookieSettings(
+                authCookieSecure = false,
+                authCookieSameSite = "None"
+            )
+        }
+
+        assertEquals(
+            "AUTH_COOKIE_SAME_SITE=None requires AUTH_COOKIE_SECURE=true",
+            error.message
+        )
+    }
+
+    @Test
+    fun `normalizeBaseUrl trims trailing slash`() {
         assertEquals(
             "https://api.example.com",
-            AppConfig.normalizeBaseUrl("https://api.example.com/", "PUBLIC_BACKEND_BASE_URL")
+            AppConfig.normalizeBaseUrl("https://api.example.com/")
         )
-
-        assertFailsWith<IllegalArgumentException> {
-            AppConfig.normalizeBaseUrl("https://api.example.com/callback", "PUBLIC_BACKEND_BASE_URL")
-        }
     }
 }

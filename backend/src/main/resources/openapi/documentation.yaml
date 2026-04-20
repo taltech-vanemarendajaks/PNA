@@ -20,16 +20,33 @@ paths:
   /api/v1/auth/google/redirect:
     get:
       summary: Start or finish Google OAuth login
-      description: Redirects the browser to Google OAuth, then handles the callback on the same route and creates the backend session cookie.
+      description: Redirects the browser to Google OAuth, then handles the callback on the same route and establishes an authenticated HttpOnly access-token cookie before returning the browser to the frontend.
       responses:
         '302':
-          description: Redirect to Google OAuth or back to the frontend when already authenticated
+          description: Redirect to Google OAuth
         '200':
           description: HTML handoff back to the frontend after callback processing
+  /api/v1/auth/session:
+    get:
+      summary: Get authenticated user
+      description: Returns the authenticated user for a valid access JWT presented by auth cookie or bearer header.
+      responses:
+        '200':
+          description: Authenticated user returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleAuthResponse'
+        '401':
+          description: Missing or invalid bearer access JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/v1/number/search:
     post:
       summary: Search number details
-      description: Looks up details for a phone number. Requires an authenticated session cookie.
+      description: Looks up details for a phone number. Requires an authenticated access JWT presented by auth cookie or bearer header.
       requestBody:
         required: true
         content:
@@ -50,7 +67,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
-          description: Missing or invalid auth session cookie
+          description: Missing or invalid access JWT
           content:
             application/json:
               schema:
@@ -58,7 +75,7 @@ paths:
   /api/v1/number/all:
     get:
       summary: Get all searched numbers
-      description: Returns all saved phone number searches. Requires an authenticated session cookie.
+      description: Returns all saved phone number searches. Requires an authenticated access JWT presented by auth cookie or bearer header.
       responses:
         '200':
           description: Saved number searches returned
@@ -69,11 +86,18 @@ paths:
                 items:
                   $ref: '#/components/schemas/SavedNumberSearchResponse'
         '401':
-          description: Missing or invalid auth session cookie
+          description: Missing or invalid access JWT
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/auth/logout:
+    post:
+      summary: Clear authenticated session
+      description: Clears the authenticated HttpOnly access-token cookie.
+      responses:
+        '204':
+          description: Auth cookie cleared
 components:
   schemas:
     SearchNumberRequest:
@@ -149,26 +173,14 @@ components:
           type: string
           nullable: true
           example: user@example.com
-        emailVerified:
-          type: boolean
-          nullable: true
-          example: true
         name:
           type: string
           nullable: true
           example: Jane Doe
-        picture:
-          type: string
-          nullable: true
-          example: https://lh3.googleusercontent.com/a/example
         givenName:
           type: string
           nullable: true
           example: Jane
-        familyName:
-          type: string
-          nullable: true
-          example: Doe
     ErrorResponse:
       type: object
       properties:

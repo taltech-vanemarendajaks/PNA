@@ -6,15 +6,15 @@ import {
   getApiBaseUrl,
   isAuthenticationError,
 } from "../command";
+import { AUTH_LOGOUT_PATH, AUTH_SESSION_PATH, GOOGLE_REDIRECT_PATH } from "./authPaths";
 
 const FRONTEND_ORIGIN_QUERY_PARAMETER = "frontendOrigin";
 const RETURN_PATH_QUERY_PARAMETER = "returnPath";
-
 type RedirectLoginLocation = Pick<Location, "origin" | "pathname" | "search" | "protocol">;
 
 export async function getSession(): Promise<GoogleAuthResponse | null> {
   try {
-    return await executeApiQuery<GoogleAuthResponse>({ path: "/api/v1/auth/session" });
+    return await executeApiQuery<GoogleAuthResponse>({ path: AUTH_SESSION_PATH });
   } catch (error: unknown) {
     if (isAuthenticationError(error)) {
       return null;
@@ -33,7 +33,7 @@ export async function requireAuthenticatedSession(): Promise<void> {
 }
 
 export function buildGoogleRedirectLoginUri(apiBaseUrl = getApiBaseUrl()): string {
-  return `${apiBaseUrl}/api/v1/auth/google/redirect`;
+  return `${apiBaseUrl}${GOOGLE_REDIRECT_PATH}`;
 }
 
 export function buildGoogleRedirectReturnPath(
@@ -60,13 +60,20 @@ export function buildGoogleRedirectLoginUriWithContext(
   return `${buildGoogleRedirectLoginUri(apiBaseUrl)}?${query.toString()}`;
 }
 
-export function startGoogleLoginWithRedirect(
+export async function startGoogleLoginWithRedirect(
   location: RedirectLoginLocation,
   navigate: (url: string) => void,
-): void {
+): Promise<void> {
+  const session = await getSession();
+
+  if (session) {
+    navigate(buildGoogleRedirectReturnPath(location));
+    return;
+  }
+
   navigate(buildGoogleRedirectLoginUriWithContext(location));
 }
 
 export async function logout(): Promise<void> {
-  await executeApiAction({ path: "/api/v1/auth/logout" });
+  await executeApiAction({ path: AUTH_LOGOUT_PATH });
 }

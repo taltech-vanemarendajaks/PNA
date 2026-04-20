@@ -99,4 +99,24 @@ describe("API response errors", () => {
     expect(hasApiResponseStatus(error, 401)).toBe(true);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
+
+  it("includes credentials for cookie-based auth requests", async () => {
+    const fetchSpy = vi.fn(async () => {
+      return new Response(JSON.stringify({ subject: "subject" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await executeApiQuery({ path: "/api/v1/auth/session" });
+
+    expect(fetchSpy).toHaveBeenCalledWith("http://localhost:8080/api/v1/auth/session", {
+      method: "GET",
+      headers: undefined,
+      body: undefined,
+      credentials: "include",
+    });
+  });
 });
