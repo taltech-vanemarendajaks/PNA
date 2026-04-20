@@ -31,13 +31,14 @@ fun Application.configureRouting(
         }
 
         googleAuthRoutes(
-            appConfig = appConfig,
-            accessTokenService = accessTokenService,
-            googleTokenVerifierService = googleTokenVerifierService,
-            googleAuthCodeService = googleAuthCodeService
+            appConfig,
+            accessTokenService,
+            googleTokenVerifierService,
+            googleAuthCodeService
         )
 
         numberRoutes(
+            appConfig,
             accessTokenService::verify,
             lookupService,
             numberSearchService

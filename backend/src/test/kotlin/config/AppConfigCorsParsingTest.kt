@@ -4,6 +4,7 @@ import com.pna.backend.config.AppConfig
 import com.pna.backend.config.CorsOrigin
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class AppConfigCorsParsingTest {
     @Test
@@ -69,11 +70,32 @@ class AppConfigCorsParsingTest {
     }
 
     @Test
-    fun `normalizeSameSite returns expected values and defaults to lax`() {
+    fun `normalizeSameSite returns expected values`() {
         assertEquals("Lax", AppConfig.normalizeSameSite("Lax"))
         assertEquals("Strict", AppConfig.normalizeSameSite("strict"))
         assertEquals("None", AppConfig.normalizeSameSite("NONE"))
-        assertEquals("Lax", AppConfig.normalizeSameSite("something-else"))
+    }
+
+    @Test
+    fun `normalizeSameSite rejects invalid values`() {
+        assertFailsWith<IllegalArgumentException> {
+            AppConfig.normalizeSameSite("something-else")
+        }
+    }
+
+    @Test
+    fun `validateCookieSettings rejects SameSite None without secure cookie`() {
+        val error = assertFailsWith<IllegalArgumentException> {
+            AppConfig.validateCookieSettings(
+                authCookieSecure = false,
+                authCookieSameSite = "None"
+            )
+        }
+
+        assertEquals(
+            "AUTH_COOKIE_SAME_SITE=None requires AUTH_COOKIE_SECURE=true",
+            error.message
+        )
     }
 
     @Test

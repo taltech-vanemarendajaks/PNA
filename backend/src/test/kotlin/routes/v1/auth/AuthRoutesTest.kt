@@ -9,7 +9,6 @@ import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
 import domain.auth.GoogleUser
-import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -21,6 +20,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class AuthRoutesTest {
@@ -148,9 +148,9 @@ class AuthRoutesTest {
         application {
             install(ContentNegotiation) { json() }
             configureSecurity(
-                accessTokenService = jwtService,
-                issuer = "test-issuer",
-                audience = "test-audience"
+                jwtService,
+                "test-issuer",
+                "test-audience"
             )
             installAuthRoutes(accessTokenService = jwtService)
         }
@@ -162,6 +162,7 @@ class AuthRoutesTest {
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("private, no-store", response.headers[HttpHeaders.CacheControl])
         assertTrue(response.bodyAsText().contains("\"subject\":\"subject\""))
     }
 
@@ -172,9 +173,9 @@ class AuthRoutesTest {
         application {
             install(ContentNegotiation) { json() }
             configureSecurity(
-                accessTokenService = jwtService,
-                issuer = "test-issuer",
-                audience = "test-audience"
+                jwtService,
+                "test-issuer",
+               "test-audience"
             )
             installAuthRoutes(accessTokenService = jwtService)
         }
@@ -196,9 +197,9 @@ class AuthRoutesTest {
         application {
             install(ContentNegotiation) { json() }
             configureSecurity(
-                accessTokenService = jwtService,
-                issuer = "test-issuer",
-                audience = "test-audience"
+                jwtService,
+                "test-issuer",
+                "test-audience"
             )
             installAuthRoutes(accessTokenService = jwtService)
         }
@@ -219,9 +220,9 @@ class AuthRoutesTest {
         application {
             install(ContentNegotiation) { json() }
             configureSecurity(
-                accessTokenService = jwtService,
-                issuer = "test-issuer",
-                audience = "test-audience"
+                jwtService,
+                "test-issuer",
+                "test-audience"
             )
             installAuthRoutes(accessTokenService = jwtService)
         }
@@ -233,20 +234,51 @@ class AuthRoutesTest {
 
     @Test
     fun `logout clears auth cookie`() = testApplication {
+        val jwtService = newJwtService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            configureSecurity(
+                jwtService,
+                "test-issuer",
+                "test-audience"
+            )
+            installAuthRoutes(accessTokenService = jwtService)
+        }
+
+        val token = jwtService.issueAccessToken(user())
+
+        val response = client.post("/api/v1/auth/logout") {
+            header(HttpHeaders.Origin, "http://localhost:5173")
+            header(HttpHeaders.Authorization, "bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.NoContent, response.status)
+
+        val setCookies = response.headers.getAll(HttpHeaders.SetCookie).orEmpty()
+        val authCookie = setCookies.firstOrNull { it.contains("$AUTH_ACCESS_COOKIE_NAME=") }
+
+        assertNotNull(authCookie)
+        assertTrue(
+            authCookie.contains("Max-Age=0") ||
+                    authCookie.contains("Expires=Thu, 01 Jan 1970")
+        )
+        assertTrue(authCookie.contains("Path=/"))
+    }
+
+    @Test
+    fun `logout rejects disallowed origin`() = testApplication {
         application {
             install(ContentNegotiation) { json() }
             installAuthRoutes()
         }
 
-        val response = client.post("/api/v1/auth/logout")
+        val response = client.post("/api/v1/auth/logout") {
+            header(HttpHeaders.Origin, "https://evil.example")
+        }
 
-        assertEquals(HttpStatusCode.NoContent, response.status)
-        assertTrue(response.headers.getAll(HttpHeaders.SetCookie)?.any {
-            it.contains("$AUTH_ACCESS_COOKIE_NAME=") && (
-                it.contains("Max-Age=0") ||
-                    it.contains("Expires=Thu, 01 Jan 1970")
-                )
-        } == true)
+        assertEquals(HttpStatusCode.Forbidden, response.status)
+        assertTrue(response.bodyAsText().contains("Invalid origin"))
     }
 
     private fun Application.installAuthRoutes(
@@ -257,18 +289,18 @@ class AuthRoutesTest {
     ) {
         if (pluginOrNull(Authentication) == null) {
             configureSecurity(
-                accessTokenService = accessTokenService,
-                issuer = appConfig.jwtIssuer,
-                audience = appConfig.jwtAudience
+                accessTokenService,
+                appConfig.jwtIssuer,
+                appConfig.jwtAudience
             )
         }
 
         routing {
             googleAuthRoutes(
-                appConfig = appConfig,
-                accessTokenService = accessTokenService,
-                googleTokenVerifierService = FakeGoogleTokenVerifierService(verifyGoogleCredential),
-                googleAuthCodeService = FakeGoogleAuthCodeService(exchangeGoogleAuthCode)
+                appConfig,
+                accessTokenService,
+                FakeGoogleTokenVerifierService(verifyGoogleCredential),
+                FakeGoogleAuthCodeService(exchangeGoogleAuthCode)
             )
         }
     }

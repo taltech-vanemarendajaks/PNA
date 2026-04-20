@@ -56,17 +56,17 @@ fun Application.module(appConfig: AppConfig = AppConfig.load()) {
     configureHttp(appConfig)
 
     configureSecurity(
-        accessTokenService = accessTokenService,
-        issuer = appConfig.jwtIssuer,
-        audience = appConfig.jwtAudience
+        accessTokenService,
+        appConfig.jwtIssuer,
+        appConfig.jwtAudience
     )
 
     configureRouting(
-        appConfig = appConfig,
-        accessTokenService = accessTokenService,
-        googleTokenVerifierService = googleTokenVerifierService,
-        googleAuthCodeService = googleAuthCodeService,
-        lookupService = lookupService,
-        numberSearchService = numberSearchService
+        appConfig,
+        accessTokenService,
+        googleTokenVerifierService,
+        googleAuthCodeService,
+        lookupService,
+        numberSearchService
     )
 }

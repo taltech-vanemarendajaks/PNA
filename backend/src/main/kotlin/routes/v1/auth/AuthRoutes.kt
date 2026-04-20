@@ -1,6 +1,8 @@
 package com.pna.backend.routes.v1.auth
 
 import com.pna.backend.config.AppConfig
+import com.pna.backend.routes.v1.hasAllowedOrigin
+import com.pna.backend.routes.v1.respondPrivateNoStore
 import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
@@ -32,11 +34,17 @@ fun Route.googleAuthRoutes(
             get("/session") {
                 val principal = call.principal<JWTPrincipal>()
                     ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
+                call.respondPrivateNoStore()
                 call.respond(HttpStatusCode.OK, principal.toGoogleAuthResponse())
             }
         }
 
         post("/logout") {
+            if (!call.hasAllowedOrigin(appConfig)) {
+                call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Invalid origin"))
+                return@post
+            }
+
             call.clearAuthAccessCookie(appConfig)
             call.respond(HttpStatusCode.NoContent)
         }

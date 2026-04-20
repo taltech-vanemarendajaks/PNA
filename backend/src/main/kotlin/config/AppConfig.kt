@@ -60,7 +60,12 @@ data class AppConfig(
             val redirectContextTtlSeconds = readValue("REDIRECT_CONTEXT_TTL_SECONDS", dotenv)?.toIntOrNull() ?: 600
 
             val oauthFlowCookieSameSite = normalizeSameSite(
-                readValue("OAUTH_FLOW_COOKIE_SAME_SITE", dotenv) ?: "Lax"
+                readValue("OAUTH_FLOW_COOKIE_SAME_SITE", dotenv) ?: ""
+            )
+
+            validateCookieSettings(
+                authCookieSecure = authCookieSecure,
+                authCookieSameSite = authCookieSameSite
             )
 
             val allowedOrigins = parseOrigins(
@@ -105,7 +110,17 @@ data class AppConfig(
             return when (value.trim().lowercase()) {
                 "strict" -> "Strict"
                 "none" -> "None"
-                else -> "Lax"
+                "lax" -> "Lax"
+                else -> throw IllegalArgumentException("AUTH_COOKIE_SAME_SITE must be one of: Lax, Strict, None.")
+            }
+        }
+
+        internal fun validateCookieSettings(
+            authCookieSecure: Boolean,
+            authCookieSameSite: String
+        ) {
+            require(authCookieSameSite != "None" || authCookieSecure) {
+                "AUTH_COOKIE_SAME_SITE=None requires AUTH_COOKIE_SECURE=true"
             }
         }
 
@@ -143,13 +158,30 @@ data class AppConfig(
                 return false
             }
 
-            val uri = runCatching { URI(originRaw.trim()) }.getOrNull() ?: return false
-            val host = uri.authority ?: return false
-            val scheme = uri.scheme ?: return false
+            val rawOrigin = originRaw.trim()
 
-            return allowedOrigins.any { origin ->
-                origin.host.equals(host, ignoreCase = true) &&
-                        origin.schemes.any { it.equals(scheme, ignoreCase = true) }
+            val origin = runCatching {
+                if (rawOrigin.contains("://")) {
+                    val uri = URI(rawOrigin)
+                    CorsOrigin(
+                        host = uri.authority ?: return false,
+                        schemes = listOfNotNull(uri.scheme)
+                    )
+                } else {
+                    CorsOrigin(
+                        host = rawOrigin,
+                        schemes = listOf("http", "https")
+                    )
+                }
+            }.getOrNull() ?: return false
+
+            return allowedOrigins.any { allowed ->
+                allowed.host.equals(origin.host, ignoreCase = true) &&
+                        allowed.schemes.any { allowedScheme ->
+                            origin.schemes.any { originScheme ->
+                                allowedScheme.equals(originScheme, ignoreCase = true)
+                            }
+                        }
             }
         }
     }
