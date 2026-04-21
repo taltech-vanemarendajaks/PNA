@@ -1,6 +1,6 @@
 package com.pna.backend.routes.v1.auth
 
-import com.pna.backend.config.AppConfig
+import com.pna.backend.config.RootConfig
 import com.pna.backend.routes.v1.hasAllowedOrigin
 import com.pna.backend.routes.v1.respondPrivateNoStore
 import com.pna.backend.services.AppJwtService
@@ -16,7 +16,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Route.googleAuthRoutes(
-    appConfig: AppConfig,
+    rootConfig: RootConfig,
     accessTokenService: AppJwtService,
     refreshTokenService: RefreshTokenService,
     googleTokenVerifierService: GoogleTokenVerifierService,
@@ -25,11 +25,11 @@ fun Route.googleAuthRoutes(
     route("/api/v1/auth") {
         get("/google/redirect") {
             call.handleGoogleRedirectRequest(
-                appConfig = appConfig,
-                accessTokenService = accessTokenService,
-                googleAuthCodeService = googleAuthCodeService,
-                googleTokenVerifierService = googleTokenVerifierService,
-                refreshTokenService = refreshTokenService
+                rootConfig,
+                accessTokenService,
+                googleAuthCodeService,
+                googleTokenVerifierService,
+                refreshTokenService
             )
         }
 
@@ -44,17 +44,17 @@ fun Route.googleAuthRoutes(
 
         post("/refresh") {
             call.handleRefresh(
-                appConfig = appConfig,
-                refreshTokenService = refreshTokenService,
-                accessTokenService = accessTokenService
+                rootConfig,
+                refreshTokenService,
+                accessTokenService
             )
         }
 
         authenticate("auth-jwt") {
             post("/logout") {
                 call.handleLogout(
-                    appConfig = appConfig,
-                    refreshTokenService = refreshTokenService
+                    rootConfig,
+                    refreshTokenService
                 )
             }
         }
@@ -62,11 +62,11 @@ fun Route.googleAuthRoutes(
 }
 
 private suspend fun ApplicationCall.handleRefresh(
-    appConfig: AppConfig,
+    rootConfig: RootConfig,
     refreshTokenService: RefreshTokenService,
     accessTokenService: AppJwtService
 ) {
-    if (!ensureAllowedOrigin(appConfig.allowedOrigins)) {
+    if (!ensureAllowedOrigin(rootConfig.app.allowedOriginsMapped)) {
         return
     }
 
@@ -75,30 +75,30 @@ private suspend fun ApplicationCall.handleRefresh(
     )
 
     if (rotation == null) {
-        clearAuthAccessCookie(appConfig)
-        clearRefreshTokenCookie(appConfig)
+        clearAuthAccessCookie(rootConfig)
+        clearRefreshTokenCookie(rootConfig)
         respond(HttpStatusCode.Unauthorized, mapOf("error" to "Refresh token is invalid or expired"))
         return
     }
 
-    appendAuthAccessCookie(accessTokenService.issueAccessToken(rotation.user), appConfig)
-    appendRefreshTokenCookie(rotation.refreshToken, appConfig)
+    appendAuthAccessCookie(accessTokenService.issueAccessToken(rotation.user), rootConfig)
+    appendRefreshTokenCookie(rotation.refreshToken, rootConfig)
     respond(HttpStatusCode.NoContent)
 }
 
 private suspend fun ApplicationCall.handleLogout(
-    appConfig: AppConfig,
+    rootConfig: RootConfig,
     refreshTokenService: RefreshTokenService
 ) {
-    if (!ensureAllowedOrigin(appConfig.allowedOrigins)) {
+    if (!ensureAllowedOrigin(rootConfig.app.allowedOriginsMapped)) {
         return
     }
 
     refreshTokenService.revokeRefreshToken(request.cookies[REFRESH_TOKEN_COOKIE_NAME])
-    clearAuthAccessCookie(appConfig)
-    clearFrontendRedirectContextCookies(appConfig)
-    clearGoogleOauthStateCookie(appConfig)
-    clearRefreshTokenCookie(appConfig)
+    clearAuthAccessCookie(rootConfig)
+    clearFrontendRedirectContextCookies(rootConfig)
+    clearGoogleOauthStateCookie(rootConfig)
+    clearRefreshTokenCookie(rootConfig)
 
     respond(HttpStatusCode.NoContent)
 }

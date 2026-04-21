@@ -8,10 +8,7 @@ import java.sql.DriverManager
 import java.time.Instant
 
 class NumberSearchRepository(
-    databasePath: String = System.getenv("NUMBER_SEARCH_DB_PATH")
-        ?.trim()
-        ?.ifBlank { null }
-        ?: "number-searches.db",
+    databasePath: String = "number-searches.db",
     private val json: Json = Json
 ) {
     private val jdbcUrl = "jdbc:sqlite:$databasePath"

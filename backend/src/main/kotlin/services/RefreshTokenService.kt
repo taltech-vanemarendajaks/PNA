@@ -16,7 +16,7 @@ data class RefreshTokenRotation(
 
 class RefreshTokenService(
     private val repository: RefreshTokenRepository,
-    private val ttlSeconds: Long,
+    private val ttlSeconds: Int,
     private val clock: Clock = Clock.systemUTC()
 ) {
     fun createRefreshToken(user: GoogleUser): String {
@@ -67,7 +67,7 @@ class RefreshTokenService(
             email = user.email,
             name = user.name,
             givenName = user.givenName,
-            expiresAt = clock.instant().plusSeconds(ttlSeconds).toString(),
+            expiresAt = clock.instant().plusSeconds(ttlSeconds.toLong()).toString(),
             revokedAt = null,
             replacedByTokenHash = null
         )

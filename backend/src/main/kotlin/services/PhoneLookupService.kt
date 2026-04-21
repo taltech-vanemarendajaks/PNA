@@ -8,11 +8,7 @@ import com.pna.backend.domain.auth.response.PhoneNumberLookupResult
 import java.util.*
 
 class PhoneLookupService(
-    private val defaultRegion: String = System.getenv("PHONE_LOOKUP_DEFAULT_REGION")
-        ?.trim()
-        ?.ifBlank { null }
-        ?.uppercase()
-        ?: "EE"
+    private val defaultRegion: String = "EE"
 ) {
     private val phoneNumberUtil = PhoneNumberUtil.getInstance()
     private val carrierMapper = PhoneNumberToCarrierMapper.getInstance()

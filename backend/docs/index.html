@@ -1348,8 +1348,7 @@ public class DefaultApiExample {
         
         DefaultApi apiInstance = new DefaultApi();
         try {
-            AccessTokenResponse result = apiInstance.apiV1AuthRefreshPost();
-            System.out.println(result);
+            apiInstance.apiV1AuthRefreshPost();
         } catch (ApiException e) {
             System.err.println("Exception when calling DefaultApi#apiV1AuthRefreshPost");
             e.printStackTrace();
@@ -1366,8 +1365,7 @@ public class DefaultApiExample {
     public static void main(String[] args) {
         DefaultApi apiInstance = new DefaultApi();
         try {
-            AccessTokenResponse result = apiInstance.apiV1AuthRefreshPost();
-            System.out.println(result);
+            apiInstance.apiV1AuthRefreshPost();
         } catch (ApiException e) {
             System.err.println("Exception when calling DefaultApi#apiV1AuthRefreshPost");
             e.printStackTrace();
@@ -1385,10 +1383,7 @@ DefaultApi *apiInstance = [[DefaultApi alloc] init];
 
 // Rotate refresh token and mint a new access JWT
 [apiInstance apiV1AuthRefreshPostWithCompletionHandler: 
-              ^(AccessTokenResponse output, NSError* error) {
-                            if (output) {
-                                NSLog(@"%@", output);
-                            }
+              ^(NSError* error) {
                             if (error) {
                                 NSLog(@"Error: %@", error);
                             }
@@ -1404,7 +1399,7 @@ var callback = function(error, data, response) {
   if (error) {
     console.error(error);
   } else {
-    console.log('API called successfully. Returned data: ' + data);
+    console.log('API called successfully.');
   }
 };
 api.apiV1AuthRefreshPost(callback);
@@ -1433,8 +1428,7 @@ namespace Example
             try
             {
                 // Rotate refresh token and mint a new access JWT
-                AccessTokenResponse result = apiInstance.apiV1AuthRefreshPost();
-                Debug.WriteLine(result);
+                apiInstance.apiV1AuthRefreshPost();
             }
             catch (Exception e)
             {
@@ -1453,8 +1447,7 @@ require_once(__DIR__ . '/vendor/autoload.php');
 $api_instance = new Swagger\Client\ApiDefaultApi();
 
 try {
-    $result = $api_instance->apiV1AuthRefreshPost();
-    print_r($result);
+    $api_instance->apiV1AuthRefreshPost();
 } catch (Exception $e) {
     echo 'Exception when calling DefaultApi->apiV1AuthRefreshPost: ', $e->getMessage(), PHP_EOL;
 }
@@ -1469,8 +1462,7 @@ use WWW::SwaggerClient::DefaultApi;
 my $api_instance = WWW::SwaggerClient::DefaultApi->new();
 
 eval { 
-    my $result = $api_instance->apiV1AuthRefreshPost();
-    print Dumper($result);
+    $api_instance->apiV1AuthRefreshPost();
 };
 if ($@) {
     warn "Exception when calling DefaultApi->apiV1AuthRefreshPost: $@\n";
@@ -1489,8 +1481,7 @@ api_instance = swagger_client.DefaultApi()
 
 try: 
     # Rotate refresh token and mint a new access JWT
-    api_response = api_instance.api_v1_auth_refresh_post()
-    pprint(api_response)
+    api_instance.api_v1_auth_refresh_post()
 except ApiException as e:
     print("Exception when calling DefaultApi->apiV1AuthRefreshPost: %s\n" % e)</code></pre>
                             </div>
@@ -1504,52 +1495,12 @@ except ApiException as e:
 
 
                           <h2>Responses</h2>
-                            <h3> Status: 200 - Access token refreshed </h3>
+                            <h3> Status: 204 - Refresh token rotated and authentication cookies updated </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
-                                <li class="active">
-                                  <a data-toggle="tab" href="#responses-apiV1AuthRefreshPost-200-schema">Schema</a>
-                                </li>
-
                             </ul>
 
                             <div class="tab-content" style='margin-bottom: 10px;'>
-                                <div class="tab-pane active" id="responses-apiV1AuthRefreshPost-200-schema">
-                                  <div id='responses-apiV1AuthRefreshPost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
-                                    <script>
-                                      $(document).ready(function() {
-                                        var schemaWrapper = {
-  "description" : "Access token refreshed",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/AccessTokenResponse"
-      }
-    }
-  }
-};
-                                        var schema = schemaWrapper.content["application/json"].schema;
-                                        if (schema.$ref != null) {
-                                          schema = defsParser.$refs.get(schema.$ref);
-                                        } else {
-                                          schemaWrapper.components = {};
-                                          schemaWrapper.components.schemas = Object.assign({}, defs);
-                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
-                                            console.log(err);
-                                          });
-                                        }
-
-                                        //console.log(JSON.stringify(schema));
-                                        var view = new JSONSchemaView(schema, 3);
-                                        $('#responses-apiV1AuthRefreshPost-200-schema-data').val(stringify(schema));
-                                        var result = $('#responses-apiV1AuthRefreshPost-200-schema-200');
-                                        result.empty();
-                                        result.append(view.render());
-                                      });
-                                    </script>
-                                  </div>
-                                  <input id='responses-apiV1AuthRefreshPost-200-schema-data' type='hidden' value=''></input>
-                                </div>
                             </div>
 
                             <h3> Status: 401 - Missing, expired, or invalid refresh token </h3>

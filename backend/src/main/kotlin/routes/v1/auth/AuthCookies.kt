@@ -1,7 +1,7 @@
 package com.pna.backend.routes.v1.auth
 
-import com.pna.backend.config.AppConfig
 import com.pna.backend.config.CorsOrigin
+import com.pna.backend.config.RootConfig
 import io.ktor.http.Cookie
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -23,108 +23,108 @@ private const val AUTH_COOKIE_PATH = "/api"
 
 internal fun ApplicationCall.appendAuthAccessCookie(
     accessToken: String,
-    appConfig: AppConfig
+    rootConfig: RootConfig
 ) {
     appendCookie(
-        name = AUTH_ACCESS_COOKIE_NAME,
-        value = accessToken,
-        path = AUTH_COOKIE_PATH,
-        maxAge = appConfig.jwtTtlSeconds.toInt(),
-        appConfig = appConfig
+        AUTH_ACCESS_COOKIE_NAME,
+        accessToken,
+        AUTH_COOKIE_PATH,
+        rootConfig.jwt.ttlSeconds,
+        rootConfig
     )
 }
 
-internal fun ApplicationCall.clearAuthAccessCookie(appConfig: AppConfig) {
+internal fun ApplicationCall.clearAuthAccessCookie(rootConfig: RootConfig) {
     clearCookie(
-        name = AUTH_ACCESS_COOKIE_NAME,
-        path = AUTH_COOKIE_PATH,
-        appConfig = appConfig
+        AUTH_ACCESS_COOKIE_NAME,
+        AUTH_COOKIE_PATH,
+        rootConfig
     )
 }
 
 internal fun ApplicationCall.appendGoogleOauthStateCookie(
     state: String,
-    appConfig: AppConfig
+    rootConfig: RootConfig
 ) {
     appendCookie(
-        name = GOOGLE_OAUTH_STATE_COOKIE_NAME,
-        value = state,
-        path = GOOGLE_REDIRECT_PATH,
-        maxAge = appConfig.googleOauthStateTtlSeconds,
-        appConfig = appConfig,
-        sameSite = appConfig.oauthFlowCookieSameSite
+        GOOGLE_OAUTH_STATE_COOKIE_NAME,
+        state,
+        GOOGLE_REDIRECT_PATH,
+        rootConfig.app.googleOauthStateTtlSeconds,
+        rootConfig,
+        rootConfig.app.oauthFlowCookieSameSite
     )
 }
 
 internal fun ApplicationCall.appendRefreshTokenCookie(
     refreshToken: String,
-    appConfig: AppConfig
+    rootConfig: RootConfig
 ) {
     appendCookie(
-        name = REFRESH_TOKEN_COOKIE_NAME,
-        value = refreshToken,
-        path = REFRESH_TOKEN_COOKIE_PATH,
-        maxAge = appConfig.refreshTokenTtlSeconds.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
-        appConfig = appConfig
+        REFRESH_TOKEN_COOKIE_NAME,
+        refreshToken,
+        REFRESH_TOKEN_COOKIE_PATH,
+        rootConfig.jwt.refreshTokenTtlSeconds.coerceAtMost(Int.MAX_VALUE),
+        rootConfig
     )
 }
 
-internal fun ApplicationCall.clearRefreshTokenCookie(appConfig: AppConfig) {
+internal fun ApplicationCall.clearRefreshTokenCookie(rootConfig: RootConfig) {
     clearCookie(
-        name = REFRESH_TOKEN_COOKIE_NAME,
-        path = REFRESH_TOKEN_COOKIE_PATH,
-        appConfig = appConfig
+        REFRESH_TOKEN_COOKIE_NAME,
+        REFRESH_TOKEN_COOKIE_PATH,
+        rootConfig
     )
 }
 
-internal fun ApplicationCall.clearGoogleOauthStateCookie(appConfig: AppConfig) {
+internal fun ApplicationCall.clearGoogleOauthStateCookie(rootConfig: RootConfig) {
     clearCookie(
-        name = GOOGLE_OAUTH_STATE_COOKIE_NAME,
-        path = GOOGLE_REDIRECT_PATH,
-        appConfig = appConfig,
-        sameSite = appConfig.oauthFlowCookieSameSite
+        GOOGLE_OAUTH_STATE_COOKIE_NAME,
+        GOOGLE_REDIRECT_PATH,
+        rootConfig,
+        rootConfig.app.oauthFlowCookieSameSite
     )
 }
 
 internal fun ApplicationCall.appendFrontendRedirectContextCookies(
     redirectContext: FrontendRedirectContext,
-    appConfig: AppConfig
+    rootConfig: RootConfig
 ) {
     appendCookie(
-        name = FRONTEND_ORIGIN_COOKIE_NAME,
-        value = urlEncode(redirectContext.redirectBaseUrl),
-        path = GOOGLE_REDIRECT_PATH,
-        maxAge = appConfig.redirectContextTtlSeconds,
-        appConfig = appConfig,
-        sameSite = appConfig.oauthFlowCookieSameSite
+        FRONTEND_ORIGIN_COOKIE_NAME,
+        urlEncode(redirectContext.redirectBaseUrl),
+        GOOGLE_REDIRECT_PATH,
+        rootConfig.app.redirectContextTtlSeconds,
+        rootConfig,
+        rootConfig.app.oauthFlowCookieSameSite
     )
     appendCookie(
-        name = RETURN_PATH_COOKIE_NAME,
-        value = urlEncode(redirectContext.returnPath ?: "/"),
-        path = GOOGLE_REDIRECT_PATH,
-        maxAge = appConfig.redirectContextTtlSeconds,
-        appConfig = appConfig,
-        sameSite = appConfig.oauthFlowCookieSameSite
+        RETURN_PATH_COOKIE_NAME,
+        urlEncode(redirectContext.returnPath ?: "/"),
+        GOOGLE_REDIRECT_PATH,
+        rootConfig.app.redirectContextTtlSeconds,
+        rootConfig,
+        rootConfig.app.oauthFlowCookieSameSite
     )
 }
 
-internal fun ApplicationCall.clearFrontendRedirectContextCookies(appConfig: AppConfig) {
+internal fun ApplicationCall.clearFrontendRedirectContextCookies(rootConfig: RootConfig) {
     clearCookie(
-        name = FRONTEND_ORIGIN_COOKIE_NAME,
-        path = GOOGLE_REDIRECT_PATH,
-        appConfig = appConfig,
-        sameSite = appConfig.oauthFlowCookieSameSite
+        FRONTEND_ORIGIN_COOKIE_NAME,
+        GOOGLE_REDIRECT_PATH,
+        rootConfig,
+        rootConfig.app.oauthFlowCookieSameSite
     )
     clearCookie(
-        name = RETURN_PATH_COOKIE_NAME,
-        path = GOOGLE_REDIRECT_PATH,
-        appConfig = appConfig,
-        sameSite = appConfig.oauthFlowCookieSameSite
+        RETURN_PATH_COOKIE_NAME,
+        GOOGLE_REDIRECT_PATH,
+        rootConfig,
+        rootConfig.app.oauthFlowCookieSameSite
     )
 }
 
 internal suspend fun ApplicationCall.ensureAllowedOrigin(allowedOrigins: List<CorsOrigin>): Boolean {
-    if (AppConfig.isAllowedOrigin(request.headers[HttpHeaders.Origin], allowedOrigins)) {
+    if (RootConfig.isAllowedOrigin(request.headers[HttpHeaders.Origin], allowedOrigins)) {
         return true
     }
 
@@ -137,8 +137,8 @@ private fun ApplicationCall.appendCookie(
     value: String,
     path: String,
     maxAge: Int,
-    appConfig: AppConfig,
-    sameSite: String = appConfig.authCookieSameSite
+    rootConfig: RootConfig,
+    sameSite: String = rootConfig.app.authCookieSameSite
 ) {
     response.cookies.append(
         Cookie(
@@ -146,7 +146,7 @@ private fun ApplicationCall.appendCookie(
             value = value,
             path = path,
             maxAge = maxAge,
-            secure = appConfig.authCookieSecure,
+            secure = rootConfig.app.authCookieSecure,
             httpOnly = true,
             extensions = mapOf("SameSite" to sameSite)
         )
@@ -156,8 +156,8 @@ private fun ApplicationCall.appendCookie(
 private fun ApplicationCall.clearCookie(
     name: String,
     path: String,
-    appConfig: AppConfig,
-    sameSite: String = appConfig.authCookieSameSite
+    rootConfig: RootConfig,
+    sameSite: String = rootConfig.app.authCookieSameSite
 ) {
     response.cookies.append(
         Cookie(
@@ -166,7 +166,7 @@ private fun ApplicationCall.clearCookie(
             path = path,
             maxAge = 0,
             expires = GMTDate.START,
-            secure = appConfig.authCookieSecure,
+            secure = rootConfig.app.authCookieSecure,
             httpOnly = true,
             extensions = mapOf("SameSite" to sameSite)
         )

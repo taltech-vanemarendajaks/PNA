@@ -1,7 +1,7 @@
 package routes.v1.auth
 
-import com.pna.backend.config.AppConfig
 import com.pna.backend.config.CorsOrigin
+import com.pna.backend.config.RootConfig
 import com.pna.backend.dal.repositories.RefreshTokenRepository
 import com.pna.backend.plugins.configureSecurity
 import com.pna.backend.routes.v1.auth.AUTH_ACCESS_COOKIE_NAME
@@ -21,10 +21,11 @@ import io.ktor.server.auth.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
+import testJwtService
+import testRootConfig
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class AuthRoutesTest {
@@ -47,10 +48,10 @@ class AuthRoutesTest {
 
         assertEquals(HttpStatusCode.Found, response.status)
         assertTrue(response.headers[HttpHeaders.Location]?.startsWith("https://accounts.google.com/o/oauth2/v2/auth?") == true)
-        assertTrue(response.headers[HttpHeaders.Location]?.contains("client_id=client-id") == true)
+        assertTrue(response.headers[HttpHeaders.Location]?.contains("client_id=google-client-id") == true)
         assertTrue(
             response.headers[HttpHeaders.Location]?.contains(
-                "redirect_uri=https%3A%2F%2Fapi.example.com%2Fapi%2Fv1%2Fauth%2Fgoogle%2Fredirect"
+                "redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fapi%2Fv1%2Fauth%2Fgoogle%2Fredirect"
             ) == true
         )
         assertTrue(setCookies.any { it.contains("pna_google_oauth_state=") })
@@ -126,12 +127,13 @@ class AuthRoutesTest {
         application {
             install(ContentNegotiation) { json() }
             installAuthRoutes(
-                appConfig = testAppConfig(
-                    frontendBaseUrl = "https://app.example.com",
-                    allowedOrigins = listOf(CorsOrigin(host = "app.example.com", schemes = listOf("https"))),
+                testRootConfig(
                     authCookieSecure = true,
                     authCookieSameSite = "Strict",
-                    oauthFlowCookieSameSite = "Lax"
+                    oauthFlowCookieSameSite = "Lax",
+                    frontendBaseUrl = "https://app.example.com",
+                    allowedOriginsMapped = listOf(CorsOrigin("app.example.com", listOf("https"))),
+                    allowedOrigins = listOf("https://app.example.com")
                 )
             )
         }
@@ -150,7 +152,7 @@ class AuthRoutesTest {
 
     @Test
     fun `session returns authenticated user for valid bearer token`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -175,7 +177,7 @@ class AuthRoutesTest {
 
     @Test
     fun `session returns authenticated user for valid auth cookie`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -199,7 +201,7 @@ class AuthRoutesTest {
 
     @Test
     fun `session accepts lowercase bearer auth scheme`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -222,7 +224,7 @@ class AuthRoutesTest {
 
     @Test
     fun `session returns unauthorized for missing bearer token`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -241,7 +243,7 @@ class AuthRoutesTest {
 
     @Test
     fun `logout rejects disallowed origin`() = testApplication {
-        val accessTokenService = newJwtService()
+        val accessTokenService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -269,7 +271,7 @@ class AuthRoutesTest {
             install(ContentNegotiation) { json() }
             installAuthRoutes(
                 refreshTokenService = refreshTokenService,
-                accessTokenService = newJwtService()
+                accessTokenService = testJwtService()
             )
         }
 
@@ -317,7 +319,7 @@ class AuthRoutesTest {
     @Test
     fun `logout clears auth and refresh cookies`() = testApplication {
         val refreshTokenService = newRefreshTokenService()
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -349,8 +351,8 @@ class AuthRoutesTest {
     }
 
     private fun Application.installAuthRoutes(
-        appConfig: AppConfig = testAppConfig(),
-        accessTokenService: AppJwtService = newJwtService(),
+        rootConfig: RootConfig = testRootConfig(),
+        accessTokenService: AppJwtService = testJwtService(),
         refreshTokenService: RefreshTokenService = newRefreshTokenService(),
         verifyGoogleCredential: (String) -> GoogleUser? = { user() },
         exchangeGoogleAuthCode: (String, String) -> String? = { _, _ -> "id-token" }
@@ -358,14 +360,14 @@ class AuthRoutesTest {
         if (pluginOrNull(Authentication) == null) {
             configureSecurity(
                 accessTokenService,
-                appConfig.jwtIssuer,
-                appConfig.jwtAudience
+                rootConfig.jwt.issuer,
+                rootConfig.jwt.audience
             )
         }
 
         routing {
             googleAuthRoutes(
-                appConfig,
+                rootConfig,
                 accessTokenService,
                 refreshTokenService,
                 FakeGoogleTokenVerifierService(verifyGoogleCredential),
@@ -374,52 +376,9 @@ class AuthRoutesTest {
         }
     }
 
-    private fun testAppConfig(
-        googleClientId: String = "client-id",
-        googleClientSecret: String = "client-secret",
-        publicBackendBaseUrl: String = "https://api.example.com",
-        frontendBaseUrl: String = "http://localhost:5173",
-        allowedOrigins: List<CorsOrigin> = listOf(CorsOrigin(host = "localhost:5173", schemes = listOf("http"))),
-        authCookieSecure: Boolean = false,
-        authCookieSameSite: String = "Lax",
-        refreshTokenTtlSeconds: Long = 2592000L,
-        googleOauthStateTtlSeconds: Int = 600,
-        redirectContextTtlSeconds: Int = 600,
-        oauthFlowCookieSameSite: String = "Lax"
-    ): AppConfig {
-        return AppConfig(
-            port = 8080,
-            host = "0.0.0.0",
-            googleClientId = googleClientId,
-            googleClientSecret = googleClientSecret,
-            publicBackendBaseUrl = publicBackendBaseUrl,
-            frontendBaseUrl = frontendBaseUrl,
-            allowedOrigins = allowedOrigins,
-            jwtSecret = "test-secret",
-            jwtIssuer = "test-issuer",
-            jwtAudience = "test-audience",
-            jwtTtlSeconds = 900L,
-            refreshTokenTtlSeconds = refreshTokenTtlSeconds,
-            authCookieSecure = authCookieSecure,
-            authCookieSameSite = authCookieSameSite,
-            googleOauthStateTtlSeconds = googleOauthStateTtlSeconds,
-            redirectContextTtlSeconds = redirectContextTtlSeconds,
-            oauthFlowCookieSameSite = oauthFlowCookieSameSite
-        )
-    }
-
-    private fun newJwtService(): AppJwtService {
-        return AppJwtService(
-            issuer = "test-issuer",
-            audience = "test-audience",
-            secret = "test-secret",
-            ttlSeconds = 900L
-        )
-    }
-
     private fun newRefreshTokenService(): RefreshTokenService {
         val dbPath = Files.createTempFile("refresh-token-routes-test", ".db").toString()
-        return RefreshTokenService(RefreshTokenRepository(dbPath), 2592000L)
+        return RefreshTokenService(RefreshTokenRepository(dbPath), 2592000)
     }
 
     private fun user(): GoogleUser = GoogleUser("subject", "user@example.com", "Jane", "Jane")
