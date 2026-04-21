@@ -47,6 +47,26 @@ fun Route.numberRoutes(
                 }
                 call.respond(HttpStatusCode.OK, SearchNumberResponse(result = result))
             }
+
+            post("/android-search") {
+
+                val user = call.readAuthenticatedUser(verifyAccessToken)
+                if (user == null) {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
+                    return@post
+                }
+
+                val request = runCatching { call.receive<SearchNumberRequest>() }.getOrNull()
+                if (request == null || request.number.isBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Request must include a non-empty number"))
+                    return@post
+                }
+
+                val result = numberSearchService.getOrLookup(request.number) { number ->
+                    lookupService.lookup(number)
+                }
+                call.respond(HttpStatusCode.OK, SearchNumberResponse(result = result))
+            }
         }
 
         authenticate("auth-jwt") {
