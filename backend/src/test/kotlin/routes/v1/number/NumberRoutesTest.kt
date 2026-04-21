@@ -226,6 +226,148 @@ class NumberRoutesTest {
         assertTrue(response.bodyAsText().contains("Invalid origin"))
     }
 
+    @Test
+    fun `android search returns unauthorized when bearer token is missing`() = testApplication {
+        application {
+            install(ContentNegotiation) { json() }
+            installNumberRoutes()
+        }
+
+        val response = client.post("/api/v1/number/android-search") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            setBody("""{"number":"1234567890"}""")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    @Test
+    fun `android search returns unauthorized when bearer token is invalid`() = testApplication {
+        application {
+            install(ContentNegotiation) { json() }
+            installNumberRoutes()
+        }
+
+        val response = client.post("/api/v1/number/android-search") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "Bearer invalid-token")
+            setBody("""{"number":"1234567890"}""")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    @Test
+    fun `android search returns bad request when number is blank`() = testApplication {
+        val jwtService = newJwtService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            installNumberRoutes()
+        }
+
+        val token = jwtService.issueAccessToken(user())
+
+        val response = client.post("/api/v1/number/android-search") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "Bearer $token")
+            setBody("""{"number":""}""")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
+
+    @Test
+    fun `android search returns success when request is valid without origin header`() = testApplication {
+        val jwtService = newJwtService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            installNumberRoutes()
+        }
+
+        val token = jwtService.issueAccessToken(user())
+
+        val response = client.post("/api/v1/number/android-search") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "Bearer $token")
+            setBody("""{"number":"1234567890"}""")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        val body = response.bodyAsText()
+        assertTrue(body.contains("\"result\""))
+        assertTrue(body.contains("\"country\""))
+        assertTrue(body.contains("\"countryCode\""))
+        assertTrue(body.contains("\"regionCode\""))
+        assertTrue(body.contains("\"numberType\""))
+        assertTrue(body.contains("\"internationalFormat\""))
+        assertTrue(body.contains("\"carrier\""))
+        assertTrue(body.contains("\"timeZones\""))
+    }
+
+    @Test
+    fun `android search ignores disallowed origin and relies on bearer token`() = testApplication {
+        val jwtService = newJwtService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            installNumberRoutes()
+        }
+
+        val token = jwtService.issueAccessToken(user())
+
+        val response = client.post("/api/v1/number/android-search") {
+            header(HttpHeaders.Origin, "https://evil.example")
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "Bearer $token")
+            setBody("""{"number":"1234567890"}""")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertTrue(response.bodyAsText().contains("\"result\""))
+    }
+
+    @Test
+    fun `android search persists and searches endpoint returns saved numbers`() = testApplication {
+        val jwtService = newJwtService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            installNumberRoutes()
+        }
+
+        val token = jwtService.issueAccessToken(user())
+
+        val searchedNumber = "1234567890"
+
+        val searchResponse = client.post("/api/v1/number/android-search") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "Bearer $token")
+            setBody("""{"number":"$searchedNumber"}""")
+        }
+        assertEquals(HttpStatusCode.OK, searchResponse.status)
+
+        val secondSearchResponse = client.post("/api/v1/number/android-search") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "Bearer $token")
+            setBody("""{"number":"$searchedNumber"}""")
+        }
+        assertEquals(HttpStatusCode.OK, secondSearchResponse.status)
+
+        val searchesResponse = client.get("/api/v1/number/all") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.OK, searchesResponse.status)
+        assertEquals("private, no-store", searchesResponse.headers[HttpHeaders.CacheControl])
+        val body = searchesResponse.bodyAsText()
+        assertTrue(body.contains("\"number\":\"$searchedNumber\""))
+        assertTrue(body.contains("\"result\""))
+        val occurrences = "\"number\":\"$searchedNumber\"".toRegex().findAll(body).count()
+        assertEquals(1, occurrences)
+    }
+
     private fun Application.installNumberRoutes(
         appConfig: AppConfig = testAppConfig(),
         accessTokenService: AppJwtService = newJwtService(),
