@@ -1,6 +1,6 @@
 package com.pna.backend.plugins
 
-import com.pna.backend.config.AppConfig
+import com.pna.backend.config.RootConfig
 import com.pna.backend.routes.v1.auth.googleAuthRoutes
 import com.pna.backend.routes.v1.number.numberRoutes
 import com.pna.backend.services.AppJwtService
@@ -16,7 +16,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Application.configureRouting(
-    appConfig: AppConfig,
+    rootConfig: RootConfig,
     accessTokenService: AppJwtService,
     refreshTokenService: RefreshTokenService,
     googleTokenVerifierService: GoogleTokenVerifierService,
@@ -33,7 +33,7 @@ fun Application.configureRouting(
         }
 
         googleAuthRoutes(
-            appConfig,
+            rootConfig,
             accessTokenService,
             refreshTokenService,
             googleTokenVerifierService,
@@ -41,7 +41,7 @@ fun Application.configureRouting(
         )
 
         numberRoutes(
-            appConfig,
+            rootConfig,
             accessTokenService::verify,
             lookupService,
             numberSearchService

@@ -1,6 +1,7 @@
 package com.pna.backend.routes.v1.auth
 
-import com.pna.backend.config.AppConfig
+
+import com.pna.backend.config.RootConfig
 import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
@@ -28,7 +29,7 @@ private data class GoogleLoginResult(
 )
 
 internal suspend fun ApplicationCall.handleGoogleRedirectRequest(
-    appConfig: AppConfig,
+    rootConfig: RootConfig,
     accessTokenService: AppJwtService,
     googleAuthCodeService: GoogleAuthCodeService,
     googleTokenVerifierService: GoogleTokenVerifierService,
@@ -37,30 +38,30 @@ internal suspend fun ApplicationCall.handleGoogleRedirectRequest(
     val callbackParams = readGoogleRedirectCallbackParams()
     if (callbackParams != null) {
         handleGoogleRedirectCallback(
-            appConfig = appConfig,
-            redirectContext = readRedirectContextFromCookies(
-                frontendBaseUrl = appConfig.frontendBaseUrl,
-                allowedOrigins = appConfig.allowedOrigins
+            rootConfig,
+            readRedirectContextFromCookies(
+                rootConfig.app.frontendBaseUrl,
+                rootConfig.app.allowedOriginsMapped
             ),
-            callbackParams = callbackParams,
-            accessTokenService = accessTokenService,
-            googleAuthCodeService = googleAuthCodeService,
-            googleTokenVerifierService = googleTokenVerifierService,
-            refreshTokenService = refreshTokenService
+            callbackParams,
+            accessTokenService,
+            googleAuthCodeService,
+            googleTokenVerifierService,
+            refreshTokenService
         )
         return
     }
 
     val redirectContext = readRedirectContextFromQuery(
-        frontendBaseUrl = appConfig.frontendBaseUrl,
-        allowedOrigins = appConfig.allowedOrigins
+        rootConfig.app.frontendBaseUrl,
+        rootConfig.app.allowedOriginsMapped
     )
 
-    startGoogleOauthFlow(appConfig, redirectContext)
+    startGoogleOauthFlow(rootConfig, redirectContext)
 }
 
 private suspend fun ApplicationCall.handleGoogleRedirectCallback(
-    appConfig: AppConfig,
+    rootConfig: RootConfig,
     redirectContext: FrontendRedirectContext,
     callbackParams: GoogleRedirectCallbackParams,
     accessTokenService: AppJwtService,
@@ -70,8 +71,8 @@ private suspend fun ApplicationCall.handleGoogleRedirectCallback(
 ) {
     val storedState = request.cookies[GOOGLE_OAUTH_STATE_COOKIE_NAME]
 
-    clearFrontendRedirectContextCookies(appConfig)
-    clearGoogleOauthStateCookie(appConfig)
+    clearFrontendRedirectContextCookies(rootConfig)
+    clearGoogleOauthStateCookie(rootConfig)
 
     suspend fun fail(message: String) {
         respondRedirectError(redirectContext, message)
@@ -93,10 +94,10 @@ private suspend fun ApplicationCall.handleGoogleRedirectCallback(
     }
 
     val loginResult = exchangeAndVerifyGoogleUser(
-        appConfig = appConfig,
-        authorizationCode = callbackParams.code,
-        googleAuthCodeService = googleAuthCodeService,
-        googleTokenVerifierService = googleTokenVerifierService
+        rootConfig,
+        callbackParams.code,
+        googleAuthCodeService,
+        googleTokenVerifierService
     )
 
     val user = loginResult.user ?: run {
@@ -109,9 +110,9 @@ private suspend fun ApplicationCall.handleGoogleRedirectCallback(
     }
 
     val accessToken = accessTokenService.issueAccessToken(user)
-    appendAuthAccessCookie(accessToken, appConfig)
+    appendAuthAccessCookie(accessToken, rootConfig)
     val refreshToken = refreshTokenService.createRefreshToken(user)
-    appendRefreshTokenCookie(refreshToken, appConfig)
+    appendRefreshTokenCookie(refreshToken, rootConfig)
     respondFrontendRedirect(buildFrontendRedirect(redirectContext.redirectBaseUrl, redirectContext.returnPath))
 }
 
@@ -128,31 +129,31 @@ private fun ApplicationCall.readGoogleRedirectCallbackParams(): GoogleRedirectCa
 }
 
 private suspend fun ApplicationCall.startGoogleOauthFlow(
-    appConfig: AppConfig,
+    rootConfig: RootConfig,
     redirectContext: FrontendRedirectContext
 ) {
     val state = generateGoogleOauthState()
-    appendFrontendRedirectContextCookies(redirectContext, appConfig)
-    appendGoogleOauthStateCookie(state, appConfig)
+    appendFrontendRedirectContextCookies(redirectContext, rootConfig)
+    appendGoogleOauthStateCookie(state, rootConfig)
 
     respondRedirect(
         buildGoogleAuthorizationUrl(
-            clientId = appConfig.googleClientId,
-            redirectUri = buildGoogleRedirectCallbackUri(appConfig),
-            state = state
+            rootConfig.google.clientId,
+            buildGoogleRedirectCallbackUri(rootConfig),
+            state
         )
     )
 }
 
 private fun exchangeAndVerifyGoogleUser(
-    appConfig: AppConfig,
+    rootConfig: RootConfig,
     authorizationCode: String,
     googleAuthCodeService: GoogleAuthCodeService,
     googleTokenVerifierService: GoogleTokenVerifierService
 ): GoogleLoginResult {
     val idToken = googleAuthCodeService.exchangeCodeForIdToken(
         code = authorizationCode,
-        redirectUri = buildGoogleRedirectCallbackUri(appConfig)
+        redirectUri = buildGoogleRedirectCallbackUri(rootConfig)
     )
 
     if (idToken.isNullOrBlank()) {
@@ -165,8 +166,8 @@ private fun exchangeAndVerifyGoogleUser(
     return GoogleLoginResult(user = user)
 }
 
-private fun buildGoogleRedirectCallbackUri(appConfig: AppConfig): String =
-    "${appConfig.publicBackendBaseUrl}$GOOGLE_REDIRECT_PATH"
+private fun buildGoogleRedirectCallbackUri(rootConfig: RootConfig): String =
+    "${rootConfig.app.publicBackendBaseUrl}$GOOGLE_REDIRECT_PATH"
 
 private fun buildGoogleAuthorizationUrl(
     clientId: String,

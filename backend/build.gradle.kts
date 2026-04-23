@@ -33,7 +33,11 @@ dependencies {
     implementation("com.googlecode.libphonenumber:geocoder:2.249")
     implementation("org.xerial:sqlite-jdbc:3.46.0.0")
     implementation("io.github.cdimascio:dotenv-java:3.0.0")
+    implementation("com.sksamuel.hoplite:hoplite-core:2.9.0")
+    implementation("com.sksamuel.hoplite:hoplite-yaml:2.9.0")
     implementation("com.auth0:java-jwt:4.5.1")
+
+    implementation("io.github.oshai:kotlin-logging-jvm:5.1.0")
 
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-server-tests-jvm")

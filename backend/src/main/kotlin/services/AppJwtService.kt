@@ -10,7 +10,7 @@ class AppJwtService(
     private val issuer: String,
     private val audience: String,
     secret: String,
-    private val ttlSeconds: Long,
+    private val ttlSeconds: Int,
     private val clock: Clock = Clock.systemUTC()
 ) {
     private val algorithm = Algorithm.HMAC256(secret)
@@ -21,7 +21,7 @@ class AppJwtService(
 
     fun issueAccessToken(user: GoogleUser): String {
         val now = clock.instant()
-        val expiresAt = now.plusSeconds(ttlSeconds)
+        val expiresAt = now.plusSeconds(ttlSeconds.toLong())
 
         return JWT.create()
             .withIssuer(issuer)

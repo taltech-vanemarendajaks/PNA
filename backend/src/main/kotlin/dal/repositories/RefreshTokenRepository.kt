@@ -28,10 +28,7 @@ data class RefreshTokenRecord(
 }
 
 class RefreshTokenRepository(
-    databasePath: String = System.getenv("REFRESH_TOKEN_DB_PATH")
-        ?.trim()
-        ?.ifBlank { null }
-        ?: "refresh-tokens.db"
+    databasePath: String = "refresh-tokens.db"
 ) {
     private val jdbcUrl = "jdbc:sqlite:$databasePath"
     private val expectedColumns = listOf(

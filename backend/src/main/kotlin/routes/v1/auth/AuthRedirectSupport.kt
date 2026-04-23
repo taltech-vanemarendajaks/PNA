@@ -1,7 +1,7 @@
 package com.pna.backend.routes.v1.auth
 
-import com.pna.backend.config.AppConfig
 import com.pna.backend.config.CorsOrigin
+import com.pna.backend.config.RootConfig
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -113,7 +113,7 @@ private fun resolveFrontendBaseUrl(
     return requestedFrontendOrigin
         ?.trim()
         ?.trimEnd('/')
-        ?.takeIf { AppConfig.isAllowedOrigin(it, allowedOrigins) }
+        ?.takeIf { RootConfig.isAllowedOrigin(it, allowedOrigins) }
         ?: configuredFrontendBaseUrl
 }
 

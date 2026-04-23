@@ -1,6 +1,6 @@
 package com.pna.backend
 
-import com.pna.backend.config.AppConfig
+import com.pna.backend.config.RootConfig
 import com.pna.backend.dal.repositories.NumberSearchRepository
 import com.pna.backend.dal.repositories.RefreshTokenRepository
 import com.pna.backend.plugins.configureHttp
@@ -20,39 +20,39 @@ import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.contentnegotiation.*
 
 fun main() {
-    val appConfig = AppConfig.load()
+    val rootConfig = RootConfig.load()
 
-    embeddedServer(Netty, port = appConfig.port, host = appConfig.host) {
-        module(appConfig)
+    embeddedServer(Netty, rootConfig.app.port, rootConfig.app.host) {
+        module(rootConfig)
     }
         .start(wait = true)
 }
 
-fun Application.module(appConfig: AppConfig = AppConfig.load()) {
+fun Application.module(rootConfig: RootConfig = RootConfig.load()) {
     val accessTokenService = AppJwtService(
-        issuer = appConfig.jwtIssuer,
-        audience = appConfig.jwtAudience,
-        secret = appConfig.jwtSecret,
-        ttlSeconds = appConfig.jwtTtlSeconds
+        rootConfig.jwt.issuer,
+        rootConfig.jwt.audience,
+        rootConfig.jwt.secret,
+        rootConfig.jwt.ttlSeconds
     )
 
     val googleTokenVerifierService = GoogleTokenVerifierService(
-        clientId = appConfig.googleClientId
+        rootConfig.google.clientId
     )
 
     val googleAuthCodeService = GoogleAuthCodeService(
-        clientId = appConfig.googleClientId,
-        clientSecret = appConfig.googleClientSecret
+        rootConfig.google.clientId,
+        rootConfig.google.clientSecret
     )
 
-    val refreshTokenRepository = RefreshTokenRepository()
+    val refreshTokenRepository = RefreshTokenRepository(rootConfig.database.refreshTokenPath)
     val refreshTokenService = RefreshTokenService(
-        repository = refreshTokenRepository,
-        ttlSeconds = appConfig.refreshTokenTtlSeconds,
+        refreshTokenRepository,
+        rootConfig.jwt.refreshTokenTtlSeconds,
     )
 
-    val lookupService = PhoneLookupService()
-    val numberSearchRepository = NumberSearchRepository()
+    val lookupService = PhoneLookupService(rootConfig.app.phoneLookupDefaultRegion)
+    val numberSearchRepository = NumberSearchRepository(rootConfig.database.numberSearchPath)
     val numberSearchService = NumberSearchService(numberSearchRepository)
 
     install(CallLogging)
@@ -61,16 +61,16 @@ fun Application.module(appConfig: AppConfig = AppConfig.load()) {
         json()
     }
 
-    configureHttp(appConfig)
+    configureHttp(rootConfig)
 
     configureSecurity(
         accessTokenService,
-        appConfig.jwtIssuer,
-        appConfig.jwtAudience
+        rootConfig.jwt.issuer,
+        rootConfig.jwt.audience
     )
 
     configureRouting(
-        appConfig,
+        rootConfig,
         accessTokenService,
         refreshTokenService,
         googleTokenVerifierService,

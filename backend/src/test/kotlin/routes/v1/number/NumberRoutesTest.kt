@@ -1,7 +1,6 @@
 package routes.v1.number
 
-import com.pna.backend.config.AppConfig
-import com.pna.backend.config.CorsOrigin
+import com.pna.backend.config.RootConfig
 import com.pna.backend.dal.repositories.NumberSearchRepository
 import com.pna.backend.plugins.configureSecurity
 import com.pna.backend.routes.v1.auth.AUTH_ACCESS_COOKIE_NAME
@@ -19,6 +18,8 @@ import io.ktor.server.auth.Authentication
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
+import testRootConfig
+import testJwtService
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -60,7 +61,7 @@ class NumberRoutesTest {
 
     @Test
     fun `search returns bad request when number is blank`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -81,7 +82,7 @@ class NumberRoutesTest {
 
     @Test
     fun `search returns success message when request is valid`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -111,7 +112,7 @@ class NumberRoutesTest {
 
     @Test
     fun `search accepts lowercase bearer auth scheme`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -132,7 +133,7 @@ class NumberRoutesTest {
 
     @Test
     fun `search accepts auth cookie`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -153,7 +154,7 @@ class NumberRoutesTest {
 
     @Test
     fun `search persists and searches endpoint returns saved numbers`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -181,6 +182,7 @@ class NumberRoutesTest {
         assertEquals(HttpStatusCode.OK, secondSearchResponse.status)
 
         val searchesResponse = client.get("/api/v1/number/all") {
+            header(HttpHeaders.Origin, "http://localhost:5173")
             header(HttpHeaders.Authorization, "Bearer $token")
         }
 
@@ -206,7 +208,7 @@ class NumberRoutesTest {
 
     @Test
     fun `search rejects disallowed origin`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
             install(ContentNegotiation) { json() }
@@ -226,54 +228,43 @@ class NumberRoutesTest {
         assertTrue(response.bodyAsText().contains("Invalid origin"))
     }
 
+    @Test
+    fun `searches rejects disallowed origin`() = testApplication {
+        val jwtService = testJwtService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            installNumberRoutes()
+        }
+
+        val token = jwtService.issueAccessToken(user())
+
+        val response = client.get("/api/v1/number/all") {
+            header(HttpHeaders.Origin, "https://evil.example")
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.Forbidden, response.status)
+        assertTrue(response.bodyAsText().contains("Invalid origin"))
+    }
+
     private fun Application.installNumberRoutes(
-        appConfig: AppConfig = testAppConfig(),
-        accessTokenService: AppJwtService = newJwtService(),
+        rootConfig: RootConfig = testRootConfig(),
+        accessTokenService: AppJwtService = testJwtService(),
         lookupService: PhoneLookupService = PhoneLookupService(),
         searchService: NumberSearchService = newSearchService(),
     ) {
         if (pluginOrNull(Authentication) == null) {
             configureSecurity(
                 accessTokenService,
-                appConfig.jwtIssuer,
-                appConfig.jwtAudience
+                rootConfig.jwt.issuer,
+                rootConfig.jwt.audience
             )
         }
 
         routing {
-            numberRoutes(appConfig, accessTokenService::verify, lookupService, searchService)
+            numberRoutes(rootConfig, accessTokenService::verify, lookupService, searchService)
         }
-    }
-
-    private fun newJwtService(): AppJwtService {
-        return AppJwtService(
-            issuer = "test-issuer",
-            audience = "test-audience",
-            secret = "test-secret",
-            ttlSeconds = 900L
-        )
-    }
-
-    private fun testAppConfig(): AppConfig {
-        return AppConfig(
-            port = 8080,
-            host = "0.0.0.0",
-            googleClientId = "client-id",
-            googleClientSecret = "client-secret",
-            publicBackendBaseUrl = "https://api.example.com",
-            frontendBaseUrl = "http://localhost:5173",
-            allowedOrigins = listOf(CorsOrigin(host = "localhost:5173", schemes = listOf("http"))),
-            jwtSecret = "test-secret",
-            jwtIssuer = "test-issuer",
-            jwtAudience = "test-audience",
-            jwtTtlSeconds = 900L,
-            authCookieSecure = false,
-            authCookieSameSite = "Lax",
-            googleOauthStateTtlSeconds = 600,
-            redirectContextTtlSeconds = 600,
-            refreshTokenTtlSeconds = 600,
-            oauthFlowCookieSameSite = "Lax"
-        )
     }
 
     private fun newSearchService(): NumberSearchService {
