@@ -17,22 +17,12 @@ Vite + React + TypeScript frontend for PNA.
 ## Quick Start
 
 ```bash
+cd pna-web
 pnpm install
-cp .env.example .env
 pnpm dev
 ```
 
 Frontend runs at `http://localhost:5173`.
-
-## Docker Compose
-
-From the repository root, you can start the frontend together with the backend and PostgreSQL:
-
-```bash
-docker compose up
-```
-
-The frontend will still be available at `http://localhost:5173`.
 
 ## `.env`
 
@@ -40,11 +30,9 @@ The frontend will still be available at `http://localhost:5173`.
 VITE_API_BASE_URL=http://localhost:8080
 ```
 
-Google login requirements:
+`VITE_API_BASE_URL` is the only frontend env variable currently read by the app. If it is omitted, the frontend falls back to `http://localhost:8080`.
 
-- Configure the Google OAuth web client redirect URI as `http://localhost:8080/api/v1/auth/google/redirect`.
-- Set backend `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
-- Google login uses a same-window backend redirect flow; set backend `FRONTEND_BASE_URL` to the frontend origin so the browser returns to the app after authentication.
+For full-stack Docker Compose startup and auth setup, see the repository root `README.md`.
 
 ## Scripts
 
@@ -73,7 +61,7 @@ For a single non-watch run:
 pnpm test:run
 ```
 
-Test files currently follow the `src/**/*.test.ts` pattern configured in `vitest.config.ts`.
+Test files currently follow the `src/**/*.test.{ts,tsx}` pattern configured in `vitest.config.ts`.
 
 ## PWA Testing
 
