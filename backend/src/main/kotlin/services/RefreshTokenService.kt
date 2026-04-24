@@ -19,13 +19,13 @@ class RefreshTokenService(
     private val ttlSeconds: Int,
     private val clock: Clock = Clock.systemUTC()
 ) {
-    fun createRefreshToken(user: GoogleUser): String {
+    fun createRefreshToken(user: GoogleUser, metadata: SessionClientMetadata): String {
         val refreshToken = generateToken()
-        repository.save(buildRecord(refreshToken, UUID.randomUUID().toString(), user))
+        repository.save(buildRecord(refreshToken, UUID.randomUUID().toString(), user, metadata))
         return refreshToken
     }
 
-    fun rotateRefreshToken(refreshToken: String): RefreshTokenRotation? {
+    fun rotateRefreshToken(refreshToken: String, metadata: SessionClientMetadata): RefreshTokenRotation? {
         val tokenHash = hashToken(refreshToken)
         val record = repository.findByHash(tokenHash) ?: return null
         val now = clock.instant()
@@ -35,19 +35,25 @@ class RefreshTokenService(
             return null
         }
 
-        if (record.replacedByTokenHash != null) {
+        if (record.replacedByTokenId != null) {
             repository.revokeFamily(record.familyId, now.toString())
             return null
         }
 
         val replacementToken = generateToken()
-        val replacementRecord = buildRecord(replacementToken, record.familyId, record.toUser())
+        val replacementRecord = buildRecord(
+            replacementToken,
+            record.familyId,
+            record.user,
+            metadata,
+            record.userId
+        )
 
-        if (!repository.rotate(record.tokenHash, replacementRecord)) {
+        if (!repository.rotate(record.id, record.tokenHash, replacementRecord, now)) {
             return null
         }
 
-        return RefreshTokenRotation(refreshToken = replacementToken, user = record.toUser())
+        return RefreshTokenRotation(refreshToken = replacementToken, user = record.user)
     }
 
     fun revokeRefreshToken(refreshToken: String?) {
@@ -59,17 +65,27 @@ class RefreshTokenService(
         repository.revokeFamily(record.familyId, clock.instant().toString())
     }
 
-    private fun buildRecord(refreshToken: String, familyId: String, user: GoogleUser): RefreshTokenRecord {
+    private fun buildRecord(
+        refreshToken: String,
+        familyId: String,
+        user: GoogleUser,
+        metadata: SessionClientMetadata,
+        userId: String? = null
+    ): RefreshTokenRecord {
+        val now = clock.instant()
         return RefreshTokenRecord(
-            tokenHash = hashToken(refreshToken),
-            familyId = familyId,
-            subject = user.subject,
-            email = user.email,
-            name = user.name,
-            givenName = user.givenName,
-            expiresAt = clock.instant().plusSeconds(ttlSeconds.toLong()).toString(),
-            revokedAt = null,
-            replacedByTokenHash = null
+            UUID.randomUUID().toString(),
+            userId,
+            user,
+            hashToken(refreshToken),
+            familyId,
+            now.plusSeconds(ttlSeconds.toLong()).toString(),
+            now.toString(),
+            null,
+            null,
+            null,
+            metadata.userAgent,
+            metadata.ipAddress
         )
     }
 

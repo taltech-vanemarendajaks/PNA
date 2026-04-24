@@ -46,14 +46,17 @@ fun testRootConfig(
             jdbcUrl = "urldb",
             username = "user",
             password = "password",
-            maximumPoolSize = 1,
-            numberSearchPath = "number-searches.db",
-            refreshTokenPath = "refresh-tokens.db"
+            maximumPoolSize = 10,
+            minimumIdle = 2,
+            connectionTimeoutMs = 10000,
+            idleTimeoutMs = 10000,
+            maxLifetimeMs = 10000,
+            autoCommit = false,
+            poolName = "app",
         ),
         GoogleConfig(
             clientId = "google-client-id",
-            clientSecret = "google-client-secret",
-            callbackUrl = "call-back"
+            clientSecret = "google-client-secret"
         )
     )
 }

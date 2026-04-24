@@ -37,12 +37,15 @@ data class DatabaseConfig(
     val username: String,
     val password: String,
     val maximumPoolSize: Int,
-    val numberSearchPath: String,
-    val refreshTokenPath: String
+    val minimumIdle: Int,
+    val connectionTimeoutMs: Long,
+    val idleTimeoutMs: Long,
+    val maxLifetimeMs: Long,
+    val autoCommit: Boolean,
+    val poolName: String
 )
 
 data class GoogleConfig(
     val clientId: String,
-    val clientSecret: String,
-    val callbackUrl: String
+    val clientSecret: String
 )

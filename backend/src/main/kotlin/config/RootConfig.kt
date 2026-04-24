@@ -1,11 +1,13 @@
 package com.pna.backend.config
 
 import com.sksamuel.hoplite.ConfigLoaderBuilder
+import com.sksamuel.hoplite.ExperimentalHoplite
 import com.sksamuel.hoplite.addMapSource
 import com.sksamuel.hoplite.addEnvironmentSource
 import com.sksamuel.hoplite.addResourceSource
 import io.github.cdimascio.dotenv.Dotenv
 import java.net.URI
+import kotlin.String
 
 data class CorsOrigin(
     val host: String,
@@ -24,6 +26,7 @@ data class RootConfig(
             return loadConfigFile()
         }
 
+        @OptIn(ExperimentalHoplite::class)
         internal fun loadConfigFile(
             dotenv: Dotenv = Dotenv.configure().ignoreIfMissing().load(),
             propertyOverrides: Map<String, Any>? = null
@@ -37,6 +40,7 @@ data class RootConfig(
             }
 
             val loaded = builder
+                .withExplicitSealedTypes()
                 .addResourceSource("/application-dev.yml", optional = true)
                 .addResourceSource("/application.yml")
                 .build()
@@ -56,6 +60,11 @@ data class RootConfig(
                 google = google.copy(
                     clientId = google.clientId.ifBlank { dotenv["GOOGLE_CLIENT_ID"] ?: "" },
                     clientSecret = google.clientSecret.ifBlank { dotenv["GOOGLE_CLIENT_SECRET"] ?: "" }
+                ),
+                database = database.copy(
+                    jdbcUrl = database.jdbcUrl.ifBlank { dotenv["DATABASE_JDBC_URL"] ?: "" },
+                    username = database.username.ifBlank { dotenv["DATABASE_USERNAME"] ?: "" },
+                    password = database.password.ifBlank { dotenv["DATABASE_PASSWORD"] ?: "" }
                 )
             )
         }
@@ -69,6 +78,15 @@ data class RootConfig(
             }
             check(google.clientSecret.isNotBlank()) {
                 "Missing Google client secret. Set GOOGLE_CLIENT_SECRET in the environment or .env."
+            }
+            check(database.jdbcUrl.isNotBlank()) {
+                "Missing database jdbcUrl. Set DATABASE_JDBC_URL in the environment or .env."
+            }
+            check(database.username.isNotBlank()) {
+                "Missing database username. Set DATABASE_USERNAME in the environment or .env."
+            }
+            check(database.password.isNotBlank()) {
+                "Missing database password. Set DATABASE_PASSWORD in the environment or .env."
             }
             return this
         }

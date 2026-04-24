@@ -122,11 +122,17 @@ class RootConfigCorsParsingTest {
                 "jwt.secret" to "injected-secret",
                 "google.clientId" to "injected-client-id",
                 "google.clientSecret" to "injected-client-secret",
+                "database.jdbcUrl" to "injected-database-jdbc-url",
+                "database.username" to "injected-database-username",
+                "database.password" to "injected-database-password",
             )
         )
 
         assertEquals("injected-secret", config.jwt.secret)
         assertEquals("injected-client-id", config.google.clientId)
         assertEquals("injected-client-secret", config.google.clientSecret)
+        assertEquals("injected-database-jdbc-url", config.database.jdbcUrl)
+        assertEquals("injected-database-username", config.database.username)
+        assertEquals("injected-database-password", config.database.password)
     }
 }

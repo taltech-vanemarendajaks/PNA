@@ -3,24 +3,20 @@ package com.pna.backend.services
 import com.pna.backend.dal.repositories.NumberSearchRepository
 import com.pna.backend.domain.auth.response.PhoneNumberLookupResult
 import com.pna.backend.domain.auth.response.SavedNumberSearchResponse
+import domain.auth.GoogleUser
 
 class NumberSearchService(
     private val repository: NumberSearchRepository
 ) {
 
-    fun getOrLookup(number: String, lookup: (String) -> PhoneNumberLookupResult): PhoneNumberLookupResult {
+    fun getOrLookup(user: GoogleUser, number: String, lookup: (String) -> PhoneNumberLookupResult): PhoneNumberLookupResult {
         val normalizedNumber = number.trim()
-        val cached = repository.findLatestByNumber(normalizedNumber)
-        if (cached != null) {
-            return cached.result
-        }
-
         val result = lookup(normalizedNumber)
-        repository.save(normalizedNumber, result)
+        repository.save(user, normalizedNumber, result)
         return result
     }
 
-    fun getAll(): List<SavedNumberSearchResponse> {
-        return repository.findAll()
+    fun getAll(user: GoogleUser): List<SavedNumberSearchResponse> {
+        return repository.findAllByUser(user)
     }
 }

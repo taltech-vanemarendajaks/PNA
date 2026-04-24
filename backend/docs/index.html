@@ -689,15 +689,6 @@
   <script>
     // Script section to load models into a JS Var
     var defs = {}
-            defs["AccessTokenResponse"] = {
-  "type" : "object",
-  "properties" : {
-    "accessToken" : {
-      "type" : "string",
-      "example" : "eyJhbGciOiJIUzI1NiJ9..."
-    }
-  }
-};
             defs["ErrorResponse"] = {
   "type" : "object",
   "properties" : {
@@ -778,21 +769,72 @@
   "type" : "object",
   "properties" : {
     "id" : {
-      "type" : "integer",
-      "format" : "int64",
-      "example" : 1
+      "type" : "string",
+      "format" : "uuid",
+      "example" : "0d4ef5e7-fd5f-4b49-817b-d2730c4c6b7f"
     },
     "number" : {
       "type" : "string",
       "example" : "+14155552671"
     },
-    "result" : {
-      "$ref" : "#/components/schemas/PhoneNumberLookupResult"
+    "results" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/SavedPhoneNumberLookupResult"
+      }
     },
     "createdAt" : {
       "type" : "string",
       "format" : "date-time",
       "example" : "2026-04-12T10:00:00Z"
+    }
+  }
+};
+            defs["SavedPhoneNumberLookupResult"] = {
+  "type" : "object",
+  "properties" : {
+    "country" : {
+      "type" : "string",
+      "nullable" : true,
+      "example" : "Estonia"
+    },
+    "countryCode" : {
+      "type" : "integer",
+      "nullable" : true,
+      "example" : 372
+    },
+    "regionCode" : {
+      "type" : "string",
+      "nullable" : true,
+      "example" : "EE"
+    },
+    "numberType" : {
+      "type" : "string",
+      "nullable" : true,
+      "example" : "Fixed line"
+    },
+    "internationalFormat" : {
+      "type" : "string",
+      "nullable" : true,
+      "example" : "+372 607 3001"
+    },
+    "carrier" : {
+      "type" : "string",
+      "nullable" : true,
+      "example" : "unknown"
+    },
+    "timeZones" : {
+      "type" : "array",
+      "nullable" : true,
+      "example" : [ "Europe/Tallinn" ],
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "createdAt" : {
+      "type" : "string",
+      "format" : "date-time",
+      "example" : "2026-04-12T10:05:00Z"
     }
   }
 };
@@ -1306,7 +1348,7 @@ except ApiException as e:
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Reads the HttpOnly refresh-token cookie, rotates it, and returns a fresh access JWT.</p>
+                        <p class="marked">Reads the HttpOnly refresh-token cookie, rotates it, and updates the authentication cookies. No response body is returned.</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v1/auth/refresh</span></code></pre>
@@ -1869,7 +1911,7 @@ except ApiException as e:
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Returns all saved phone number searches. Requires an authenticated access JWT presented by auth cookie or bearer header.</p>
+                        <p class="marked">Returns only the authenticated user&#x27;s saved phone number searches. Requires an authenticated access JWT presented by auth cookie or bearer header.</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v1/number/all</span></code></pre>

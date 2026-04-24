@@ -24,14 +24,14 @@ export function buildDescription(result: SearchNumberResult): string {
 }
 
 export function buildNumberLogItem(search: SavedNumberSearchResponse): NumberLogItem {
+  const latestResult = search.results[0];
+
   return {
-    phoneNumber: search.result.internationalFormat ?? search.number,
+    phoneNumber: latestResult?.internationalFormat ?? search.number,
     dateSearched: search.createdAt,
-    results: [
-      {
-        description: buildDescription(search.result),
-        logDate: search.createdAt,
-      },
-    ],
+    results: search.results.map((result) => ({
+      description: buildDescription(result),
+      logDate: result.createdAt,
+    })),
   };
 }
