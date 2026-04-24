@@ -3,9 +3,14 @@ import { redirectUnauthenticatedUser } from "./routeAuth";
 
 const getSessionMock = vi.hoisted(() => vi.fn());
 
-vi.mock("./auth", () => ({
-  getSession: getSessionMock,
-}));
+vi.mock("./auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./auth")>();
+
+  return {
+    ...actual,
+    getSession: getSessionMock,
+  };
+});
 
 describe("redirectUnauthenticatedUser", () => {
   it("allows authenticated users to continue", async () => {
@@ -25,10 +30,15 @@ describe("redirectUnauthenticatedUser", () => {
     });
   });
 
-  it("rethrows non-authentication failures", async () => {
+  it("redirects to login when the session request fails", async () => {
     const error = new Error("Backend unavailable");
     getSessionMock.mockRejectedValue(error);
 
-    await expect(redirectUnauthenticatedUser()).rejects.toBe(error);
+    await expect(redirectUnauthenticatedUser()).rejects.toMatchObject({
+      options: {
+        to: "/",
+        statusCode: 307,
+      },
+    });
   });
 });

@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import { startGoogleLoginWithRedirect } from "../api/auth/auth";
+import {
+  DEFAULT_AUTHENTICATED_PATH,
+  getSession,
+  startGoogleLoginWithRedirect,
+} from "../api/auth/auth";
 import { GoogleLoginButton } from "./GoogleLoginButton";
+
+export const LOGIN_REQUEST_FAILURE_MESSAGE = "Something went wrong. Please try again later.";
 
 function consumeAuthErrorFromQuery(): string | null {
   const query = new URLSearchParams(window.location.search);
@@ -28,11 +34,34 @@ export function GoogleLoginPanel() {
     }
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    void getSession()
+      .then((session) => {
+        if (!isActive || !session) {
+          return;
+        }
+
+        window.location.assign(DEFAULT_AUTHENTICATED_PATH);
+      })
+      .catch(() => {});
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   async function prepareGoogleRedirectLogin() {
     setError(null);
-    await startGoogleLoginWithRedirect(window.location, (url) => {
-      window.location.assign(url);
-    });
+
+    try {
+      await startGoogleLoginWithRedirect(window.location, (url) => {
+        window.location.assign(url);
+      });
+    } catch {
+      setError(LOGIN_REQUEST_FAILURE_MESSAGE);
+    }
   }
 
   return (
