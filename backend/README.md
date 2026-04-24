@@ -18,6 +18,12 @@ The backend loads tracked YAML config plus environment overrides.
 cp backend/.env.example backend/.env
 ```
 
+### Recommended local PostgreSQL setup
+
+For local development, the simplest setup is to use the root-level `compose.yaml` Postgres
+service. This avoids installing PostgreSQL directly on your machine and matches the
+recommended local `DATABASE_*` values in `backend/.env`.
+
 ```env
 GOOGLE_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-web-client-secret
@@ -41,7 +47,53 @@ Notes:
 ## Run
 
 ```bash
-./gradlew run
+cp .env.example .env
+cp backend/.env.example backend/.env
+docker compose up -d postgres
+cd backend && ./gradlew run
 ```
+
+- Run `cp .env.example .env` from the repository root before using Compose; the root Compose file reads variables from the root `.env`.
+- Run `docker compose up -d postgres` from the repository root.
+- Run `./gradlew run` from `backend/`.
+- The backend runs on your host machine; Docker is only used for the local PostgreSQL service.
+
+### Full Docker Compose stack
+
+You can also start the local database, backend, and frontend together from the repository root:
+
+```bash
+cp .env.example .env
+docker compose up
+```
+
+This Compose setup reads all required variables from the repository-root `.env` file.
+Start by copying `.env.example` to `.env`, then update values as needed for your machine.
+Google login will not work until you replace the placeholder Google OAuth values with real credentials.
+
+The checked-in Compose service starts PostgreSQL on `localhost:5432` with:
+
+- database: `pna`
+- user: `postgres`
+- password: `postgres-secret`
+
+If port `5432` is already in use on your machine, Docker will fail to start the local database
+until that conflict is resolved.
+
+Useful local database commands:
+
+```bash
+docker compose ps
+docker compose logs -f postgres
+docker compose down
+docker compose down -v
+```
+
+- `docker compose down` stops the database and keeps the local data volume.
+- `docker compose down -v` also removes the local Postgres data volume and resets the DB.
+- PostgreSQL data is stored in the named Compose volume `postgres_data`, which Docker creates
+  with the project-prefixed name `pna_postgres_data` for this repo.
+- Deleting containers alone, including from Docker Desktop, does not remove that volume, so the
+  database data remains until you remove the volume explicitly.
 
 Swagger UI will be available at `http://localhost:8080/swagger`.

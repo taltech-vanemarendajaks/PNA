@@ -24,6 +24,16 @@ pnpm dev
 
 Frontend runs at `http://localhost:5173`.
 
+## Docker Compose
+
+From the repository root, you can start the frontend together with the backend and PostgreSQL:
+
+```bash
+docker compose up
+```
+
+The frontend will still be available at `http://localhost:5173`.
+
 ## `.env`
 
 ```env
