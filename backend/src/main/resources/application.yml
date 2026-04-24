@@ -30,10 +30,13 @@ database:
   username:
   password:
   maximumPoolSize: 10
-  numberSearchPath: 'number-searches.db'
-  refreshTokenPath: 'refresh-tokens.db'
+  minimumIdle: 2
+  connectionTimeoutMs: 10000
+  idleTimeoutMs: 60000
+  maxLifetimeMs: 1800000
+  autoCommit: false
+  poolName: app-pool
 
 google:
   clientId:
   clientSecret:
-  callbackUrl: 'http://localhost:8080/auth/google/callback'

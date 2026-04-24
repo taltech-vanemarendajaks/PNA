@@ -1,8 +1,10 @@
 package com.pna.backend
 
 import com.pna.backend.config.RootConfig
+import com.pna.backend.dal.Database
 import com.pna.backend.dal.repositories.NumberSearchRepository
 import com.pna.backend.dal.repositories.RefreshTokenRepository
+import com.pna.backend.dal.repositories.UserRepository
 import com.pna.backend.plugins.configureHttp
 import com.pna.backend.plugins.configureRouting
 import com.pna.backend.plugins.configureSecurity
@@ -45,14 +47,24 @@ fun Application.module(rootConfig: RootConfig = RootConfig.load()) {
         rootConfig.google.clientSecret
     )
 
-    val refreshTokenRepository = RefreshTokenRepository(rootConfig.database.refreshTokenPath)
+    val database = Database(rootConfig.database)
+
+    database.migrate()
+
+    environment.monitor.subscribe(ApplicationStopping) {
+        database.close()
+    }
+
+    val userRepository = UserRepository(database)
+
+    val refreshTokenRepository = RefreshTokenRepository(database, userRepository)
     val refreshTokenService = RefreshTokenService(
         refreshTokenRepository,
         rootConfig.jwt.refreshTokenTtlSeconds,
     )
 
     val lookupService = PhoneLookupService(rootConfig.app.phoneLookupDefaultRegion)
-    val numberSearchRepository = NumberSearchRepository(rootConfig.database.numberSearchPath)
+    val numberSearchRepository = NumberSearchRepository(database, userRepository)
     val numberSearchService = NumberSearchService(numberSearchRepository)
 
     install(CallLogging)
