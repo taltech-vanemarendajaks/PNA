@@ -42,7 +42,7 @@ fun Route.numberRoutes(
                     return@post
                 }
 
-                val result = numberSearchService.getOrLookup(request.number) { number ->
+                val result = numberSearchService.getOrLookup(user, request.number) { number ->
                     lookupService.lookup(number)
                 }
                 call.respond(HttpStatusCode.OK, SearchNumberResponse(result = result))
@@ -63,7 +63,7 @@ fun Route.numberRoutes(
                 }
 
                 call.respondPrivateNoStore()
-                call.respond(HttpStatusCode.OK, numberSearchService.getAll())
+                call.respond(HttpStatusCode.OK, numberSearchService.getAll(user))
             }
         }
     }
