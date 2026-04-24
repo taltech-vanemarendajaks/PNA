@@ -1,6 +1,5 @@
 package com.pna.backend.routes.v1.auth
 
-
 import com.pna.backend.config.RootConfig
 import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.GoogleAuthCodeService
@@ -111,7 +110,7 @@ private suspend fun ApplicationCall.handleGoogleRedirectCallback(
 
     val accessToken = accessTokenService.issueAccessToken(user)
     appendAuthAccessCookie(accessToken, rootConfig)
-    val refreshToken = refreshTokenService.createRefreshToken(user)
+    val refreshToken = refreshTokenService.createRefreshToken(user, readSessionClientMetadata())
     appendRefreshTokenCookie(refreshToken, rootConfig)
     respondFrontendRedirect(buildFrontendRedirect(redirectContext.redirectBaseUrl, redirectContext.returnPath))
 }

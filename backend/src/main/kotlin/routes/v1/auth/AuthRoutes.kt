@@ -7,6 +7,7 @@ import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
 import com.pna.backend.services.RefreshTokenService
+import com.pna.backend.services.SessionClientMetadata
 import domain.auth.response.GoogleAuthResponse
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -71,7 +72,8 @@ private suspend fun ApplicationCall.handleRefresh(
     }
 
     val rotation = refreshTokenService.rotateRefreshToken(
-        request.cookies[REFRESH_TOKEN_COOKIE_NAME] ?: ""
+        request.cookies[REFRESH_TOKEN_COOKIE_NAME] ?: "",
+        readSessionClientMetadata()
     )
 
     if (rotation == null) {
@@ -109,5 +111,15 @@ private fun JWTPrincipal.toGoogleAuthResponse(): GoogleAuthResponse {
         email = payload.getClaim("email").asString(),
         name = payload.getClaim("name").asString(),
         givenName = payload.getClaim("givenName").asString()
+    )
+}
+
+internal fun ApplicationCall.readSessionClientMetadata(): SessionClientMetadata {
+    val remoteHost = request.local.remoteHost
+        .takeIf { it.isNotBlank() && !it.equals("unknown", ignoreCase = true) }
+
+    return SessionClientMetadata(
+        userAgent = request.headers[HttpHeaders.UserAgent]?.takeIf { it.isNotBlank() },
+        ipAddress = remoteHost
     )
 }
