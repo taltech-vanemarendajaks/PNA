@@ -19,4 +19,12 @@ class NumberSearchService(
     fun getAll(user: GoogleUser): List<SavedNumberSearchResponse> {
         return repository.findAllByUser(user)
     }
+
+    fun deleteById(user: GoogleUser, searchId: String): Boolean {
+        return repository.deleteById(user, searchId)
+    }
+
+    fun deleteAllByUser(user: GoogleUser): Int {
+        return repository.deleteAllByUser(user)
+    }
 }

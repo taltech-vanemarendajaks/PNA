@@ -885,11 +885,17 @@
                     <li data-group="Default" data-name="apiV1AuthSessionGet" class="">
                       <a href="#api-Default-apiV1AuthSessionGet">apiV1AuthSessionGet</a>
                     </li>
+                    <li data-group="Default" data-name="apiV1NumberAllDelete" class="">
+                      <a href="#api-Default-apiV1NumberAllDelete">apiV1NumberAllDelete</a>
+                    </li>
                     <li data-group="Default" data-name="apiV1NumberAllGet" class="">
                       <a href="#api-Default-apiV1NumberAllGet">apiV1NumberAllGet</a>
                     </li>
                     <li data-group="Default" data-name="apiV1NumberSearchPost" class="">
                       <a href="#api-Default-apiV1NumberSearchPost">apiV1NumberSearchPost</a>
+                    </li>
+                    <li data-group="Default" data-name="apiV1NumberSearchSearchIdDelete" class="">
+                      <a href="#api-Default-apiV1NumberSearchSearchIdDelete">apiV1NumberSearchSearchIdDelete</a>
                     </li>
                     <li data-group="Default" data-name="healthGet" class="">
                       <a href="#api-Default-healthGet">healthGet</a>
@@ -1902,6 +1908,311 @@ except ApiException as e:
                         </article>
                       </div>
                       <hr>
+                    <div id="api-Default-apiV1NumberAllDelete">
+                      <article id="api-Default-apiV1NumberAllDelete-0" data-group="User" data-name="apiV1NumberAllDelete" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV1NumberAllDelete</h1>
+                          <p>Delete all saved searches</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Deletes all saved &#x60;user_search&#x60; rows for the authenticated user. Shared phone number and result records are preserved.</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="delete"><code><span class="pln">/api/v1/number/all</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Default-apiV1NumberAllDelete-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllDelete-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllDelete-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1NumberAllDelete-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1NumberAllDelete-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllDelete-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1NumberAllDelete-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1NumberAllDelete-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllDelete-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllDelete-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberAllDelete-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Default-apiV1NumberAllDelete-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X DELETE\
+-H "Accept: application/json"\
+"//api/v1/number/all"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Default-apiV1NumberAllDelete-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.DefaultApi;
+
+import java.io.File;
+import java.util.*;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            apiInstance.apiV1NumberAllDelete();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1NumberAllDelete");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Default-apiV1NumberAllDelete-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        DefaultApi apiInstance = new DefaultApi();
+        try {
+            apiInstance.apiV1NumberAllDelete();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1NumberAllDelete");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Default-apiV1NumberAllDelete-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllDelete-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+DefaultApi *apiInstance = [[DefaultApi alloc] init];
+
+// Delete all saved searches
+[apiInstance apiV1NumberAllDeleteWithCompletionHandler: 
+              ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllDelete-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var PnaBackendApi = require('pna_backend_api');
+
+var api = new PnaBackendApi.DefaultApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.apiV1NumberAllDelete(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Default-apiV1NumberAllDelete-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllDelete-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV1NumberAllDeleteExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new DefaultApi();
+
+            try
+            {
+                // Delete all saved searches
+                apiInstance.apiV1NumberAllDelete();
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling DefaultApi.apiV1NumberAllDelete: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllDelete-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiDefaultApi();
+
+try {
+    $api_instance->apiV1NumberAllDelete();
+} catch (Exception $e) {
+    echo 'Exception when calling DefaultApi->apiV1NumberAllDelete: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllDelete-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::DefaultApi;
+
+my $api_instance = WWW::SwaggerClient::DefaultApi->new();
+
+eval { 
+    $api_instance->apiV1NumberAllDelete();
+};
+if ($@) {
+    warn "Exception when calling DefaultApi->apiV1NumberAllDelete: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberAllDelete-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.DefaultApi()
+
+try: 
+    # Delete all saved searches
+    api_instance.api_v1_number_all_delete()
+except ApiException as e:
+    print("Exception when calling DefaultApi->apiV1NumberAllDelete: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 204 - Saved searches deleted </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                            </div>
+
+                            <h3> Status: 403 - Origin is not allowed </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV1NumberAllDelete-403-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV1NumberAllDelete-403-schema">
+                                  <div id='responses-apiV1NumberAllDelete-403-schema-403' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Origin is not allowed",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV1NumberAllDelete-403-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1NumberAllDelete-403-schema-403');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV1NumberAllDelete-403-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 401 - Missing or invalid access JWT </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV1NumberAllDelete-401-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV1NumberAllDelete-401-schema">
+                                  <div id='responses-apiV1NumberAllDelete-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Missing or invalid access JWT",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV1NumberAllDelete-401-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1NumberAllDelete-401-schema-401');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV1NumberAllDelete-401-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
                     <div id="api-Default-apiV1NumberAllGet">
                       <article id="api-Default-apiV1NumberAllGet-0" data-group="User" data-name="apiV1NumberAllGet" data-version="0">
                         <div class="pull-left">
@@ -2613,6 +2924,394 @@ except ApiException as e:
                                     </script>
                                   </div>
                                   <input id='responses-apiV1NumberSearchPost-401-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Default-apiV1NumberSearchSearchIdDelete">
+                      <article id="api-Default-apiV1NumberSearchSearchIdDelete-0" data-group="User" data-name="apiV1NumberSearchSearchIdDelete" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV1NumberSearchSearchIdDelete</h1>
+                          <p>Delete one saved search</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Deletes one saved &#x60;user_search&#x60; row for the authenticated user. Shared phone number and result records are preserved.</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="delete"><code><span class="pln">/api/v1/number/search/{searchId}</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Default-apiV1NumberSearchSearchIdDelete-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchSearchIdDelete-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchSearchIdDelete-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1NumberSearchSearchIdDelete-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchSearchIdDelete-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchSearchIdDelete-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1NumberSearchSearchIdDelete-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchSearchIdDelete-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchSearchIdDelete-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchSearchIdDelete-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchSearchIdDelete-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Default-apiV1NumberSearchSearchIdDelete-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X DELETE\
+-H "Accept: application/json"\
+"//api/v1/number/search/{searchId}"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Default-apiV1NumberSearchSearchIdDelete-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.DefaultApi;
+
+import java.io.File;
+import java.util.*;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        
+        DefaultApi apiInstance = new DefaultApi();
+        String searchId = searchId_example; // String | 
+        try {
+            apiInstance.apiV1NumberSearchSearchIdDelete(searchId);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1NumberSearchSearchIdDelete");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Default-apiV1NumberSearchSearchIdDelete-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        DefaultApi apiInstance = new DefaultApi();
+        String searchId = searchId_example; // String | 
+        try {
+            apiInstance.apiV1NumberSearchSearchIdDelete(searchId);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1NumberSearchSearchIdDelete");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Default-apiV1NumberSearchSearchIdDelete-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchSearchIdDelete-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">String *searchId = searchId_example; // 
+
+DefaultApi *apiInstance = [[DefaultApi alloc] init];
+
+// Delete one saved search
+[apiInstance apiV1NumberSearchSearchIdDeleteWith:searchId
+              completionHandler: ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchSearchIdDelete-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var PnaBackendApi = require('pna_backend_api');
+
+var api = new PnaBackendApi.DefaultApi()
+var searchId = searchId_example; // {{String}} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.apiV1NumberSearchSearchIdDelete(searchId, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Default-apiV1NumberSearchSearchIdDelete-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchSearchIdDelete-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV1NumberSearchSearchIdDeleteExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new DefaultApi();
+            var searchId = searchId_example;  // String | 
+
+            try
+            {
+                // Delete one saved search
+                apiInstance.apiV1NumberSearchSearchIdDelete(searchId);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling DefaultApi.apiV1NumberSearchSearchIdDelete: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchSearchIdDelete-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiDefaultApi();
+$searchId = searchId_example; // String | 
+
+try {
+    $api_instance->apiV1NumberSearchSearchIdDelete($searchId);
+} catch (Exception $e) {
+    echo 'Exception when calling DefaultApi->apiV1NumberSearchSearchIdDelete: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchSearchIdDelete-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::DefaultApi;
+
+my $api_instance = WWW::SwaggerClient::DefaultApi->new();
+my $searchId = searchId_example; # String | 
+
+eval { 
+    $api_instance->apiV1NumberSearchSearchIdDelete(searchId => $searchId);
+};
+if ($@) {
+    warn "Exception when calling DefaultApi->apiV1NumberSearchSearchIdDelete: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchSearchIdDelete-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.DefaultApi()
+searchId = searchId_example # String | 
+
+try: 
+    # Delete one saved search
+    api_instance.api_v1_number_search_search_id_delete(searchId)
+except ApiException as e:
+    print("Exception when calling DefaultApi->apiV1NumberSearchSearchIdDelete: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">searchId*</td>
+                                  <td>
+                                  
+                                  
+                                      <div id="d2e199_apiV1NumberSearchSearchIdDelete_searchId">
+                                          <div class="json-schema-view">
+                                              <div class="primitive">
+                                                  <span class="type">
+                                                      String
+                                                  </span>
+                                  
+                                              </div>
+                                                  <div class="inner required">
+                                                      Required
+                                                  </div>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  </tr>
+                            </table>
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 204 - Saved search deleted </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                            </div>
+
+                            <h3> Status: 403 - Origin is not allowed </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV1NumberSearchSearchIdDelete-403-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV1NumberSearchSearchIdDelete-403-schema">
+                                  <div id='responses-apiV1NumberSearchSearchIdDelete-403-schema-403' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Origin is not allowed",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV1NumberSearchSearchIdDelete-403-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1NumberSearchSearchIdDelete-403-schema-403');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV1NumberSearchSearchIdDelete-403-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 401 - Missing or invalid access JWT </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV1NumberSearchSearchIdDelete-401-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV1NumberSearchSearchIdDelete-401-schema">
+                                  <div id='responses-apiV1NumberSearchSearchIdDelete-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Missing or invalid access JWT",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV1NumberSearchSearchIdDelete-401-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1NumberSearchSearchIdDelete-401-schema-401');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV1NumberSearchSearchIdDelete-401-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 404 - Saved search not found for the authenticated user </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-apiV1NumberSearchSearchIdDelete-404-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-apiV1NumberSearchSearchIdDelete-404-schema">
+                                  <div id='responses-apiV1NumberSearchSearchIdDelete-404-schema-404' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "Saved search not found for the authenticated user",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-apiV1NumberSearchSearchIdDelete-404-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1NumberSearchSearchIdDelete-404-schema-404');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-apiV1NumberSearchSearchIdDelete-404-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 
