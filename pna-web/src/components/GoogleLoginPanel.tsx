@@ -65,8 +65,8 @@ export function GoogleLoginPanel() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[60vh] w-full items-center justify-center">
-      <section className="w-full max-w-2xl rounded-4xl border border-base-300 bg-base-100 p-8 shadow-xl shadow-primary/5">
+    <div className="mx-auto flex w-full items-center justify-center">
+      <section className="w-full rounded-4xl border border-base-300 bg-base-100 p-8 shadow-xl shadow-primary/5">
         <span className="badge badge-primary mb-4">Authentication</span>
         <h1 className="text-4xl font-semibold sm:text-5xl">Login with Google</h1>
 
