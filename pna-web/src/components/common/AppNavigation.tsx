@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { handleLogout } from "../../api/auth/auth";
-import { ThemeController } from "./ThemeController";
 import { MobileAuthDock } from "./MobileAuthDock";
 
 export function AppNavigation({ isAuthenticatedRoute }: { isAuthenticatedRoute: boolean }) {
@@ -14,7 +13,6 @@ export function AppNavigation({ isAuthenticatedRoute }: { isAuthenticatedRoute: 
             </Link>
           </div>
           <nav className="flex gap-2">
-            <ThemeController />
             {isAuthenticatedRoute && (
               <div className="flex gap-2">
                 <Link to="/search" className="btn btn-ghost btn-sm">
