@@ -5,6 +5,8 @@ import { Alert } from "../common/Alert";
 import { NumberLogComponent } from "../number-log/NumberLogComponent";
 import { validatePhoneNumber } from "./SearchComponent.validation";
 import { isAuthenticationError, leaveAuthenticatedFlow } from "../../api/auth/auth";
+import { NumberLogSwap } from "../number-log/NumberLogSwap";
+
 
 export function getSearchErrorMessage(
   searchError: unknown,
@@ -118,9 +120,22 @@ export function SearchComponent() {
       {history.length > 0 ? (
         <div>
           <p className="text-2xl text-primary font-semibold">History</p>
-          <div className="mt-4 space-y-4">
+          <div className="mt-4 space-y-4 hidden sm:block w-auto">
+            {historyToDisplay.map((log) => (
+              <NumberLogComponent
+                key={`${log.phoneNumber}-${log.dateSearched}`}
+                log={log}
+                onDelete={(searchId) => handleDeletion(searchId)}
+              />
+            ))}
+          </div>
+          <div className="mt-4 space-y-4 sm:hidden w-full">
             {history.map((log) => (
-              <NumberLogComponent key={`${log.phoneNumber}-${log.dateSearched}`} log={log} />
+              <NumberLogSwap
+                key={`${log.phoneNumber}-${log.dateSearched}`}
+                log={log}
+                onDelete={(searchId) => handleDeletion(searchId)}
+              />
             ))}
           </div>
         </div>

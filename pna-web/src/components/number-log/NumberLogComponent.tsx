@@ -48,7 +48,7 @@ export function NumberLogComponent({ log }: NumberLogComponentProps) {
             )}
           </div>
         </div>
-        <div className="flex justify-end -mt-6">
+        <div className="justify-end -mt-6 hidden md:flex">
           <DeleteButton />
         </div>
       </div>
@@ -86,7 +86,7 @@ export function NumberLogComponent({ log }: NumberLogComponentProps) {
               {index + 1}. {formatResult(result)}
             </p>
           ))}
-          <div className="flex justify-end -mt-6">
+          <div className="justify-end -mt-6 hidden md:flex">
             <DeleteButton />
           </div>
         </div>
