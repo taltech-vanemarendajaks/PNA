@@ -1,12 +1,11 @@
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import { isAuthenticationError, leaveAuthenticatedFlow } from "../../api/auth/auth";
 import { deleteNumberLog, getAllNumberSearches, searchNumber } from "../../api/requests";
 import type { NumberLogItem } from "../../lib/numberLog";
 import { Alert } from "../common/Alert";
 import { NumberLogComponent } from "../number-log/NumberLogComponent";
-import { validatePhoneNumber } from "./SearchComponent.validation";
-import { isAuthenticationError, leaveAuthenticatedFlow } from "../../api/auth/auth";
 import { NumberLogSwap } from "../number-log/NumberLogSwap";
-
+import { validatePhoneNumber } from "./SearchComponent.validation";
 
 export function getSearchErrorMessage(
   searchError: unknown,
@@ -20,6 +19,18 @@ export function getSearchErrorMessage(
   return searchError instanceof Error ? searchError.message : "Search failed.";
 }
 
+export function getDeletionErrorMessage(
+  deletionError: unknown,
+  onUnauthenticated?: () => void,
+): string | null {
+  if (isAuthenticationError(deletionError)) {
+    onUnauthenticated?.();
+    return null;
+  }
+
+  return deletionError instanceof Error ? deletionError.message : "Deletion failed.";
+}
+
 export function SearchComponent() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -28,10 +39,16 @@ export function SearchComponent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const onUnauthenticatedRef = useRef(leaveAuthenticatedFlow);
 
-
   const handleDeletion = async (searchId: string) => {
     try {
       await deleteNumberLog(searchId);
+      setError(null);
+
+      if (resultMessage?.id === searchId) {
+        setResultMessage(null);
+      }
+
+      await loadHistory();
     } catch (deletionError: unknown) {
       const deletionErrorMessage = getDeletionErrorMessage(
         deletionError,
@@ -40,7 +57,6 @@ export function SearchComponent() {
 
       if (!deletionErrorMessage) {
         setError(null);
-        loadHistory();
         return;
       }
 
@@ -48,18 +64,18 @@ export function SearchComponent() {
     }
   };
 
-    async function loadHistory() {
-      try {
-        const searches = await getAllNumberSearches();
-        setHistory(searches);
-      } catch (historyLoadError: unknown) {
-        getSearchErrorMessage(historyLoadError, onUnauthenticatedRef.current);
-      }
+  const loadHistory = useCallback(async () => {
+    try {
+      const searches = await getAllNumberSearches();
+      setHistory(searches);
+    } catch (historyLoadError: unknown) {
+      getSearchErrorMessage(historyLoadError, onUnauthenticatedRef.current);
     }
+  }, []);
 
   useEffect(() => {
     void loadHistory();
-  }, []);
+  }, [loadHistory]);
 
   function handlePhoneNumberChange(event: ChangeEvent<HTMLInputElement>) {
     const nextPhoneNumber = event.currentTarget.value;
@@ -84,13 +100,7 @@ export function SearchComponent() {
     try {
       const result = await searchNumber(phoneNumber);
       setResultMessage(result);
-
-      try {
-        const searches = await getAllNumberSearches();
-        setHistory(searches);
-      } catch (historyLoadError: unknown) {
-        getSearchErrorMessage(historyLoadError, onUnauthenticatedRef.current);
-      }
+      await loadHistory();
     } catch (searchError: unknown) {
       const searchErrorMessage = getSearchErrorMessage(searchError, onUnauthenticatedRef.current);
 
@@ -141,7 +151,7 @@ export function SearchComponent() {
         <div>
           <p className="text-2xl text-primary font-semibold">History</p>
           <div className="mt-4 space-y-4 hidden sm:block w-auto">
-            {historyToDisplay.map((log) => (
+            {history.map((log) => (
               <NumberLogComponent
                 key={`${log.phoneNumber}-${log.dateSearched}`}
                 log={log}
