@@ -1,6 +1,32 @@
+import { useRef, useState } from "react";
+import { deleteAllNumberLogHistory } from "../../api/requests";
 import { ThemeController } from "../common/ThemeController";
+import { getDeletionErrorMessage } from "../search-component/SearchComponent";
+import { Alert } from "../common/Alert";
+import { leaveAuthenticatedFlow } from "../../api/auth/auth";
 
 export function SettingsComponent() {
+  const [error, setError] = useState<string | null>(null);
+  const onUnauthenticatedRef = useRef(leaveAuthenticatedFlow);
+
+  const handleDeleteAll = async () => {
+    try {
+      await deleteAllNumberLogHistory();
+    } catch (deletionError: unknown) {
+      const deletionErrorMessage = getDeletionErrorMessage(
+        deletionError,
+        onUnauthenticatedRef.current,
+      );
+
+      if (!deletionErrorMessage) {
+        setError(null);
+        return;
+      }
+
+      setError(deletionErrorMessage);
+    }
+  };
+
   return (
     <section className="mx-auto w-full rounded-4xl border border-base-300 bg-base-100 p-8 shadow-xl shadow-primary/5 sm:p-10">
       <div className="max-w-3xl">
@@ -21,9 +47,16 @@ export function SettingsComponent() {
                 <p className="text-md font-semibold">Remove Data</p>
                 <span>Clear all number search history</span>
               </div>
-              <button type="button" className="btn btn-error">
+              <button
+                type="button"
+                className="btn btn-error"
+                onClick={() => {
+                  void handleDeleteAll();
+                }}
+              >
                 Remove
               </button>
+              {error ? <Alert type="error" message={error} /> : null}
             </div>
           </div>
         </div>

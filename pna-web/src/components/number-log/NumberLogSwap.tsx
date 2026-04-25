@@ -1,13 +1,14 @@
 import { useRef, useState } from "react";
-import { TrashIcon } from "@heroicons/react/24/outline";
 import type { NumberLogItem } from "../../lib/numberLog";
 import { NumberLogComponent } from "./NumberLogComponent";
+import { DeleteButton } from "./DeleteButton";
 
 type NumberLogSwapProps = {
-  log: NumberLogItem | null;
+  log: NumberLogItem;
+  onDelete: (searchId: string) => void;
 };
 
-export function NumberLogSwap({ log }: NumberLogSwapProps) {
+export function NumberLogSwap({ log, onDelete }: NumberLogSwapProps) {
   const [isSwapped, setIsSwapped] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
 
@@ -51,23 +52,21 @@ export function NumberLogSwap({ log }: NumberLogSwapProps) {
 
   return (
     <div
-      className={`swap swap-flip ${isSwapped ? "swap-active" : ""}`}
+      className={`swap swap-flip grid w-full place-content-stretch *:w-full ${isSwapped ? "swap-active" : ""}`}
       onTouchEnd={handleTouchEnd}
       onTouchStart={handleTouchStart}
     >
       <button
-        className="swap-on"
+        className="swap-on w-full"
         onClick={handleSwapOff}
         onKeyDown={handleSwapOffKeyDown}
         type="button"
       >
         <div className="flex items-center justify-center h-full w-full">
-          <span className="btn btn-outline btn-error p-2 w-16 h-16">
-            <TrashIcon className="size-8" />
-          </span>
+          <DeleteButton variant="large" onClick={() => onDelete(log.id)} />
         </div>
       </button>
-      <div className="swap-off">
+      <div className="swap-off w-full">
         <NumberLogComponent log={log} />
       </div>
     </div>

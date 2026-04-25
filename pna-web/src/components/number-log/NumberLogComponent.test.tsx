@@ -16,6 +16,7 @@ function renderComponent(log: NumberLogItem) {
 describe("NumberLogComponent", () => {
   it("renders a non-collapsible card for a single result", () => {
     const log: NumberLogItem = {
+      id: "1",
       phoneNumber: "+372 5551 2048",
       dateSearched: "2026-03-18T09:42:00Z",
       results: [
@@ -39,6 +40,7 @@ describe("NumberLogComponent", () => {
 
   it("renders multiple results in the order provided inside a collapsible details block", () => {
     const log: NumberLogItem = {
+      id: "2",
       phoneNumber: "+372 5887 3164",
       dateSearched: "2026-03-20T14:17:00Z",
       results: [

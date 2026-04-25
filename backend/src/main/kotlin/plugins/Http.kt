@@ -15,6 +15,7 @@ fun Application.configureHttp(rootConfig: RootConfig) {
 
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Options)
 
         allowHeader(HttpHeaders.Authorization)

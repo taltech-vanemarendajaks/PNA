@@ -32,7 +32,7 @@ type ExecuteApiActionOptions<TRequest> = {
 
 type RequestOptions<TRequest> = {
   path: string;
-  method: "GET" | "POST";
+  method: "GET" | "POST" | "DELETE";
   body?: TRequest;
   preflight?: ApiRequestPreflight;
   allowAuthRefresh?: boolean;
@@ -115,6 +115,19 @@ export async function executeApiActionWithResponse<TResponse, TRequest = never>(
   const response = await executeRequest({ path, method: "POST", body, preflight });
 
   return parseApiResponse<TResponse>(response);
+}
+
+export async function executeApiDelete<TRequest>({
+  path,
+  body,
+  preflight,
+}: ExecuteApiActionOptions<TRequest>): Promise<void> {
+  const response = await executeRequest({ path, method: "DELETE", body, preflight });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => ({}))) as ApiError;
+    throw new ApiResponseError(response.status, payload);
+  }
 }
 
 function shouldAttemptRefresh(path: string): boolean {

@@ -1,5 +1,5 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
-import { getAllNumberSearches, searchNumber } from "../../api/requests";
+import { deleteNumberLog, getAllNumberSearches, searchNumber } from "../../api/requests";
 import type { NumberLogItem } from "../../lib/numberLog";
 import { Alert } from "../common/Alert";
 import { NumberLogComponent } from "../number-log/NumberLogComponent";
@@ -28,7 +28,26 @@ export function SearchComponent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const onUnauthenticatedRef = useRef(leaveAuthenticatedFlow);
 
-  useEffect(() => {
+
+  const handleDeletion = async (searchId: string) => {
+    try {
+      await deleteNumberLog(searchId);
+    } catch (deletionError: unknown) {
+      const deletionErrorMessage = getDeletionErrorMessage(
+        deletionError,
+        onUnauthenticatedRef.current,
+      );
+
+      if (!deletionErrorMessage) {
+        setError(null);
+        loadHistory();
+        return;
+      }
+
+      setError(deletionErrorMessage);
+    }
+  };
+
     async function loadHistory() {
       try {
         const searches = await getAllNumberSearches();
@@ -38,6 +57,7 @@ export function SearchComponent() {
       }
     }
 
+  useEffect(() => {
     void loadHistory();
   }, []);
 

@@ -4,6 +4,7 @@ export type NumberResult = {
 };
 
 export type NumberLogItem = {
+  id: string;
   phoneNumber: string;
   dateSearched: string;
   results: NumberResult[];

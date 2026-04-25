@@ -27,6 +27,7 @@ export function buildNumberLogItem(search: SavedNumberSearchResponse): NumberLog
   const latestResult = search.results[0];
 
   return {
+    id: search.id,
     phoneNumber: latestResult?.internationalFormat ?? search.number,
     dateSearched: search.createdAt,
     results: search.results.map((result) => ({
