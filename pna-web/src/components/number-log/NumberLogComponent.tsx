@@ -1,4 +1,6 @@
 import type { NumberLogItem, NumberResult } from "../../lib/numberLog";
+import { DeleteButton } from "./DeleteButton";
+import "./NumberLogComponent.css";
 
 type NumberLogComponentProps = {
   log: NumberLogItem | null;
@@ -31,18 +33,23 @@ export function NumberLogComponent({ log }: NumberLogComponentProps) {
   if (resultCount <= 1) {
     return (
       <div className="bg-base-100 border-base-300 border rounded-box p-4">
-        <h3 className="font-semibold text-xl text-accent">{log.phoneNumber}</h3>
-        <div className="text-sm">
-          <span className="font-semibold">Date Searched: </span>
-          <span>{formatLocalDateTime(log.dateSearched)}</span>
+        <div className="w-[90%]">
+          <h3 className="font-semibold text-xl text-accent">{log.phoneNumber}</h3>
+          <div className="text-sm">
+            <span className="font-semibold">Date Searched: </span>
+            <span>{formatLocalDateTime(log.dateSearched)}</span>
+          </div>
+          <div className="text-sm">
+            {latestResult && (
+              <>
+                <span className="font-semibold">Latest find: </span>
+                <span>{formatResult(latestResult)}</span>
+              </>
+            )}
+          </div>
         </div>
-        <div className="text-sm">
-          {latestResult && (
-            <>
-              <span className="font-semibold">Latest find: </span>
-              <span>{formatResult(latestResult)}</span>
-            </>
-          )}
+        <div className="flex justify-end -mt-6">
+          <DeleteButton />
         </div>
       </div>
     );
@@ -50,22 +57,39 @@ export function NumberLogComponent({ log }: NumberLogComponentProps) {
 
   return (
     <details className="group collapse collapse-arrow bg-base-100 border-base-300 border">
-      <summary className="collapse-title">
+      <summary className="collapse-title flex flex-col after:top-8!">
         <h3 className="font-semibold text-xl text-accent">{`${log.phoneNumber} (${resultCount})`}</h3>
         <div className="text-sm">
           <span className="font-semibold">Date Searched: </span>
           <span>{formatLocalDateTime(log.dateSearched)}</span>
         </div>
-        {latestResult && (
-          <span className="group-open:hidden text-sm">{formatResult(latestResult)}</span>
-        )}
+        <div className="grid motion-preview-collapse">
+          <div className="overflow-hidden motion-preview-fade">
+            <div className="text-sm">
+              {latestResult && (
+                <>
+                  <span className="font-semibold">Latest find: </span>
+                  <span>{formatResult(latestResult)}</span>
+                </>
+              )}
+            </div>
+            <div className="flex justify-end -mt-6 -mr-8">
+              <DeleteButton />
+            </div>
+          </div>
+        </div>
       </summary>
       <div className="collapse-content text-sm">
-        {log.results.map((result, index) => (
-          <p key={`${result.logDate}-${result.description}`}>
-            {index + 1}. {formatResult(result)}
-          </p>
-        ))}
+        <div className="motion-expanded-fade">
+          {log.results.map((result, index) => (
+            <p key={`${result.logDate}-${result.description}`}>
+              {index + 1}. {formatResult(result)}
+            </p>
+          ))}
+          <div className="flex justify-end -mt-6">
+            <DeleteButton />
+          </div>
+        </div>
       </div>
     </details>
   );

@@ -1,0 +1,32 @@
+@media (prefers-reduced-motion: no-preference) {
+  .motion-preview-collapse,
+  .motion-preview-fade,
+  .motion-expanded-fade {
+    transition: all 300ms ease-in-out;
+  }
+}
+
+.motion-preview-collapse {
+  grid-template-rows: 1fr;
+}
+details[open].group .motion-preview-collapse {
+  grid-template-rows: 0fr;
+}
+
+.motion-preview-fade {
+  opacity: 1;
+  transform: translateY(0);
+}
+details[open].group .motion-preview-fade {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+}
+
+.motion-expanded-fade {
+  opacity: 0;
+  transform: translateY(0.5rem);
+}
+details[open].group .motion-expanded-fade {
+  opacity: 1;
+  transform: translateY(0);
+}
