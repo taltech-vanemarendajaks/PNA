@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { logout } from "../api/auth/auth";
 import { redirectUnauthenticatedUser } from "../api/auth/routeAuth";
-import { isAuthenticationError } from "../api/command";
 import { SearchComponent } from "../components/search-component/SearchComponent";
+import { isAuthenticationError } from "../api/auth/auth";
 
 export const Route = createFileRoute("/search")({
   beforeLoad: () => redirectUnauthenticatedUser(),
@@ -23,48 +21,9 @@ export function getLogoutErrorMessage(
 }
 
 function SearchRoute() {
-  const [logoutError, setLogoutError] = useState<string | null>(null);
-
-  function leaveAuthenticatedFlow() {
-    window.location.assign("/");
-  }
-
-  async function handleLogout() {
-    setLogoutError(null);
-
-    try {
-      await logout();
-      leaveAuthenticatedFlow();
-    } catch (error: unknown) {
-      const logoutErrorMessage = getLogoutErrorMessage(error, leaveAuthenticatedFlow);
-
-      if (!logoutErrorMessage) {
-        return;
-      }
-
-      setLogoutError(logoutErrorMessage);
-    }
-  }
-
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <div className="mb-4 hidden justify-end md:flex">
-        <button
-          type="button"
-          className="btn btn-outline btn-sm"
-          onClick={() => void handleLogout()}
-        >
-          Logout
-        </button>
-      </div>
-
-      {logoutError ? (
-        <div role="alert" className="alert alert-error mb-4">
-          <span>{logoutError}</span>
-        </div>
-      ) : null}
-
-      <SearchComponent onUnauthenticated={leaveAuthenticatedFlow} />
+      <SearchComponent />
     </div>
   );
 }

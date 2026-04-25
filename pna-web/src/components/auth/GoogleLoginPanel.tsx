@@ -3,7 +3,7 @@ import {
   DEFAULT_AUTHENTICATED_PATH,
   getSession,
   startGoogleLoginWithRedirect,
-} from "../api/auth/auth";
+} from "../../api/auth/auth";
 import { GoogleLoginButton } from "./GoogleLoginButton";
 
 export const LOGIN_REQUEST_FAILURE_MESSAGE = "Something went wrong. Please try again later.";

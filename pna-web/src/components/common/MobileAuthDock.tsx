@@ -4,12 +4,9 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { Link } from "@tanstack/react-router";
+import { handleLogout } from "../../api/auth/auth";
 
-type MobileAuthDockProps = {
-  onLogout: () => void;
-};
-
-export function MobileAuthDock({ onLogout }: MobileAuthDockProps) {
+export function MobileAuthDock() {
   return (
     <nav aria-label="Authenticated navigation" className="dock dock-sm md:hidden">
       <Link to="/search" aria-label="Search" activeProps={{ className: "dock-active" }}>
@@ -20,7 +17,7 @@ export function MobileAuthDock({ onLogout }: MobileAuthDockProps) {
         <Cog6ToothIcon className="size-7" />
       </Link>
 
-      <button type="button" aria-label="Logout" onClick={onLogout}>
+      <button type="button" aria-label="Logout" onClick={() => void handleLogout()}>
         <ArrowRightStartOnRectangleIcon className="size-7" />
       </button>
     </nav>

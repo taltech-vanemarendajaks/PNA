@@ -1,14 +1,10 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
-import { isAuthenticationError } from "../../api/command";
 import { getAllNumberSearches, searchNumber } from "../../api/requests";
 import type { NumberLogItem } from "../../lib/numberLog";
 import { Alert } from "../common/Alert";
 import { NumberLogComponent } from "../number-log/NumberLogComponent";
 import { validatePhoneNumber } from "./SearchComponent.validation";
-
-type SearchComponentProps = {
-  onUnauthenticated?: () => void;
-};
+import { isAuthenticationError, leaveAuthenticatedFlow } from "../../api/auth/auth";
 
 export function getSearchErrorMessage(
   searchError: unknown,
@@ -22,17 +18,13 @@ export function getSearchErrorMessage(
   return searchError instanceof Error ? searchError.message : "Search failed.";
 }
 
-export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
+export function SearchComponent() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [resultMessage, setResultMessage] = useState<NumberLogItem | null>(null);
   const [history, setHistory] = useState<NumberLogItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const onUnauthenticatedRef = useRef(onUnauthenticated);
-
-  useEffect(() => {
-    onUnauthenticatedRef.current = onUnauthenticated;
-  }, [onUnauthenticated]);
+  const onUnauthenticatedRef = useRef(leaveAuthenticatedFlow);
 
   useEffect(() => {
     async function loadHistory() {
@@ -75,10 +67,10 @@ export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
         const searches = await getAllNumberSearches();
         setHistory(searches);
       } catch (historyLoadError: unknown) {
-        getSearchErrorMessage(historyLoadError, onUnauthenticated);
+        getSearchErrorMessage(historyLoadError, onUnauthenticatedRef.current);
       }
     } catch (searchError: unknown) {
-      const searchErrorMessage = getSearchErrorMessage(searchError, onUnauthenticated);
+      const searchErrorMessage = getSearchErrorMessage(searchError, onUnauthenticatedRef.current);
 
       if (!searchErrorMessage) {
         setError(null);

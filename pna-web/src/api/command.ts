@@ -17,10 +17,6 @@ export function hasApiResponseStatus(error: unknown, expectedStatus: number | nu
   return error instanceof ApiResponseError && statuses.includes(error.status);
 }
 
-export function isAuthenticationError(error: unknown): boolean {
-  return hasApiResponseStatus(error, [401, 403]);
-}
-
 type ApiRequestPreflight = () => Promise<void>;
 
 type ExecuteApiQueryOptions = {
