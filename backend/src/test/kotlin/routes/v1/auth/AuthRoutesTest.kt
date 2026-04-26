@@ -22,13 +22,13 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.auth.Authentication
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import kotlinx.serialization.json.*
 import support.TestDatabase
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -253,6 +253,194 @@ class AuthRoutesTest {
         assertTrue(setCookies.any { it.contains("pna_google_oauth_state=") && it.contains("SameSite=Lax") })
         assertTrue(setCookies.any { it.contains("pna_frontend_origin=") && it.contains("SameSite=Lax") })
         assertTrue(setCookies.any { it.contains("pna_return_path=") && it.contains("SameSite=Lax") })
+    }
+
+    @Test
+    fun `android google login verifies id token and returns access and refresh tokens`() = testApplication {
+        val refreshTokenService = newRefreshTokenService()
+        val jwtService = newJwtService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            installAuthRoutes(
+                accessTokenService = jwtService,
+                refreshTokenService = refreshTokenService,
+                verifyGoogleCredential = { idToken ->
+                    if (idToken == "android-google-id-token") user() else null
+                }
+            )
+        }
+
+        val response = client.post("/api/v1/auth/google") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "idToken": "android-google-id-token"
+                }
+                """.trimIndent()
+            )
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("private, no-store", response.headers[HttpHeaders.CacheControl])
+
+        val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        val accessToken = body["token"]?.jsonPrimitive?.content
+        val refreshToken = body["refreshToken"]?.jsonPrimitive?.content
+        val displayName = body["displayName"]?.jsonPrimitive?.content
+
+        assertNotNull(accessToken)
+        assertNotNull(refreshToken)
+        assertEquals("Jane", displayName)
+
+        val verifiedUser = jwtService.verify(accessToken)
+        assertNotNull(verifiedUser)
+        assertEquals("subject", verifiedUser.subject)
+        assertEquals("user@example.com", verifiedUser.email)
+
+        val rotation = refreshTokenService.rotateRefreshToken(refreshToken)
+        assertNotNull(rotation)
+        assertEquals("subject", rotation.user.subject)
+    }
+
+    @Test
+    fun `android google login rejects blank id token`() = testApplication {
+        application {
+            install(ContentNegotiation) { json() }
+            installAuthRoutes()
+        }
+
+        val response = client.post("/api/v1/auth/google") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "idToken": ""
+                }
+                """.trimIndent()
+            )
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertTrue(response.bodyAsText().contains("idToken is required"))
+    }
+
+    @Test
+    fun `android google login rejects invalid google id token`() = testApplication {
+        application {
+            install(ContentNegotiation) { json() }
+            installAuthRoutes(
+                verifyGoogleCredential = { null }
+            )
+        }
+
+        val response = client.post("/api/v1/auth/google") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "idToken": "invalid-token"
+                }
+                """.trimIndent()
+            )
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertTrue(response.bodyAsText().contains("Invalid Google token"))
+    }
+
+    @Test
+    fun `android refresh rotates refresh token and returns new access and refresh tokens`() = testApplication {
+        val refreshTokenService = newRefreshTokenService()
+        val jwtService = newJwtService()
+        val originalRefreshToken = refreshTokenService.createRefreshToken(user())
+
+        application {
+            install(ContentNegotiation) { json() }
+            installAuthRoutes(
+                accessTokenService = jwtService,
+                refreshTokenService = refreshTokenService
+            )
+        }
+
+        val response = client.post("/api/v1/auth/android-refresh") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "refreshToken": "$originalRefreshToken"
+                }
+                """.trimIndent()
+            )
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("private, no-store", response.headers[HttpHeaders.CacheControl])
+
+        val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+
+        val newAccessToken = body["token"]?.jsonPrimitive?.content
+        val newRefreshToken = body["refreshToken"]?.jsonPrimitive?.content
+
+        assertNotNull(newAccessToken)
+        assertNotNull(newRefreshToken)
+        assertTrue(newRefreshToken != originalRefreshToken)
+
+        val verifiedUser = jwtService.verify(newAccessToken)
+        assertNotNull(verifiedUser)
+        assertEquals("subject", verifiedUser.subject)
+
+        val secondRotation = refreshTokenService.rotateRefreshToken(newRefreshToken)
+        assertNotNull(secondRotation)
+        assertEquals("subject", secondRotation.user.subject)
+    }
+
+    @Test
+    fun `android refresh rejects blank refresh token`() = testApplication {
+        application {
+            install(ContentNegotiation) { json() }
+            installAuthRoutes()
+        }
+
+        val response = client.post("/api/v1/auth/android-refresh") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "refreshToken": ""
+                }
+                """.trimIndent()
+            )
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertTrue(response.bodyAsText().contains("refreshToken is required"))
+    }
+
+    @Test
+    fun `android refresh rejects invalid refresh token`() = testApplication {
+        application {
+            install(ContentNegotiation) { json() }
+            installAuthRoutes(
+                refreshTokenService = newRefreshTokenService()
+            )
+        }
+
+        val response = client.post("/api/v1/auth/android-refresh") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                  "refreshToken": "invalid-refresh-token"
+                }
+                """.trimIndent()
+            )
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertTrue(response.bodyAsText().contains("Refresh token is invalid or expired"))
     }
 
     @Test
