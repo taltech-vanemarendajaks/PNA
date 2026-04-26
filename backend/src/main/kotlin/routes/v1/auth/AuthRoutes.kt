@@ -1,25 +1,29 @@
 package com.pna.backend.routes.v1.auth
 
 import com.pna.backend.config.RootConfig
-import com.pna.backend.routes.v1.hasAllowedOrigin
 import com.pna.backend.routes.v1.respondPrivateNoStore
 import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
 import com.pna.backend.services.RefreshTokenService
+import com.pna.backend.services.SessionClientMetadata
 import domain.auth.request.AndroidGoogleLoginRequest
 import domain.auth.request.AndroidRefreshRequest
 import domain.auth.response.AndroidAuthResponse
 import domain.auth.response.AndroidRefreshResponse
-import com.pna.backend.services.SessionClientMetadata
 import domain.auth.response.GoogleAuthResponse
-import io.ktor.http.*
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.principal
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 
 fun Route.googleAuthRoutes(
     rootConfig: RootConfig,
@@ -50,7 +54,11 @@ fun Route.googleAuthRoutes(
         authenticate("auth-jwt") {
             get("/session") {
                 val principal = call.principal<JWTPrincipal>()
-                    ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
+                    ?: return@get call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Not authenticated")
+                    )
+
                 call.respondPrivateNoStore()
                 call.respond(HttpStatusCode.OK, principal.toGoogleAuthResponse())
             }
@@ -108,7 +116,11 @@ private suspend fun ApplicationCall.handleAndroidGoogleLogin(
     }
 
     val accessToken = accessTokenService.issueAccessToken(googleUser)
-    val refreshToken = refreshTokenService.createRefreshToken(googleUser)
+
+    val refreshToken = refreshTokenService.createRefreshToken(
+        googleUser,
+        readSessionClientMetadata()
+    )
 
     respondPrivateNoStore()
     respond(
@@ -135,7 +147,10 @@ private suspend fun ApplicationCall.handleAndroidRefresh(
         return
     }
 
-    val rotation = refreshTokenService.rotateRefreshToken(request.refreshToken)
+    val rotation = refreshTokenService.rotateRefreshToken(
+        request.refreshToken,
+        readSessionClientMetadata()
+    )
 
     if (rotation == null) {
         respond(
@@ -174,12 +189,16 @@ private suspend fun ApplicationCall.handleRefresh(
     if (rotation == null) {
         clearAuthAccessCookie(rootConfig)
         clearRefreshTokenCookie(rootConfig)
-        respond(HttpStatusCode.Unauthorized, mapOf("error" to "Refresh token is invalid or expired"))
+        respond(
+            HttpStatusCode.Unauthorized,
+            mapOf("error" to "Refresh token is invalid or expired")
+        )
         return
     }
 
     appendAuthAccessCookie(accessTokenService.issueAccessToken(rotation.user), rootConfig)
     appendRefreshTokenCookie(rotation.refreshToken, rootConfig)
+
     respond(HttpStatusCode.NoContent)
 }
 
@@ -192,6 +211,7 @@ private suspend fun ApplicationCall.handleLogout(
     }
 
     refreshTokenService.revokeRefreshToken(request.cookies[REFRESH_TOKEN_COOKIE_NAME])
+
     clearAuthAccessCookie(rootConfig)
     clearFrontendRedirectContextCookies(rootConfig)
     clearGoogleOauthStateCookie(rootConfig)
