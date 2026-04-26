@@ -1,0 +1,287 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1-create-users
+      author: pna
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: TEXT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: subject
+                  type: TEXT
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: email
+                  type: TEXT
+              - column:
+                  name: name
+                  type: TEXT
+              - column:
+                  name: given_name
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 2-create-phone-number
+      author: pna
+      changes:
+        - createTable:
+            tableName: phone_number
+            columns:
+              - column:
+                  name: id
+                  type: TEXT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: canonical_number
+                  type: TEXT
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: e164_number
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 3-create-phone-number-results
+      author: pna
+      changes:
+        - createTable:
+            tableName: phone_number_results
+            columns:
+              - column:
+                  name: id
+                  type: TEXT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: phone_number_id
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: country
+                  type: TEXT
+              - column:
+                  name: country_code
+                  type: INTEGER
+              - column:
+                  name: region_code
+                  type: TEXT
+              - column:
+                  name: number_type
+                  type: TEXT
+              - column:
+                  name: international_format
+                  type: TEXT
+              - column:
+                  name: carrier
+                  type: TEXT
+              - column:
+                  name: time_zones
+                  type: TEXT[]
+              - column:
+                  name: result_hash
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: phone_number_results
+            baseColumnNames: phone_number_id
+            referencedTableName: phone_number
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_phone_number_results_phone_number_id
+        - addUniqueConstraint:
+            tableName: phone_number_results
+            columnNames: phone_number_id, result_hash
+            constraintName: phone_number_results_dedupe
+
+  - changeSet:
+      id: 4-create-user-search
+      author: pna
+      changes:
+        - createTable:
+            tableName: user_search
+            columns:
+              - column:
+                  name: id
+                  type: TEXT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone_number_id
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: raw_input
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: user_search
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_user_search_user_id
+        - addForeignKeyConstraint:
+            baseTableName: user_search
+            baseColumnNames: phone_number_id
+            referencedTableName: phone_number
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_user_search_phone_number_id
+
+  - changeSet:
+      id: 5-create-refresh-tokens
+      author: pna
+      changes:
+        - createTable:
+            tableName: refresh_tokens
+            columns:
+              - column:
+                  name: id
+                  type: TEXT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: family_id
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: token_hash
+                  type: TEXT
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_used_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: revoked_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: replaced_by_token_id
+                  type: TEXT
+              - column:
+                  name: user_agent
+                  type: TEXT
+              - column:
+                  name: ip_address
+                  type: TEXT
+        - addForeignKeyConstraint:
+            baseTableName: refresh_tokens
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_refresh_tokens_user_id
+        - addForeignKeyConstraint:
+            baseTableName: refresh_tokens
+            baseColumnNames: replaced_by_token_id
+            referencedTableName: refresh_tokens
+            referencedColumnNames: id
+            onDelete: SET NULL
+            constraintName: fk_refresh_tokens_replaced_by_token_id
+
+  - changeSet:
+      id: 6-create-indexes
+      author: pna
+      changes:
+        - createIndex:
+            indexName: idx_refresh_tokens_user_id_created_at
+            tableName: refresh_tokens
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: created_at
+                  descending: true
+        - createIndex:
+            indexName: idx_refresh_tokens_family_id
+            tableName: refresh_tokens
+            columns:
+              - column:
+                  name: family_id
+        - createIndex:
+            indexName: idx_user_search_user_id_created_at
+            tableName: user_search
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: created_at
+                  descending: true
+        - createIndex:
+            indexName: idx_user_search_phone_number_id_created_at
+            tableName: user_search
+            columns:
+              - column:
+                  name: phone_number_id
+              - column:
+                  name: created_at
+                  descending: true
+        - createIndex:
+            indexName: idx_phone_number_results_phone_number_id_created_at
+            tableName: phone_number_results
+            columns:
+              - column:
+                  name: phone_number_id
+              - column:
+                  name: created_at
+                  descending: true

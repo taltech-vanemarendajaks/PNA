@@ -1,6 +1,6 @@
 package com.pna.backend.routes.v1.number
 
-import com.pna.backend.config.AppConfig
+import com.pna.backend.config.RootConfig
 import com.pna.backend.domain.auth.request.SearchNumberRequest
 import com.pna.backend.domain.auth.response.SearchNumberResponse
 import com.pna.backend.routes.v1.hasAllowedOrigin
@@ -17,7 +17,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Route.numberRoutes(
-    appConfig: AppConfig,
+    rootConfig: RootConfig,
     verifyAccessToken: (String) -> GoogleUser?,
     lookupService: PhoneLookupService,
     numberSearchService: NumberSearchService
@@ -25,7 +25,7 @@ fun Route.numberRoutes(
     route("/api/v1/number") {
         authenticate("auth-jwt") {
             post("/search") {
-                if (!call.hasAllowedOrigin(appConfig)) {
+                if (!call.hasAllowedOrigin(rootConfig)) {
                     call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Invalid origin"))
                     return@post
                 }
@@ -42,7 +42,7 @@ fun Route.numberRoutes(
                     return@post
                 }
 
-                val result = numberSearchService.getOrLookup(request.number) { number ->
+                val result = numberSearchService.getOrLookup(user, request.number) { number ->
                     lookupService.lookup(number)
                 }
                 call.respond(HttpStatusCode.OK, SearchNumberResponse(result = result))
@@ -71,6 +71,11 @@ fun Route.numberRoutes(
 
         authenticate("auth-jwt") {
             get("/all") {
+                if (!call.hasAllowedOrigin(rootConfig)) {
+                    call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Invalid origin"))
+                    return@get
+                }
+
                 val user = call.readAuthenticatedUser(verifyAccessToken)
                 if (user == null) {
                     call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
@@ -78,7 +83,7 @@ fun Route.numberRoutes(
                 }
 
                 call.respondPrivateNoStore()
-                call.respond(HttpStatusCode.OK, numberSearchService.getAll())
+                call.respond(HttpStatusCode.OK, numberSearchService.getAll(user))
             }
         }
     }

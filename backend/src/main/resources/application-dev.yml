@@ -1,0 +1,46 @@
+ktor:
+  deployment:
+    port: 8080
+    host: 0.0.0.0
+
+app:
+  port: 8080
+  host: 0.0.0.0
+  publicBackendBaseUrl: http://localhost:8080
+  frontendBaseUrl: http://localhost:5173
+  allowedOrigins:
+    - http://localhost:5173
+  allowedOriginsMapped: []
+  authCookieSecure: false
+  authCookieSameSite: Lax
+  googleOauthStateTtlSeconds: 3600
+  redirectContextTtlSeconds: 600
+  oauthFlowCookieSameSite: Lax
+  phoneLookupDefaultRegion: EE
+
+jwt:
+  issuer: http://localhost:8080
+  audience: pna-clients
+  secret:
+  ttlSeconds: 900
+  refreshTokenTtlSeconds: 2592000
+
+database:
+  jdbcUrl:
+  username:
+  password:
+  maximumPoolSize: 10
+  minimumIdle: 2
+  connectionTimeoutMs: 10000
+  idleTimeoutMs: 60000
+  maxLifetimeMs: 1800000
+  autoCommit: false
+  poolName: app-pool
+
+google:
+  clientId:
+  clientSecret:
+
+logging:
+  level:
+    liquibase: off

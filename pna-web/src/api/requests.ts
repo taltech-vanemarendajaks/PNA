@@ -21,9 +21,13 @@ export type SearchNumberResponse = {
 };
 
 export type SavedNumberSearchResponse = {
-  id: number;
+  id: string;
   number: string;
-  result: SearchNumberResult;
+  results: SavedSearchNumberResult[];
+  createdAt: string;
+};
+
+export type SavedSearchNumberResult = SearchNumberResult & {
   createdAt: string;
 };
 

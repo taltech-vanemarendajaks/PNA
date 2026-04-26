@@ -31,11 +31,21 @@ dependencies {
     implementation("com.googlecode.libphonenumber:libphonenumber:8.13.55")
     implementation("com.googlecode.libphonenumber:carrier:1.239")
     implementation("com.googlecode.libphonenumber:geocoder:2.249")
-    implementation("org.xerial:sqlite-jdbc:3.46.0.0")
+    implementation("org.postgresql:postgresql:42.7.7")
+    implementation("org.liquibase:liquibase-core:5.0.1")
+    implementation("com.zaxxer:HikariCP:7.0.2")
     implementation("io.github.cdimascio:dotenv-java:3.0.0")
+    implementation("com.sksamuel.hoplite:hoplite-core:2.9.0")
+    implementation("com.sksamuel.hoplite:hoplite-yaml:2.9.0")
     implementation("com.auth0:java-jwt:4.5.1")
 
+    implementation("ch.qos.logback:logback-classic:1.5.18")
+
     testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testImplementation("org.testcontainers:postgresql:1.21.4")
+    testImplementation("org.liquibase:liquibase-core:4.31.1")
+    testRuntimeOnly("org.postgresql:postgresql:42.7.7")
     testImplementation("io.ktor:ktor-server-tests-jvm")
 }
 
