@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SearchNumberResponse(
-    val message: String,
+    val result: PhoneNumberLookupResult,
 )

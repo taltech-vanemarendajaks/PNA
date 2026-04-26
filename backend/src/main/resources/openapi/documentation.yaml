@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
-  title: PNA Backend Auth API
+  title: PNA Backend API
   version: 1.0.0
-  description: Kotlin backend API for Google authentication.
+  description: Kotlin backend API for authentication and number lookup.
 servers:
-  - url: http://localhost:8080
+  - url: /
 paths:
   /health:
     get:
@@ -17,50 +17,128 @@ paths:
               schema:
                 type: string
                 example: ok
-  /api/v1/auth/google:
+  /api/v1/auth/google/redirect:
+    get:
+      summary: Start or finish Google OAuth login
+      description: Redirects the browser to Google OAuth, then handles the callback on the same route and creates the backend session cookie.
+      responses:
+        '302':
+          description: Redirect to Google OAuth or back to the frontend when already authenticated
+        '200':
+          description: HTML handoff back to the frontend after callback processing
+  /api/v1/number/search:
     post:
-      summary: Verify Google ID token
+      summary: Search number details
+      description: Looks up details for a phone number. Requires an authenticated session cookie.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GoogleAuthRequest'
+              $ref: '#/components/schemas/SearchNumberRequest'
       responses:
         '200':
-          description: Token is valid
+          description: Number lookup succeeded
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GoogleAuthResponse'
+                $ref: '#/components/schemas/SearchNumberResponse'
         '400':
-          description: Missing or malformed request body
+          description: Request body is invalid or number is empty
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
-          description: Invalid Google ID token
+          description: Missing or invalid auth session cookie
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Server misconfiguration
+  /api/v1/number/all:
+    get:
+      summary: Get all searched numbers
+      description: Returns all saved phone number searches. Requires an authenticated session cookie.
+      responses:
+        '200':
+          description: Saved number searches returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SavedNumberSearchResponse'
+        '401':
+          description: Missing or invalid auth session cookie
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    GoogleAuthRequest:
+    SearchNumberRequest:
       type: object
       required:
-        - idToken
+        - number
       properties:
-        idToken:
+        number:
           type: string
-          example: eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...
+          example: "+14155552671"
+    SearchNumberResponse:
+      type: object
+      properties:
+        result:
+          $ref: '#/components/schemas/PhoneNumberLookupResult'
+    PhoneNumberLookupResult:
+      type: object
+      properties:
+        country:
+          type: string
+          nullable: true
+          example: Estonia
+        countryCode:
+          type: integer
+          nullable: true
+          example: 372
+        regionCode:
+          type: string
+          nullable: true
+          example: EE
+        numberType:
+          type: string
+          nullable: true
+          example: Fixed line
+        internationalFormat:
+          type: string
+          nullable: true
+          example: "+372 607 3001"
+        carrier:
+          type: string
+          nullable: true
+          example: unknown
+        timeZones:
+          type: array
+          nullable: true
+          items:
+            type: string
+          example:
+            - Europe/Tallinn
+    SavedNumberSearchResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        number:
+          type: string
+          example: "+14155552671"
+        result:
+          $ref: '#/components/schemas/PhoneNumberLookupResult'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-04-12T10:00:00Z"
     GoogleAuthResponse:
       type: object
       properties:

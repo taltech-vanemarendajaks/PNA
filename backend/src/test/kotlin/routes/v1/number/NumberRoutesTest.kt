@@ -1,45 +1,36 @@
-package com.pna.backend.routes.v1.number
+package routes.v1.number
 
+import com.pna.backend.dal.repositories.NumberSearchRepository
+import com.pna.backend.routes.v1.auth.AUTH_SESSION_COOKIE_NAME
+import com.pna.backend.routes.v1.number.numberRoutes
+import com.pna.backend.services.AuthSessionService
+import com.pna.backend.services.NumberSearchService
+import com.pna.backend.services.PhoneLookupService
 import domain.auth.GoogleUser
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.install
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.routing.routing
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.testing.testApplication
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.routing.*
+import io.ktor.server.testing.*
+import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class NumberRoutesTest {
     @Test
-    fun `search returns internal server error when google client id is missing`() = testApplication {
+    fun `search returns unauthorized when session cookie is missing`() = testApplication {
+        val authSessionService = AuthSessionService()
+        val lookupService = PhoneLookupService()
+        val searchService = newSearchService()
+
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes(null)
-            }
-        }
-
-        val response = client.post("/api/v1/number/search") {
-            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            setBody("""{"number":"1234567890"}""")
-        }
-
-        assertEquals(HttpStatusCode.InternalServerError, response.status)
-    }
-
-    @Test
-    fun `search returns unauthorized when bearer token is missing`() = testApplication {
-        application {
-            install(ContentNegotiation) { json() }
-            routing {
-                numberRoutes("test-google-client-id") { null }
+                numberRoutes(authSessionService, lookupService, searchService)
             }
         }
 
@@ -52,17 +43,21 @@ class NumberRoutesTest {
     }
 
     @Test
-    fun `search returns unauthorized when google token is invalid`() = testApplication {
+    fun `search returns unauthorized when session is invalid`() = testApplication {
+        val authSessionService = AuthSessionService()
+        val lookupService = PhoneLookupService()
+        val searchService = newSearchService()
+
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes("test-google-client-id") { null }
+                numberRoutes(authSessionService, lookupService, searchService)
             }
         }
 
         val response = client.post("/api/v1/number/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            header(HttpHeaders.Authorization, "Bearer invalid-token")
+            cookie(AUTH_SESSION_COOKIE_NAME, "missing-session")
             setBody("""{"number":"1234567890"}""")
         }
 
@@ -71,18 +66,23 @@ class NumberRoutesTest {
 
     @Test
     fun `search returns bad request when number is blank`() = testApplication {
+        val authSessionService = AuthSessionService()
+        val lookupService = PhoneLookupService()
+        val searchService = newSearchService()
+        val sessionId = authSessionService.create(
+            GoogleUser("subject", "user@example.com", true, "Jane", null, "Jane", "Doe")
+        )
+
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes("test-google-client-id") {
-                    GoogleUser("subject", "user@example.com", true, "Jane", null, "Jane", "Doe")
-                }
+                numberRoutes(authSessionService, lookupService, searchService)
             }
         }
 
         val response = client.post("/api/v1/number/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            header(HttpHeaders.Authorization, "Bearer valid-token")
+            cookie(AUTH_SESSION_COOKIE_NAME, sessionId)
             setBody("""{"number":""}""")
         }
 
@@ -91,22 +91,101 @@ class NumberRoutesTest {
 
     @Test
     fun `search returns success message when request is valid`() = testApplication {
+        val authSessionService = AuthSessionService()
+        val lookupService = PhoneLookupService()
+        val searchService = newSearchService()
+        val sessionId = authSessionService.create(
+            GoogleUser("subject", "user@example.com", true, "Jane", null, "Jane", "Doe")
+        )
+
         application {
             install(ContentNegotiation) { json() }
             routing {
-                numberRoutes("test-google-client-id") {
-                    GoogleUser("subject", "user@example.com", true, "Jane", null, "Jane", "Doe")
-                }
+                numberRoutes(authSessionService, lookupService, searchService)
             }
         }
 
         val response = client.post("/api/v1/number/search") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            header(HttpHeaders.Authorization, "Bearer valid-token")
+            cookie(AUTH_SESSION_COOKIE_NAME, sessionId)
             setBody("""{"number":"1234567890"}""")
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals("{\"message\":\"search was successful\"}", response.bodyAsText())
+        val body = response.bodyAsText()
+        assertTrue(body.contains("\"result\""))
+        assertTrue(body.contains("\"country\""))
+        assertTrue(body.contains("\"countryCode\""))
+        assertTrue(body.contains("\"regionCode\""))
+        assertTrue(body.contains("\"numberType\""))
+        assertTrue(body.contains("\"internationalFormat\""))
+        assertTrue(body.contains("\"carrier\""))
+        assertTrue(body.contains("\"timeZones\""))
+    }
+
+    @Test
+    fun `search persists and searches endpoint returns saved numbers`() = testApplication {
+        val authSessionService = AuthSessionService()
+        val lookupService = PhoneLookupService()
+        val searchService = newSearchService()
+        val sessionId = authSessionService.create(
+            GoogleUser("subject", "user@example.com", true, "Jane", null, "Jane", "Doe")
+        )
+
+        application {
+            install(ContentNegotiation) { json() }
+            routing {
+                numberRoutes(authSessionService, lookupService, searchService)
+            }
+        }
+
+        val searchedNumber = "1234567890"
+
+        val searchResponse = client.post("/api/v1/number/search") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            cookie(AUTH_SESSION_COOKIE_NAME, sessionId)
+            setBody("""{"number":"$searchedNumber"}""")
+        }
+        assertEquals(HttpStatusCode.OK, searchResponse.status)
+
+        val secondSearchResponse = client.post("/api/v1/number/search") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            cookie(AUTH_SESSION_COOKIE_NAME, sessionId)
+            setBody("""{"number":"$searchedNumber"}""")
+        }
+        assertEquals(HttpStatusCode.OK, secondSearchResponse.status)
+
+        val searchesResponse = client.get("/api/v1/number/all") {
+            cookie(AUTH_SESSION_COOKIE_NAME, sessionId)
+        }
+
+        assertEquals(HttpStatusCode.OK, searchesResponse.status)
+        val body = searchesResponse.bodyAsText()
+        assertTrue(body.contains("\"number\":\"$searchedNumber\""))
+        assertTrue(body.contains("\"result\""))
+        val occurrences = "\"number\":\"$searchedNumber\"".toRegex().findAll(body).count()
+        assertEquals(1, occurrences)
+    }
+
+    @Test
+    fun `searches returns unauthorized when session cookie is missing`() = testApplication {
+        val authSessionService = AuthSessionService()
+        val lookupService = PhoneLookupService()
+        val searchService = newSearchService()
+
+        application {
+            install(ContentNegotiation) { json() }
+            routing {
+                numberRoutes(authSessionService, lookupService, searchService)
+            }
+        }
+
+        val response = client.get("/api/v1/number/all")
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    private fun newSearchService(): NumberSearchService {
+        val dbPath = Files.createTempFile("number-routes-test", ".db").toString()
+        return NumberSearchService(NumberSearchRepository(dbPath))
     }
 }

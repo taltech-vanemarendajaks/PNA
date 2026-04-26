@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>PNA Backend Auth API</title>
+  <title>PNA Backend API</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta charset="UTF-8" />
@@ -698,16 +698,6 @@
     }
   }
 };
-            defs["GoogleAuthRequest"] = {
-  "required" : [ "idToken" ],
-  "type" : "object",
-  "properties" : {
-    "idToken" : {
-      "type" : "string",
-      "example" : "eyJhbGciOiJSUzI1NiIsImtpZCI6Ij..."
-    }
-  }
-};
             defs["GoogleAuthResponse"] = {
   "type" : "object",
   "properties" : {
@@ -747,6 +737,25 @@
     }
   }
 };
+            defs["SearchNumberRequest"] = {
+  "required" : [ "number" ],
+  "type" : "object",
+  "properties" : {
+    "number" : {
+      "type" : "string",
+      "example" : "+14155552671"
+    }
+  }
+};
+            defs["SearchNumberResponse"] = {
+  "type" : "object",
+  "properties" : {
+    "message" : {
+      "type" : "string",
+      "example" : "country=Estonia, countryCode=372, regionCode=EE, numberType=Fixed line, internationalFormat=+372 607 3001, carrier=unknown, timeZones=Europe/Tallinn"
+    }
+  }
+};
   </script>
 
   <div class="container-fluid">
@@ -764,8 +773,11 @@
             <li class="nav-fixed nav-header active" data-group="_"><a href="#api-_">API Summary</a></li>
 
                   <li class="nav-header" data-group="Default"><a href="#api-Default">API Methods - Default</a></li>
-                    <li data-group="Default" data-name="apiV1AuthGooglePost" class="">
-                      <a href="#api-Default-apiV1AuthGooglePost">apiV1AuthGooglePost</a>
+                    <li data-group="Default" data-name="apiV1AuthGoogleRedirectGet" class="">
+                      <a href="#api-Default-apiV1AuthGoogleRedirectGet">apiV1AuthGoogleRedirectGet</a>
+                    </li>
+                    <li data-group="Default" data-name="apiV1NumberSearchPost" class="">
+                      <a href="#api-Default-apiV1NumberSearchPost">apiV1NumberSearchPost</a>
                     </li>
                     <li data-group="Default" data-name="healthGet" class="">
                       <a href="#api-Default-healthGet">healthGet</a>
@@ -776,7 +788,7 @@
       <div id="content">
         <div id="project">
           <div class="pull-left">
-            <h1>PNA Backend Auth API</h1>
+            <h1>PNA Backend API</h1>
           </div>
           <div class="clearfix"></div>
         </div>
@@ -785,50 +797,48 @@
             <h2 id="welcome-to-apidoc">API and SDK Documentation</h2>
               <div class="app-desc">Version: 1.0.0</div>
             <hr>
-            <div>Kotlin backend API for Google authentication.</div>
+            <div>Kotlin backend API for authentication and number lookup.</div>
           </div>
         </div>
         <div id="sections">
                 <section id="api-Default">
                   <h1>Default</h1>
-                    <div id="api-Default-apiV1AuthGooglePost">
-                      <article id="api-Default-apiV1AuthGooglePost-0" data-group="User" data-name="apiV1AuthGooglePost" data-version="0">
+                    <div id="api-Default-apiV1AuthGoogleRedirectGet">
+                      <article id="api-Default-apiV1AuthGoogleRedirectGet-0" data-group="User" data-name="apiV1AuthGoogleRedirectGet" data-version="0">
                         <div class="pull-left">
-                          <h1>apiV1AuthGooglePost</h1>
-                          <p>Verify Google ID token</p>
+                          <h1>apiV1AuthGoogleRedirectGet</h1>
+                          <p>Start or finish Google OAuth login</p>
                         </div>
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked"></p>
+                        <p class="marked">Redirects the browser to Google OAuth, then handles the callback on the same route and creates the backend session cookie.</p>
                         <p></p>
                         <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v1/auth/google</span></code></pre>
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/v1/auth/google/redirect</span></code></pre>
                         <p>
                           <h3>Usage and SDK Samples</h3>
                         </p>
                         <ul class="nav nav-tabs nav-tabs-examples">
-                          <li class="active"><a href="#examples-Default-apiV1AuthGooglePost-0-curl">Curl</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-java">Java</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-android">Android</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-groovy">Groovy</a></li>-->
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-objc">Obj-C</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-javascript">JavaScript</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-angular">Angular</a></li>-->
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-csharp">C#</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-php">PHP</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-perl">Perl</a></li>
-                          <li class=""><a href="#examples-Default-apiV1AuthGooglePost-0-python">Python</a></li>
+                          <li class="active"><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1AuthGoogleRedirectGet-0-python">Python</a></li>
                         </ul>
 
                         <div class="tab-content">
-                          <div class="tab-pane active" id="examples-Default-apiV1AuthGooglePost-0-curl">
-                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
--H "Accept: application/json"\
--H "Content-Type: application/json"\
-"http://localhost:8080/api/v1/auth/google"</code></pre>
+                          <div class="tab-pane active" id="examples-Default-apiV1AuthGoogleRedirectGet-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+"//api/v1/auth/google/redirect"</code></pre>
                           </div>
-                          <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-java">
+                          <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-java">
                             <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
 import io.swagger.client.auth.*;
 import io.swagger.client.model.*;
@@ -842,48 +852,266 @@ public class DefaultApiExample {
     public static void main(String[] args) {
         
         DefaultApi apiInstance = new DefaultApi();
-        GoogleAuthRequest body = ; // GoogleAuthRequest | 
         try {
-            GoogleAuthResponse result = apiInstance.apiV1AuthGooglePost(body);
-            System.out.println(result);
+            apiInstance.apiV1AuthGoogleRedirectGet();
         } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiV1AuthGooglePost");
+            System.err.println("Exception when calling DefaultApi#apiV1AuthGoogleRedirectGet");
             e.printStackTrace();
         }
     }
 }</code></pre>
                           </div>
 
-                          <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-android">
+                          <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-android">
                             <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
 
 public class DefaultApiExample {
 
     public static void main(String[] args) {
         DefaultApi apiInstance = new DefaultApi();
-        GoogleAuthRequest body = ; // GoogleAuthRequest | 
         try {
-            GoogleAuthResponse result = apiInstance.apiV1AuthGooglePost(body);
-            System.out.println(result);
+            apiInstance.apiV1AuthGoogleRedirectGet();
         } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiV1AuthGooglePost");
+            System.err.println("Exception when calling DefaultApi#apiV1AuthGoogleRedirectGet");
             e.printStackTrace();
         }
     }
 }</code></pre>
                           </div>
   <!--
-  <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-groovy">
+  <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-groovy">
   <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
   </div> -->
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-objc">
-                              <pre class="prettyprint"><code class="language-cpp">GoogleAuthRequest *body = ; // 
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+DefaultApi *apiInstance = [[DefaultApi alloc] init];
+
+// Start or finish Google OAuth login
+[apiInstance apiV1AuthGoogleRedirectGetWithCompletionHandler: 
+              ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var PnaBackendApi = require('pna_backend_api');
+
+var api = new PnaBackendApi.DefaultApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.apiV1AuthGoogleRedirectGet(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class apiV1AuthGoogleRedirectGetExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new DefaultApi();
+
+            try
+            {
+                // Start or finish Google OAuth login
+                apiInstance.apiV1AuthGoogleRedirectGet();
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling DefaultApi.apiV1AuthGoogleRedirectGet: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiDefaultApi();
+
+try {
+    $api_instance->apiV1AuthGoogleRedirectGet();
+} catch (Exception $e) {
+    echo 'Exception when calling DefaultApi->apiV1AuthGoogleRedirectGet: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::DefaultApi;
+
+my $api_instance = WWW::SwaggerClient::DefaultApi->new();
+
+eval { 
+    $api_instance->apiV1AuthGoogleRedirectGet();
+};
+if ($@) {
+    warn "Exception when calling DefaultApi->apiV1AuthGoogleRedirectGet: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Default-apiV1AuthGoogleRedirectGet-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.DefaultApi()
+
+try: 
+    # Start or finish Google OAuth login
+    api_instance.api_v1_auth_google_redirect_get()
+except ApiException as e:
+    print("Exception when calling DefaultApi->apiV1AuthGoogleRedirectGet: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 302 - Redirect to Google OAuth or back to the frontend when already authenticated </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                            </div>
+
+                            <h3> Status: 200 - HTML handoff back to the frontend after callback processing </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Default-apiV1NumberSearchPost">
+                      <article id="api-Default-apiV1NumberSearchPost-0" data-group="User" data-name="apiV1NumberSearchPost" data-version="0">
+                        <div class="pull-left">
+                          <h1>apiV1NumberSearchPost</h1>
+                          <p>Search number details</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Looks up details for a phone number. Requires an authenticated session cookie.</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v1/number/search</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Default-apiV1NumberSearchPost-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchPost-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchPost-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1NumberSearchPost-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchPost-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchPost-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-apiV1NumberSearchPost-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchPost-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchPost-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchPost-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-apiV1NumberSearchPost-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Default-apiV1NumberSearchPost-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/v1/number/search"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Default-apiV1NumberSearchPost-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.DefaultApi;
+
+import java.io.File;
+import java.util.*;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        
+        DefaultApi apiInstance = new DefaultApi();
+        SearchNumberRequest body = ; // SearchNumberRequest | 
+        try {
+            SearchNumberResponse result = apiInstance.apiV1NumberSearchPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1NumberSearchPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Default-apiV1NumberSearchPost-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
+
+public class DefaultApiExample {
+
+    public static void main(String[] args) {
+        DefaultApi apiInstance = new DefaultApi();
+        SearchNumberRequest body = ; // SearchNumberRequest | 
+        try {
+            SearchNumberResponse result = apiInstance.apiV1NumberSearchPost(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#apiV1NumberSearchPost");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Default-apiV1NumberSearchPost-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchPost-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">SearchNumberRequest *body = ; // 
 
 DefaultApi *apiInstance = [[DefaultApi alloc] init];
 
-// Verify Google ID token
-[apiInstance apiV1AuthGooglePostWith:body
-              completionHandler: ^(GoogleAuthResponse output, NSError* error) {
+// Search number details
+[apiInstance apiV1NumberSearchPostWith:body
+              completionHandler: ^(SearchNumberResponse output, NSError* error) {
                             if (output) {
                                 NSLog(@"%@", output);
                             }
@@ -894,11 +1122,11 @@ DefaultApi *apiInstance = [[DefaultApi alloc] init];
 </code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-javascript">
-                              <pre class="prettyprint"><code class="language-js">var PnaBackendAuthApi = require('pna_backend_auth_api');
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchPost-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var PnaBackendApi = require('pna_backend_api');
 
-var api = new PnaBackendAuthApi.DefaultApi()
-var body = ; // {{GoogleAuthRequest}} 
+var api = new PnaBackendApi.DefaultApi()
+var body = ; // {{SearchNumberRequest}} 
 
 var callback = function(error, data, response) {
   if (error) {
@@ -907,14 +1135,14 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.apiV1AuthGooglePost(body, callback);
+api.apiV1NumberSearchPost(body, callback);
 </code></pre>
                             </div>
 
-                            <!--<div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-angular">
+                            <!--<div class="tab-pane" id="examples-Default-apiV1NumberSearchPost-0-angular">
               <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
             </div>-->
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-csharp">
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchPost-0-csharp">
                               <pre class="prettyprint"><code class="language-cs">using System;
 using System.Diagnostics;
 using IO.Swagger.Api;
@@ -923,23 +1151,23 @@ using IO.Swagger.Model;
 
 namespace Example
 {
-    public class apiV1AuthGooglePostExample
+    public class apiV1NumberSearchPostExample
     {
         public void main()
         {
 
             var apiInstance = new DefaultApi();
-            var body = new GoogleAuthRequest(); // GoogleAuthRequest | 
+            var body = new SearchNumberRequest(); // SearchNumberRequest | 
 
             try
             {
-                // Verify Google ID token
-                GoogleAuthResponse result = apiInstance.apiV1AuthGooglePost(body);
+                // Search number details
+                SearchNumberResponse result = apiInstance.apiV1NumberSearchPost(body);
                 Debug.WriteLine(result);
             }
             catch (Exception e)
             {
-                Debug.Print("Exception when calling DefaultApi.apiV1AuthGooglePost: " + e.Message );
+                Debug.Print("Exception when calling DefaultApi.apiV1NumberSearchPost: " + e.Message );
             }
         }
     }
@@ -947,40 +1175,40 @@ namespace Example
 </code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-php">
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchPost-0-php">
                               <pre class="prettyprint"><code class="language-php"><&#63;php
 require_once(__DIR__ . '/vendor/autoload.php');
 
 $api_instance = new Swagger\Client\ApiDefaultApi();
-$body = ; // GoogleAuthRequest | 
+$body = ; // SearchNumberRequest | 
 
 try {
-    $result = $api_instance->apiV1AuthGooglePost($body);
+    $result = $api_instance->apiV1NumberSearchPost($body);
     print_r($result);
 } catch (Exception $e) {
-    echo 'Exception when calling DefaultApi->apiV1AuthGooglePost: ', $e->getMessage(), PHP_EOL;
+    echo 'Exception when calling DefaultApi->apiV1NumberSearchPost: ', $e->getMessage(), PHP_EOL;
 }
 ?></code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-perl">
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchPost-0-perl">
                               <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
 use WWW::SwaggerClient::Configuration;
 use WWW::SwaggerClient::DefaultApi;
 
 my $api_instance = WWW::SwaggerClient::DefaultApi->new();
-my $body = WWW::SwaggerClient::Object::GoogleAuthRequest->new(); # GoogleAuthRequest | 
+my $body = WWW::SwaggerClient::Object::SearchNumberRequest->new(); # SearchNumberRequest | 
 
 eval { 
-    my $result = $api_instance->apiV1AuthGooglePost(body => $body);
+    my $result = $api_instance->apiV1NumberSearchPost(body => $body);
     print Dumper($result);
 };
 if ($@) {
-    warn "Exception when calling DefaultApi->apiV1AuthGooglePost: $@\n";
+    warn "Exception when calling DefaultApi->apiV1NumberSearchPost: $@\n";
 }</code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiV1AuthGooglePost-0-python">
+                            <div class="tab-pane" id="examples-Default-apiV1NumberSearchPost-0-python">
                               <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
 import time
 import swagger_client
@@ -989,14 +1217,14 @@ from pprint import pprint
 
 # create an instance of the API class
 api_instance = swagger_client.DefaultApi()
-body =  # GoogleAuthRequest | 
+body =  # SearchNumberRequest | 
 
 try: 
-    # Verify Google ID token
-    api_response = api_instance.api_v1_auth_google_post(body)
+    # Search number details
+    api_response = api_instance.api_v1_number_search_post(body)
     pprint(api_response)
 except ApiException as e:
-    print("Exception when calling DefaultApi->apiV1AuthGooglePost: %s\n" % e)</code></pre>
+    print("Exception when calling DefaultApi->apiV1NumberSearchPost: %s\n" % e)</code></pre>
                             </div>
                           </div>
 
@@ -1020,7 +1248,7 @@ except ApiException as e:
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/GoogleAuthRequest"
+        "$ref" : "#/components/schemas/SearchNumberRequest"
       }
     }
   },
@@ -1038,12 +1266,12 @@ except ApiException as e:
                                   }
                                 
                                   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-                                  var result = $('#d2e199_apiV1AuthGooglePost_body');
+                                  var result = $('#d2e199_apiV1NumberSearchPost_body');
                                   result.empty();
                                   result.append(view.render());
                                 });
                                 </script>
-                                <div id="d2e199_apiV1AuthGooglePost_body"></div>
+                                <div id="d2e199_apiV1NumberSearchPost_body"></div>
                                 </td>
                                 </tr>
                             </table>
@@ -1051,26 +1279,26 @@ except ApiException as e:
 
 
                           <h2>Responses</h2>
-                            <h3> Status: 200 - Token is valid </h3>
+                            <h3> Status: 200 - Number lookup succeeded </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
                                 <li class="active">
-                                  <a data-toggle="tab" href="#responses-apiV1AuthGooglePost-200-schema">Schema</a>
+                                  <a data-toggle="tab" href="#responses-apiV1NumberSearchPost-200-schema">Schema</a>
                                 </li>
 
                             </ul>
 
                             <div class="tab-content" style='margin-bottom: 10px;'>
-                                <div class="tab-pane active" id="responses-apiV1AuthGooglePost-200-schema">
-                                  <div id='responses-apiV1AuthGooglePost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                <div class="tab-pane active" id="responses-apiV1NumberSearchPost-200-schema">
+                                  <div id='responses-apiV1NumberSearchPost-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
                                     <script>
                                       $(document).ready(function() {
                                         var schemaWrapper = {
-  "description" : "Token is valid",
+  "description" : "Number lookup succeeded",
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/GoogleAuthResponse"
+        "$ref" : "#/components/schemas/SearchNumberResponse"
       }
     }
   }
@@ -1088,33 +1316,33 @@ except ApiException as e:
 
                                         //console.log(JSON.stringify(schema));
                                         var view = new JSONSchemaView(schema, 3);
-                                        $('#responses-apiV1AuthGooglePost-200-schema-data').val(stringify(schema));
-                                        var result = $('#responses-apiV1AuthGooglePost-200-schema-200');
+                                        $('#responses-apiV1NumberSearchPost-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1NumberSearchPost-200-schema-200');
                                         result.empty();
                                         result.append(view.render());
                                       });
                                     </script>
                                   </div>
-                                  <input id='responses-apiV1AuthGooglePost-200-schema-data' type='hidden' value=''></input>
+                                  <input id='responses-apiV1NumberSearchPost-200-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 
-                            <h3> Status: 400 - Missing or malformed request body </h3>
+                            <h3> Status: 400 - Request body is invalid or number is empty </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
                                 <li class="active">
-                                  <a data-toggle="tab" href="#responses-apiV1AuthGooglePost-400-schema">Schema</a>
+                                  <a data-toggle="tab" href="#responses-apiV1NumberSearchPost-400-schema">Schema</a>
                                 </li>
 
                             </ul>
 
                             <div class="tab-content" style='margin-bottom: 10px;'>
-                                <div class="tab-pane active" id="responses-apiV1AuthGooglePost-400-schema">
-                                  <div id='responses-apiV1AuthGooglePost-400-schema-400' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                <div class="tab-pane active" id="responses-apiV1NumberSearchPost-400-schema">
+                                  <div id='responses-apiV1NumberSearchPost-400-schema-400' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
                                     <script>
                                       $(document).ready(function() {
                                         var schemaWrapper = {
-  "description" : "Missing or malformed request body",
+  "description" : "Request body is invalid or number is empty",
   "content" : {
     "application/json" : {
       "schema" : {
@@ -1136,33 +1364,33 @@ except ApiException as e:
 
                                         //console.log(JSON.stringify(schema));
                                         var view = new JSONSchemaView(schema, 3);
-                                        $('#responses-apiV1AuthGooglePost-400-schema-data').val(stringify(schema));
-                                        var result = $('#responses-apiV1AuthGooglePost-400-schema-400');
+                                        $('#responses-apiV1NumberSearchPost-400-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1NumberSearchPost-400-schema-400');
                                         result.empty();
                                         result.append(view.render());
                                       });
                                     </script>
                                   </div>
-                                  <input id='responses-apiV1AuthGooglePost-400-schema-data' type='hidden' value=''></input>
+                                  <input id='responses-apiV1NumberSearchPost-400-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 
-                            <h3> Status: 401 - Invalid Google ID token </h3>
+                            <h3> Status: 401 - Missing or invalid auth session cookie </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
                                 <li class="active">
-                                  <a data-toggle="tab" href="#responses-apiV1AuthGooglePost-401-schema">Schema</a>
+                                  <a data-toggle="tab" href="#responses-apiV1NumberSearchPost-401-schema">Schema</a>
                                 </li>
 
                             </ul>
 
                             <div class="tab-content" style='margin-bottom: 10px;'>
-                                <div class="tab-pane active" id="responses-apiV1AuthGooglePost-401-schema">
-                                  <div id='responses-apiV1AuthGooglePost-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                <div class="tab-pane active" id="responses-apiV1NumberSearchPost-401-schema">
+                                  <div id='responses-apiV1NumberSearchPost-401-schema-401' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
                                     <script>
                                       $(document).ready(function() {
                                         var schemaWrapper = {
-  "description" : "Invalid Google ID token",
+  "description" : "Missing or invalid auth session cookie",
   "content" : {
     "application/json" : {
       "schema" : {
@@ -1184,62 +1412,14 @@ except ApiException as e:
 
                                         //console.log(JSON.stringify(schema));
                                         var view = new JSONSchemaView(schema, 3);
-                                        $('#responses-apiV1AuthGooglePost-401-schema-data').val(stringify(schema));
-                                        var result = $('#responses-apiV1AuthGooglePost-401-schema-401');
+                                        $('#responses-apiV1NumberSearchPost-401-schema-data').val(stringify(schema));
+                                        var result = $('#responses-apiV1NumberSearchPost-401-schema-401');
                                         result.empty();
                                         result.append(view.render());
                                       });
                                     </script>
                                   </div>
-                                  <input id='responses-apiV1AuthGooglePost-401-schema-data' type='hidden' value=''></input>
-                                </div>
-                            </div>
-
-                            <h3> Status: 500 - Server misconfiguration </h3>
-
-                            <ul class="nav nav-tabs nav-tabs-examples" >
-                                <li class="active">
-                                  <a data-toggle="tab" href="#responses-apiV1AuthGooglePost-500-schema">Schema</a>
-                                </li>
-
-                            </ul>
-
-                            <div class="tab-content" style='margin-bottom: 10px;'>
-                                <div class="tab-pane active" id="responses-apiV1AuthGooglePost-500-schema">
-                                  <div id='responses-apiV1AuthGooglePost-500-schema-500' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
-                                    <script>
-                                      $(document).ready(function() {
-                                        var schemaWrapper = {
-  "description" : "Server misconfiguration",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/ErrorResponse"
-      }
-    }
-  }
-};
-                                        var schema = schemaWrapper.content["application/json"].schema;
-                                        if (schema.$ref != null) {
-                                          schema = defsParser.$refs.get(schema.$ref);
-                                        } else {
-                                          schemaWrapper.components = {};
-                                          schemaWrapper.components.schemas = Object.assign({}, defs);
-                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
-                                            console.log(err);
-                                          });
-                                        }
-
-                                        //console.log(JSON.stringify(schema));
-                                        var view = new JSONSchemaView(schema, 3);
-                                        $('#responses-apiV1AuthGooglePost-500-schema-data').val(stringify(schema));
-                                        var result = $('#responses-apiV1AuthGooglePost-500-schema-500');
-                                        result.empty();
-                                        result.append(view.render());
-                                      });
-                                    </script>
-                                  </div>
-                                  <input id='responses-apiV1AuthGooglePost-500-schema-data' type='hidden' value=''></input>
+                                  <input id='responses-apiV1NumberSearchPost-401-schema-data' type='hidden' value=''></input>
                                 </div>
                             </div>
 
@@ -1280,7 +1460,7 @@ except ApiException as e:
                           <div class="tab-pane active" id="examples-Default-healthGet-0-curl">
                            <pre class="prettyprint"><code class="language-bsh">curl -X GET\
 -H "Accept: text/plain"\
-"http://localhost:8080/health"</code></pre>
+"//health"</code></pre>
                           </div>
                           <div class="tab-pane" id="examples-Default-healthGet-0-java">
                             <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
@@ -1346,9 +1526,9 @@ DefaultApi *apiInstance = [[DefaultApi alloc] init];
                             </div>
 
                             <div class="tab-pane" id="examples-Default-healthGet-0-javascript">
-                              <pre class="prettyprint"><code class="language-js">var PnaBackendAuthApi = require('pna_backend_auth_api');
+                              <pre class="prettyprint"><code class="language-js">var PnaBackendApi = require('pna_backend_api');
 
-var api = new PnaBackendAuthApi.DefaultApi()
+var api = new PnaBackendApi.DefaultApi()
 var callback = function(error, data, response) {
   if (error) {
     console.error(error);

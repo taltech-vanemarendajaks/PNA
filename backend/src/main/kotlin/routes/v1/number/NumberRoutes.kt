@@ -2,46 +2,26 @@ package com.pna.backend.routes.v1.number
 
 import com.pna.backend.domain.auth.request.SearchNumberRequest
 import com.pna.backend.domain.auth.response.SearchNumberResponse
-import com.pna.backend.services.GoogleTokenVerifierService
-import domain.auth.GoogleUser
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.post
-import io.ktor.server.routing.route
+import com.pna.backend.routes.v1.auth.AUTH_SESSION_COOKIE_NAME
+import com.pna.backend.services.AuthSessionService
+import com.pna.backend.services.NumberSearchService
+import com.pna.backend.services.PhoneLookupService
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 fun Route.numberRoutes(
-    googleClientId: String?,
-    verifyToken: ((String) -> GoogleUser?)? = googleClientId
-        ?.takeIf { it.isNotBlank() }
-        ?.let { GoogleTokenVerifierService(it) }
-        ?.let { verifier -> { idToken -> verifier.verify(idToken) } }
+    authSessionService: AuthSessionService,
+    lookupService: PhoneLookupService,
+    numberSearchService: NumberSearchService
 ) {
-
     route("/api/v1/number") {
         post("/search") {
-            if (verifyToken == null) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "GOOGLE_CLIENT_ID is not configured"))
-                return@post
-            }
-
-            val authHeader = call.request.headers[HttpHeaders.Authorization]
-            val idToken = authHeader
-                ?.takeIf { it.startsWith("Bearer ", ignoreCase = true) }
-                ?.removePrefix("Bearer ")
-                ?.trim()
-
-            if (idToken.isNullOrBlank()) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing or invalid Authorization Bearer token"))
-                return@post
-            }
-
-            val user = verifyToken(idToken)
+            val user = authSessionService.get(call.request.cookies[AUTH_SESSION_COOKIE_NAME])
             if (user == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid Google ID token"))
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
                 return@post
             }
 
@@ -51,10 +31,20 @@ fun Route.numberRoutes(
                 return@post
             }
 
-            call.respond(
-                HttpStatusCode.OK,
-                SearchNumberResponse(message = "search was successful")
-            )
+            val result = numberSearchService.getOrLookup(request.number) { number ->
+                lookupService.lookup(number)
+            }
+            call.respond(HttpStatusCode.OK, SearchNumberResponse(result = result))
+        }
+
+        get("/all") {
+            val user = authSessionService.get(call.request.cookies[AUTH_SESSION_COOKIE_NAME])
+            if (user == null) {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
+                return@get
+            }
+
+            call.respond(HttpStatusCode.OK, numberSearchService.getAll())
         }
     }
 

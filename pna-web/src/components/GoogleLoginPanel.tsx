@@ -1,0 +1,58 @@
+import { useEffect, useState } from "react";
+import { startGoogleLoginWithRedirect } from "../api/auth/auth";
+import { GoogleLoginButton } from "./GoogleLoginButton";
+
+function consumeAuthErrorFromQuery(): string | null {
+  const query = new URLSearchParams(window.location.search);
+  const authError = query.get("authError");
+
+  if (!authError) {
+    return null;
+  }
+
+  query.delete("authError");
+  const nextSearch = query.toString();
+  const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}`;
+  window.history.replaceState({}, document.title, nextUrl);
+  return authError;
+}
+
+export function GoogleLoginPanel() {
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const authError = consumeAuthErrorFromQuery();
+
+    if (authError) {
+      setError(authError);
+    }
+  }, []);
+
+  function prepareGoogleRedirectLogin() {
+    setError(null);
+    startGoogleLoginWithRedirect(window.location, (url) => {
+      window.location.assign(url);
+    });
+  }
+
+  return (
+    <div className="mx-auto flex min-h-[60vh] w-full items-center justify-center">
+      <section className="w-full max-w-2xl rounded-4xl border border-base-300 bg-base-100 p-8 shadow-xl shadow-primary/5">
+        <span className="badge badge-primary mb-4">Authentication</span>
+        <h1 className="text-4xl font-semibold sm:text-5xl">Login with Google</h1>
+
+        <div className="mt-8 space-y-4">
+          <div className="flex justify-center">
+            <GoogleLoginButton onClick={prepareGoogleRedirectLogin} />
+          </div>
+
+          {error ? (
+            <div className="alert alert-error">
+              <span>{error}</span>
+            </div>
+          ) : null}
+        </div>
+      </section>
+    </div>
+  );
+}

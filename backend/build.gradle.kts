@@ -28,6 +28,10 @@ dependencies {
     implementation("io.ktor:ktor-server-swagger-jvm")
 
     implementation("com.google.api-client:google-api-client:2.7.0")
+    implementation("com.googlecode.libphonenumber:libphonenumber:8.13.55")
+    implementation("com.googlecode.libphonenumber:carrier:1.239")
+    implementation("com.googlecode.libphonenumber:geocoder:2.249")
+    implementation("org.xerial:sqlite-jdbc:3.46.0.0")
     implementation("io.github.cdimascio:dotenv-java:3.0.0")
 
     implementation("ch.qos.logback:logback-classic:1.5.6")
