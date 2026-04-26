@@ -1,4 +1,4 @@
-package com.example.callgrabber.auth
+package com.example.callgrabber
 
 import android.content.Context
 import okhttp3.Interceptor

@@ -13,11 +13,9 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.net.toUri
 import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -25,17 +23,14 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.lifecycleScope
-import com.example.callgrabber.ApiProvider
-import com.example.callgrabber.auth.AuthStorage
+import com.example.callgrabber.AuthStorage
 import com.example.callgrabber.BuildConfig
-import com.example.callgrabber.GoogleLoginRequest
 import com.example.callgrabber.R
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.core.net.toUri
 
 class MainActivity : AppCompatActivity() {
 
@@ -157,37 +152,13 @@ class MainActivity : AppCompatActivity() {
 
                 } catch (e2: GetCredentialException) {
                     Log.e("CALL_GRABBER", "Google sign-in fallback failed", e2)
-
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Google sign-in failed",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 } catch (e2: Exception) {
                     Log.e("CALL_GRABBER", "Unexpected fallback sign-in error", e2)
-
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Unexpected sign-in error",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
             } catch (e: GetCredentialException) {
                 Log.e("CALL_GRABBER", "Credential error", e)
-
-                Toast.makeText(
-                    this@MainActivity,
-                    "Google sign-in failed",
-                    Toast.LENGTH_SHORT
-                ).show()
             } catch (e: Exception) {
                 Log.e("CALL_GRABBER", "Unexpected sign-in error", e)
-
-                Toast.makeText(
-                    this@MainActivity,
-                    "Unexpected sign-in error",
-                    Toast.LENGTH_SHORT
-                ).show()
             }
         }
     }
@@ -198,114 +169,24 @@ class MainActivity : AppCompatActivity() {
                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                     try {
                         val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                        val googleIdToken = googleIdTokenCredential.idToken
-                        val googleDisplayName = googleIdTokenCredential.displayName
 
-                        loginToBackendWithGoogleToken(
-                            googleIdToken = googleIdToken,
-                            googleDisplayName = googleDisplayName
-                        )
+                        val idToken = googleIdTokenCredential.idToken
+                        val displayName = googleIdTokenCredential.displayName
+
+                        AuthStorage.saveLogin(this, idToken, displayName, email)
+                        updateLoginUi()
+
+                        Log.d("CALL_GRABBER", "Google sign-in success")
                     } catch (e: GoogleIdTokenParsingException) {
                         Log.e("CALL_GRABBER", "Invalid Google ID token response", e)
-
-                        Toast.makeText(
-                            this,
-                            "Invalid Google sign-in response",
-                            Toast.LENGTH_SHORT
-                        ).show()
                     }
                 } else {
                     Log.e("CALL_GRABBER", "Unexpected custom credential type: ${credential.type}")
-
-                    Toast.makeText(
-                        this,
-                        "Unexpected credential type",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
             }
 
             else -> {
                 Log.e("CALL_GRABBER", "Unexpected credential type")
-
-                Toast.makeText(
-                    this,
-                    "Unexpected credential type",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-    }
-
-    private fun loginToBackendWithGoogleToken(
-        googleIdToken: String,
-        googleDisplayName: String?
-    ) {
-        lifecycleScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) {
-                    val authApi = ApiProvider.getAuthApiService(this@MainActivity)
-
-                    authApi.loginWithGoogle(
-                        GoogleLoginRequest(idToken = googleIdToken)
-                    )
-                }
-
-                if (response.isSuccessful) {
-                    val authResponse = response.body()
-
-                    if (authResponse?.token.isNullOrBlank() || authResponse.refreshToken.isBlank()) {
-                        Log.e("CALL_GRABBER", "Backend returned empty JWT")
-
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Login failed: empty token",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        return@launch
-                    }
-
-                    AuthStorage.saveLogin(
-                        context = this@MainActivity,
-                        accessToken = authResponse.token,
-                        refreshToken = authResponse.refreshToken,
-                        displayName = authResponse.displayName ?: googleDisplayName
-                    )
-
-                    updateLoginUi()
-
-                    Log.d("CALL_GRABBER", "Backend JWT login success")
-
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Logged in",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    val errorBody = withContext(Dispatchers.IO) {
-                        response.errorBody()?.string()
-                    }
-
-                    Log.e(
-                        "CALL_GRABBER",
-                        "Backend Google login failed: ${response.code()} $errorBody"
-                    )
-
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Backend login failed: ${response.code()}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            } catch (e: Exception) {
-                Log.e("CALL_GRABBER", "Backend login request failed", e)
-
-                Toast.makeText(
-                    this@MainActivity,
-                    "Backend login request failed",
-                    Toast.LENGTH_LONG
-                ).show()
             }
         }
     }

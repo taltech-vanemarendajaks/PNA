@@ -6,12 +6,8 @@ import android.telecom.Call
 import android.telecom.CallScreeningService
 import android.util.Log
 import android.widget.Toast
-import com.example.callgrabber.auth.AuthStorage
-import com.example.callgrabber.helpers.toCallerTitle
-import com.example.callgrabber.helpers.toDisplayText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 class CallService : CallScreeningService() {
@@ -58,10 +54,9 @@ class CallService : CallScreeningService() {
 
                 if (response.isSuccessful) {
                     val body = response.body()
-                    val message = body?.result?.toDisplayText(number) ?: "Unknown caller: $number"
+                    val message = body?.message ?: "Request successful"
                     Log.d("CALL_GRABBER", "Server responded: $message")
-                    val title = body?.result?.toCallerTitle(number) ?: "Unknown caller: $number"
-                    showToast(title)
+                    showToast(message)
                 } else {
                     val errorMessage = "Server error: ${response.code()}"
                     Log.e(
@@ -83,10 +78,7 @@ class CallService : CallScreeningService() {
         }
     }
     override fun onDestroy() {
-        Log.d("CALL_GRABBER", "Service destroyed")
-
-        //TODO: Kills the service the moment it is launched. Disabled for now. Fix if time.
-        //serviceScope.cancel()
-        //super.onDestroy()
+        serviceScope.cancel()
+        super.onDestroy()
     }
 }

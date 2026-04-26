@@ -7,17 +7,12 @@ import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
 import com.pna.backend.services.RefreshTokenService
-import domain.auth.request.AndroidGoogleLoginRequest
-import domain.auth.request.AndroidRefreshRequest
-import domain.auth.response.AndroidAuthResponse
-import domain.auth.response.AndroidRefreshResponse
 import com.pna.backend.services.SessionClientMetadata
 import domain.auth.response.GoogleAuthResponse
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
@@ -29,14 +24,6 @@ fun Route.googleAuthRoutes(
     googleAuthCodeService: GoogleAuthCodeService
 ) {
     route("/api/v1/auth") {
-        post("/google") {
-            call.handleAndroidGoogleLogin(
-                accessTokenService = accessTokenService,
-                refreshTokenService = refreshTokenService,
-                googleTokenVerifierService = googleTokenVerifierService
-            )
-        }
-
         get("/google/redirect") {
             call.handleGoogleRedirectRequest(
                 rootConfig,
@@ -64,13 +51,6 @@ fun Route.googleAuthRoutes(
             )
         }
 
-        post("/android-refresh") {
-            call.handleAndroidRefresh(
-                refreshTokenService = refreshTokenService,
-                accessTokenService = accessTokenService
-            )
-        }
-
         authenticate("auth-jwt") {
             post("/logout") {
                 call.handleLogout(
@@ -80,81 +60,6 @@ fun Route.googleAuthRoutes(
             }
         }
     }
-}
-
-private suspend fun ApplicationCall.handleAndroidGoogleLogin(
-    accessTokenService: AppJwtService,
-    refreshTokenService: RefreshTokenService,
-    googleTokenVerifierService: GoogleTokenVerifierService
-) {
-    val request = receive<AndroidGoogleLoginRequest>()
-
-    if (request.idToken.isBlank()) {
-        respond(
-            HttpStatusCode.BadRequest,
-            mapOf("error" to "idToken is required")
-        )
-        return
-    }
-
-    val googleUser = googleTokenVerifierService.verify(request.idToken)
-
-    if (googleUser == null) {
-        respond(
-            HttpStatusCode.Unauthorized,
-            mapOf("error" to "Invalid Google token")
-        )
-        return
-    }
-
-    val accessToken = accessTokenService.issueAccessToken(googleUser)
-    val refreshToken = refreshTokenService.createRefreshToken(googleUser)
-
-    respondPrivateNoStore()
-    respond(
-        HttpStatusCode.OK,
-        AndroidAuthResponse(
-            token = accessToken,
-            refreshToken = refreshToken,
-            displayName = googleUser.name
-        )
-    )
-}
-
-private suspend fun ApplicationCall.handleAndroidRefresh(
-    refreshTokenService: RefreshTokenService,
-    accessTokenService: AppJwtService
-) {
-    val request = receive<AndroidRefreshRequest>()
-
-    if (request.refreshToken.isBlank()) {
-        respond(
-            HttpStatusCode.BadRequest,
-            mapOf("error" to "refreshToken is required")
-        )
-        return
-    }
-
-    val rotation = refreshTokenService.rotateRefreshToken(request.refreshToken)
-
-    if (rotation == null) {
-        respond(
-            HttpStatusCode.Unauthorized,
-            mapOf("error" to "Refresh token is invalid or expired")
-        )
-        return
-    }
-
-    val accessToken = accessTokenService.issueAccessToken(rotation.user)
-
-    respondPrivateNoStore()
-    respond(
-        HttpStatusCode.OK,
-        AndroidRefreshResponse(
-            token = accessToken,
-            refreshToken = rotation.refreshToken
-        )
-    )
 }
 
 private suspend fun ApplicationCall.handleRefresh(
