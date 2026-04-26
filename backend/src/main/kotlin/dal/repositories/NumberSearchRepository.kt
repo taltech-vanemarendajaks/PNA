@@ -93,6 +93,64 @@ class NumberSearchRepository(
         }
     }
 
+    fun deleteById(user: GoogleUser, searchId: String): Boolean {
+        database.dataSource.connection.use { connection ->
+            connection.autoCommit = false
+
+            try {
+                val deleted = connection.prepareStatement(
+                    """
+                DELETE FROM user_search us
+                USING users u
+                WHERE us.user_id = u.id
+                  AND u.subject = ?
+                  AND us.id = ?
+                """.trimIndent()
+                ).use { statement ->
+                    statement.setString(1, user.subject)
+                    statement.setString(2, searchId)
+                    statement.executeUpdate() == 1
+                }
+
+                connection.commit()
+                return deleted
+            } catch (error: Throwable) {
+                connection.rollback()
+                throw error
+            } finally {
+                connection.autoCommit = true
+            }
+        }
+    }
+
+    fun deleteAllByUser(user: GoogleUser): Int {
+        database.dataSource.connection.use { connection ->
+            connection.autoCommit = false
+
+            try {
+                val deletedCount = connection.prepareStatement(
+                    """
+                DELETE FROM user_search us
+                USING users u
+                WHERE us.user_id = u.id
+                  AND u.subject = ?
+                """.trimIndent()
+                ).use { statement ->
+                    statement.setString(1, user.subject)
+                    statement.executeUpdate()
+                }
+
+                connection.commit()
+                return deletedCount
+            } catch (error: Throwable) {
+                connection.rollback()
+                throw error
+            } finally {
+                connection.autoCommit = true
+            }
+        }
+    }
+
     private fun ensurePhoneNumber(connection: Connection, normalizedPhone: NormalizedPhoneNumber, createdAt: String): String {
         connection.prepareStatement(
             "SELECT id, e164_number FROM phone_number WHERE canonical_number = ? LIMIT 1"

@@ -1,14 +1,11 @@
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
-import { isAuthenticationError } from "../../api/command";
-import { getAllNumberSearches, searchNumber } from "../../api/requests";
+import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import { isAuthenticationError, leaveAuthenticatedFlow } from "../../api/auth/auth";
+import { deleteNumberLog, getAllNumberSearches, searchNumber } from "../../api/requests";
 import type { NumberLogItem } from "../../lib/numberLog";
 import { Alert } from "../common/Alert";
 import { NumberLogComponent } from "../number-log/NumberLogComponent";
+import { NumberLogSwap } from "../number-log/NumberLogSwap";
 import { validatePhoneNumber } from "./SearchComponent.validation";
-
-type SearchComponentProps = {
-  onUnauthenticated?: () => void;
-};
 
 export function getSearchErrorMessage(
   searchError: unknown,
@@ -22,30 +19,63 @@ export function getSearchErrorMessage(
   return searchError instanceof Error ? searchError.message : "Search failed.";
 }
 
-export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
+export function getDeletionErrorMessage(
+  deletionError: unknown,
+  onUnauthenticated?: () => void,
+): string | null {
+  if (isAuthenticationError(deletionError)) {
+    onUnauthenticated?.();
+    return null;
+  }
+
+  return deletionError instanceof Error ? deletionError.message : "Deletion failed.";
+}
+
+export function SearchComponent() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [resultMessage, setResultMessage] = useState<NumberLogItem | null>(null);
   const [history, setHistory] = useState<NumberLogItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const onUnauthenticatedRef = useRef(onUnauthenticated);
+  const onUnauthenticatedRef = useRef(leaveAuthenticatedFlow);
 
-  useEffect(() => {
-    onUnauthenticatedRef.current = onUnauthenticated;
-  }, [onUnauthenticated]);
+  const handleDeletion = async (searchId: string) => {
+    try {
+      await deleteNumberLog(searchId);
+      setError(null);
 
-  useEffect(() => {
-    async function loadHistory() {
-      try {
-        const searches = await getAllNumberSearches();
-        setHistory(searches);
-      } catch (historyLoadError: unknown) {
-        getSearchErrorMessage(historyLoadError, onUnauthenticatedRef.current);
+      if (resultMessage?.id === searchId) {
+        setResultMessage(null);
       }
-    }
 
-    void loadHistory();
+      await loadHistory();
+    } catch (deletionError: unknown) {
+      const deletionErrorMessage = getDeletionErrorMessage(
+        deletionError,
+        onUnauthenticatedRef.current,
+      );
+
+      if (!deletionErrorMessage) {
+        setError(null);
+        return;
+      }
+
+      setError(deletionErrorMessage);
+    }
+  };
+
+  const loadHistory = useCallback(async () => {
+    try {
+      const searches = await getAllNumberSearches();
+      setHistory(searches);
+    } catch (historyLoadError: unknown) {
+      getSearchErrorMessage(historyLoadError, onUnauthenticatedRef.current);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
 
   function handlePhoneNumberChange(event: ChangeEvent<HTMLInputElement>) {
     const nextPhoneNumber = event.currentTarget.value;
@@ -70,15 +100,9 @@ export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
     try {
       const result = await searchNumber(phoneNumber);
       setResultMessage(result);
-
-      try {
-        const searches = await getAllNumberSearches();
-        setHistory(searches);
-      } catch (historyLoadError: unknown) {
-        getSearchErrorMessage(historyLoadError, onUnauthenticated);
-      }
+      await loadHistory();
     } catch (searchError: unknown) {
-      const searchErrorMessage = getSearchErrorMessage(searchError, onUnauthenticated);
+      const searchErrorMessage = getSearchErrorMessage(searchError, onUnauthenticatedRef.current);
 
       if (!searchErrorMessage) {
         setError(null);
@@ -126,9 +150,22 @@ export function SearchComponent({ onUnauthenticated }: SearchComponentProps) {
       {history.length > 0 ? (
         <div>
           <p className="text-2xl text-primary font-semibold">History</p>
-          <div className="mt-4 space-y-4">
+          <div className="mt-4 space-y-4 hidden sm:block w-auto">
             {history.map((log) => (
-              <NumberLogComponent key={`${log.phoneNumber}-${log.dateSearched}`} log={log} />
+              <NumberLogComponent
+                key={`${log.phoneNumber}-${log.dateSearched}`}
+                log={log}
+                onDelete={(searchId) => handleDeletion(searchId)}
+              />
+            ))}
+          </div>
+          <div className="mt-4 space-y-4 sm:hidden w-full">
+            {history.map((log) => (
+              <NumberLogSwap
+                key={`${log.phoneNumber}-${log.dateSearched}`}
+                log={log}
+                onDelete={(searchId) => handleDeletion(searchId)}
+              />
             ))}
           </div>
         </div>

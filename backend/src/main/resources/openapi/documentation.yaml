@@ -92,6 +92,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/number/search/{searchId}:
+    delete:
+      summary: Delete one saved search
+      description: Deletes one saved `user_search` row for the authenticated user. Shared phone number and result records are preserved.
+      parameters:
+        - in: path
+          name: searchId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Saved search deleted
+        '403':
+          description: Origin is not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid access JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Saved search not found for the authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/v1/number/all:
     get:
       summary: Get all searched numbers
@@ -105,6 +136,24 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SavedNumberSearchResponse'
+        '401':
+          description: Missing or invalid access JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete all saved searches
+      description: Deletes all saved `user_search` rows for the authenticated user. Shared phone number and result records are preserved.
+      responses:
+        '204':
+          description: Saved searches deleted
+        '403':
+          description: Origin is not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Missing or invalid access JWT
           content:

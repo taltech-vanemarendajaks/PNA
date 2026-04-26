@@ -1,12 +1,17 @@
 import type { NumberLogItem } from "../lib/numberLog";
 import { buildDescription, buildNumberLogItem } from "../lib/numberLogFormat";
-import { executeApiActionWithResponse, executeApiQuery } from "./command";
+import { executeApiActionWithResponse, executeApiDelete, executeApiQuery } from "./command";
 
 type SearchNumberRequest = {
   number: string;
 };
 
+type DeleteNumberRequest = {
+  searchId: string;
+};
+
 export type SearchNumberResult = {
+  id: string;
   country: string | null;
   countryCode: number | null;
   regionCode: string | null;
@@ -50,6 +55,7 @@ export async function searchNumber(number: string): Promise<NumberLogItem> {
   const timestamp = new Date().toISOString();
 
   return {
+    id: result.id,
     phoneNumber: result.internationalFormat ?? number,
     dateSearched: timestamp,
     results: [
@@ -59,4 +65,16 @@ export async function searchNumber(number: string): Promise<NumberLogItem> {
       },
     ],
   };
+}
+
+export async function deleteNumberLog(searchId: string): Promise<void> {
+  await executeApiDelete<DeleteNumberRequest>({
+    path: `/api/v1/number/search/${searchId}`,
+  });
+}
+
+export async function deleteAllNumberLogHistory(): Promise<void> {
+  await executeApiDelete({
+    path: "/api/v1/number/all",
+  });
 }

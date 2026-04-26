@@ -85,6 +85,49 @@ fun Route.numberRoutes(
                 call.respondPrivateNoStore()
                 call.respond(HttpStatusCode.OK, numberSearchService.getAll(user))
             }
+
+            delete("/search/{searchId}") {
+                if (!call.hasAllowedOrigin(rootConfig)) {
+                    call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Invalid origin"))
+                    return@delete
+                }
+
+                val user = call.readAuthenticatedUser(verifyAccessToken)
+                if (user == null) {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
+                    return@delete
+                }
+
+                val searchId = call.parameters["searchId"]?.trim().orEmpty()
+                if (searchId.isBlank()) {
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "Search not found"))
+                    return@delete
+                }
+
+                val deleted = numberSearchService.deleteById(user, searchId)
+                if (!deleted) {
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "Search not found"))
+                    return@delete
+                }
+
+                call.respond(HttpStatusCode.NoContent)
+            }
+
+            delete("/all") {
+                if (!call.hasAllowedOrigin(rootConfig)) {
+                    call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Invalid origin"))
+                    return@delete
+                }
+
+                val user = call.readAuthenticatedUser(verifyAccessToken)
+                if (user == null) {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
+                    return@delete
+                }
+
+                numberSearchService.deleteAllByUser(user)
+                call.respond(HttpStatusCode.NoContent)
+            }
         }
     }
 }

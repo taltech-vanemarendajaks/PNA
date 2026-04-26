@@ -4,7 +4,7 @@ import {
   executeApiAction,
   executeApiQuery,
   getApiBaseUrl,
-  isAuthenticationError,
+  hasApiResponseStatus,
 } from "../command";
 import { AUTH_SESSION_PATH, GOOGLE_REDIRECT_PATH, LOGOUT_PATH } from "./authPaths";
 
@@ -81,4 +81,24 @@ export async function startGoogleLoginWithRedirect(
 
 export async function logout(): Promise<void> {
   await executeApiAction({ path: LOGOUT_PATH });
+}
+
+export function isAuthenticationError(error: unknown): boolean {
+  return hasApiResponseStatus(error, [401, 403]);
+}
+
+export function leaveAuthenticatedFlow() {
+  window.location.assign("/");
+}
+
+export async function handleLogout() {
+  try {
+    await logout();
+    leaveAuthenticatedFlow();
+  } catch (error: unknown) {
+    if (isAuthenticationError(error)) {
+      leaveAuthenticatedFlow();
+      return;
+    }
+  }
 }

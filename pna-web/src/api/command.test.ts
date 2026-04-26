@@ -5,8 +5,8 @@ import {
   executeApiActionWithResponse,
   executeApiQuery,
   hasApiResponseStatus,
-  isAuthenticationError,
 } from "./command";
+import { isAuthenticationError } from "./auth/auth";
 
 afterEach(() => {
   vi.restoreAllMocks();

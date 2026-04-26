@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { GoogleLoginPanel } from "../components/GoogleLoginPanel";
+import { GoogleLoginPanel } from "../components/auth/GoogleLoginPanel";
 import { AboutSection } from "../components/AboutSection";
 
 export const Route = createFileRoute("/")({

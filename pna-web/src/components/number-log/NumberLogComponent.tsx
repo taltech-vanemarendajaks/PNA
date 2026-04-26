@@ -1,7 +1,10 @@
 import type { NumberLogItem, NumberResult } from "../../lib/numberLog";
+import { DeleteButton } from "./DeleteButton";
+import "./NumberLogComponent.css";
 
 type NumberLogComponentProps = {
   log: NumberLogItem | null;
+  onDelete?: (searchId: string) => void;
 };
 
 function formatLocalDateTime(value: string) {
@@ -20,7 +23,7 @@ function formatResult(result: NumberResult) {
   return `${result.description} (${formatLocalDateTime(result.logDate)})`;
 }
 
-export function NumberLogComponent({ log }: NumberLogComponentProps) {
+export function NumberLogComponent({ log, onDelete }: NumberLogComponentProps) {
   if (!log) {
     return;
   }
@@ -30,42 +33,64 @@ export function NumberLogComponent({ log }: NumberLogComponentProps) {
 
   if (resultCount <= 1) {
     return (
-      <div className="bg-base-100 border-base-300 border rounded-box p-4">
-        <h3 className="font-semibold text-xl text-accent">{log.phoneNumber}</h3>
-        <div className="text-sm">
-          <span className="font-semibold">Date Searched: </span>
-          <span>{formatLocalDateTime(log.dateSearched)}</span>
+      <div className="bg-base-100 border-base-300 block w-full rounded-box border p-4">
+        <div className="min-w-0 w-[90%]">
+          <h3 className="font-semibold text-xl text-accent">{log.phoneNumber}</h3>
+          <div className="text-sm">
+            <span className="font-semibold">Date Searched: </span>
+            <span>{formatLocalDateTime(log.dateSearched)}</span>
+          </div>
+          <div className="text-sm">
+            {latestResult && (
+              <>
+                <span className="font-semibold">Latest find: </span>
+                <span>{formatResult(latestResult)}</span>
+              </>
+            )}
+          </div>
         </div>
-        <div className="text-sm">
-          {latestResult && (
-            <>
-              <span className="font-semibold">Latest find: </span>
-              <span>{formatResult(latestResult)}</span>
-            </>
-          )}
+        <div className="hidden justify-end md:flex -mt-8">
+          <DeleteButton onClick={() => onDelete?.(log.id)} />
         </div>
       </div>
     );
   }
 
   return (
-    <details className="group collapse collapse-arrow bg-base-100 border-base-300 border">
-      <summary className="collapse-title">
+    <details className="group collapse collapse-arrow bg-base-100 border-base-300 block w-full border">
+      <summary className="collapse-title flex flex-col gap-2 pr-12 after:top-8!">
         <h3 className="font-semibold text-xl text-accent">{`${log.phoneNumber} (${resultCount})`}</h3>
         <div className="text-sm">
           <span className="font-semibold">Date Searched: </span>
           <span>{formatLocalDateTime(log.dateSearched)}</span>
         </div>
-        {latestResult && (
-          <span className="group-open:hidden text-sm">{formatResult(latestResult)}</span>
-        )}
+        <div className="grid w-[90%] motion-preview-collapse">
+          <div className="min-w-0 w-full motion-preview-fade">
+            <div className="text-sm">
+              {latestResult && (
+                <>
+                  <span className="font-semibold">Latest find: </span>
+                  <span>{formatResult(latestResult)}</span>
+                </>
+              )}
+            </div>
+            <div className="hidden justify-end md:flex -mt-8 -mr-25">
+              <DeleteButton onClick={() => onDelete?.(log.id)} />
+            </div>
+          </div>
+        </div>
       </summary>
       <div className="collapse-content text-sm">
-        {log.results.map((result, index) => (
-          <p key={`${result.logDate}-${result.description}`}>
-            {index + 1}. {formatResult(result)}
-          </p>
-        ))}
+        <div className="motion-expanded-fade space-y-3">
+          {log.results.map((result, index) => (
+            <p key={`${result.logDate}-${result.description}`}>
+              {index + 1}. {formatResult(result)}
+            </p>
+          ))}
+          <div className="hidden justify-end sm:flex -mt-8">
+            <DeleteButton onClick={() => onDelete?.(log?.id)} />
+          </div>
+        </div>
       </div>
     </details>
   );
