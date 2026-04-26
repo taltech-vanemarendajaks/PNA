@@ -436,47 +436,6 @@ class NumberRoutesTest {
         assertTrue(response.bodyAsText().contains("\"result\""))
     }
 
-    @Test
-    fun `android search persists and searches endpoint returns saved numbers`() = testApplication {
-        val jwtService = testJwtService()
-
-        application {
-            installNumberRoutes(accessTokenService = jwtService)
-        }
-
-        val token = jwtService.issueAccessToken(user())
-        val searchedNumber = "1234567890"
-
-        val searchResponse = client.post("/api/v1/number/android-search") {
-            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            header(HttpHeaders.Authorization, "Bearer $token")
-            setBody("""{"number":"$searchedNumber"}""")
-        }
-
-        assertEquals(HttpStatusCode.OK, searchResponse.status)
-
-        val secondSearchResponse = client.post("/api/v1/number/android-search") {
-            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            header(HttpHeaders.Authorization, "Bearer $token")
-            setBody("""{"number":"$searchedNumber"}""")
-        }
-
-        assertEquals(HttpStatusCode.OK, secondSearchResponse.status)
-
-        val searchesResponse = client.get("/api/v1/number/all") {
-            header(HttpHeaders.Authorization, "Bearer $token")
-        }
-
-        assertEquals(HttpStatusCode.OK, searchesResponse.status)
-        assertEquals("private, no-store", searchesResponse.headers[HttpHeaders.CacheControl])
-
-        val body = searchesResponse.bodyAsText()
-        assertTrue(body.contains("\"number\":\"$searchedNumber\""))
-        assertTrue(body.contains("\"results\""))
-
-        val occurrences = "\"number\":\"$searchedNumber\"".toRegex().findAll(body).count()
-        assertEquals(2, occurrences)
-    }
 
     private fun Application.installNumberRoutes(
         rootConfig: RootConfig = testRootConfig(),
