@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { hasApiResponseStatus } from "../command";
 import {
+  buildGoogleRedirectLoginUriWithContext,
   getSession,
   logout,
   requireAuthenticatedSession,
@@ -212,6 +213,23 @@ describe("google redirect auth helpers", () => {
     );
 
     expect(navigate).toHaveBeenCalledWith("/search");
+  });
+
+  it("preserves the validated return path in the backend redirect url", async () => {
+    const redirectUri = buildGoogleRedirectLoginUriWithContext(
+      {
+        origin: "http://localhost:5173",
+        pathname: "/",
+        search: "",
+        protocol: "http:",
+      },
+      "http://localhost:8080",
+      "/search?number=%2B37255551234",
+    );
+
+    expect(redirectUri).toBe(
+      "http://localhost:8080/api/v1/auth/google/redirect?frontendOrigin=http%3A%2F%2Flocalhost%3A5173&returnPath=%2Fsearch%3Fnumber%3D%252B37255551234",
+    );
   });
 
   it("logs out through the cookie-backed endpoint", async () => {
