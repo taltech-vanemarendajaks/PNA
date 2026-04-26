@@ -217,7 +217,9 @@ class NumberRoutesTest {
                     )
                 }
 
-                val token = jwtService.issueAccessToken(GoogleUser("subject-123", "user@example.com", "Jane", "Jane"))
+                val token = jwtService.issueAccessToken(
+                    GoogleUser("subject-123", "user@example.com", "Jane", "Jane")
+                )
 
                 val response = client.post("/api/v1/number/search") {
                     header(HttpHeaders.Origin, "http://localhost:5173")
@@ -252,8 +254,13 @@ class NumberRoutesTest {
             installNumberRoutes(accessTokenService = jwtService)
         }
 
-        val firstUserToken = jwtService.issueAccessToken(GoogleUser("subject-1", "one@example.com", "One", "One"))
-        val secondUserToken = jwtService.issueAccessToken(GoogleUser("subject-2", "two@example.com", "Two", "Two"))
+        val firstUserToken = jwtService.issueAccessToken(
+            GoogleUser("subject-1", "one@example.com", "One", "One")
+        )
+
+        val secondUserToken = jwtService.issueAccessToken(
+            GoogleUser("subject-2", "two@example.com", "Two", "Two")
+        )
 
         client.post("/api/v1/number/search") {
             header(HttpHeaders.Origin, "http://localhost:5173")
@@ -275,8 +282,10 @@ class NumberRoutesTest {
         }
 
         assertEquals(HttpStatusCode.OK, firstUserHistory.status)
-        assertTrue(firstUserHistory.bodyAsText().contains("\"number\":\"111111\""))
-        assertTrue(!firstUserHistory.bodyAsText().contains("\"number\":\"222222\""))
+
+        val body = firstUserHistory.bodyAsText()
+        assertTrue(body.contains("\"number\":\"111111\""))
+        assertTrue(!body.contains("\"number\":\"222222\""))
     }
 
     @Test
@@ -311,9 +320,27 @@ class NumberRoutesTest {
     }
 
     @Test
+    fun `searches rejects disallowed origin`() = testApplication {
+        val jwtService = testJwtService()
+
+        application {
+            installNumberRoutes(accessTokenService = jwtService)
+        }
+
+        val token = jwtService.issueAccessToken(user())
+
+        val response = client.get("/api/v1/number/all") {
+            header(HttpHeaders.Origin, "https://evil.example")
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+
+        assertEquals(HttpStatusCode.Forbidden, response.status)
+        assertTrue(response.bodyAsText().contains("Invalid origin"))
+    }
+
+    @Test
     fun `android search returns unauthorized when bearer token is missing`() = testApplication {
         application {
-            install(ContentNegotiation) { json() }
             installNumberRoutes()
         }
 
@@ -328,7 +355,6 @@ class NumberRoutesTest {
     @Test
     fun `android search returns unauthorized when bearer token is invalid`() = testApplication {
         application {
-            install(ContentNegotiation) { json() }
             installNumberRoutes()
         }
 
@@ -343,12 +369,6 @@ class NumberRoutesTest {
 
     @Test
     fun `android search returns bad request when number is blank`() = testApplication {
-        val jwtService = newJwtService()
-
-        application {
-            install(ContentNegotiation) { json() }
-            installNumberRoutes()
-    fun `searches rejects disallowed origin`() = testApplication {
         val jwtService = testJwtService()
 
         application {
@@ -368,11 +388,10 @@ class NumberRoutesTest {
 
     @Test
     fun `android search returns success when request is valid without origin header`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
-            install(ContentNegotiation) { json() }
-            installNumberRoutes()
+            installNumberRoutes(accessTokenService = jwtService)
         }
 
         val token = jwtService.issueAccessToken(user())
@@ -384,6 +403,7 @@ class NumberRoutesTest {
         }
 
         assertEquals(HttpStatusCode.OK, response.status)
+
         val body = response.bodyAsText()
         assertTrue(body.contains("\"result\""))
         assertTrue(body.contains("\"country\""))
@@ -397,11 +417,10 @@ class NumberRoutesTest {
 
     @Test
     fun `android search ignores disallowed origin and relies on bearer token`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
-            install(ContentNegotiation) { json() }
-            installNumberRoutes()
+            installNumberRoutes(accessTokenService = jwtService)
         }
 
         val token = jwtService.issueAccessToken(user())
@@ -419,15 +438,13 @@ class NumberRoutesTest {
 
     @Test
     fun `android search persists and searches endpoint returns saved numbers`() = testApplication {
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
-            install(ContentNegotiation) { json() }
-            installNumberRoutes()
+            installNumberRoutes(accessTokenService = jwtService)
         }
 
         val token = jwtService.issueAccessToken(user())
-
         val searchedNumber = "1234567890"
 
         val searchResponse = client.post("/api/v1/number/android-search") {
@@ -435,6 +452,7 @@ class NumberRoutesTest {
             header(HttpHeaders.Authorization, "Bearer $token")
             setBody("""{"number":"$searchedNumber"}""")
         }
+
         assertEquals(HttpStatusCode.OK, searchResponse.status)
 
         val secondSearchResponse = client.post("/api/v1/number/android-search") {
@@ -442,6 +460,7 @@ class NumberRoutesTest {
             header(HttpHeaders.Authorization, "Bearer $token")
             setBody("""{"number":"$searchedNumber"}""")
         }
+
         assertEquals(HttpStatusCode.OK, secondSearchResponse.status)
 
         val searchesResponse = client.get("/api/v1/number/all") {
@@ -450,18 +469,13 @@ class NumberRoutesTest {
 
         assertEquals(HttpStatusCode.OK, searchesResponse.status)
         assertEquals("private, no-store", searchesResponse.headers[HttpHeaders.CacheControl])
+
         val body = searchesResponse.bodyAsText()
         assertTrue(body.contains("\"number\":\"$searchedNumber\""))
-        assertTrue(body.contains("\"result\""))
-        val occurrences = "\"number\":\"$searchedNumber\"".toRegex().findAll(body).count()
-        assertEquals(1, occurrences)
-        val response = client.get("/api/v1/number/all") {
-            header(HttpHeaders.Origin, "https://evil.example")
-            header(HttpHeaders.Authorization, "Bearer $token")
-        }
+        assertTrue(body.contains("\"results\""))
 
-        assertEquals(HttpStatusCode.Forbidden, response.status)
-        assertTrue(response.bodyAsText().contains("Invalid origin"))
+        val occurrences = "\"number\":\"$searchedNumber\"".toRegex().findAll(body).count()
+        assertEquals(2, occurrences)
     }
 
     private fun Application.installNumberRoutes(
@@ -496,7 +510,12 @@ class NumberRoutesTest {
         val resolvedSearchService = searchService ?: newSearchService(ownedDatabase)
 
         routing {
-            numberRoutes(rootConfig, accessTokenService::verify, lookupService, resolvedSearchService)
+            numberRoutes(
+                rootConfig,
+                accessTokenService::verify,
+                lookupService,
+                resolvedSearchService
+            )
         }
     }
 
@@ -509,5 +528,7 @@ class NumberRoutesTest {
         return "${prefix}_${UUID.randomUUID().toString().replace("-", "")}"
     }
 
-    private fun user(): GoogleUser = GoogleUser("subject", "user@example.com", "Jane", "Jane")
+    private fun user(): GoogleUser {
+        return GoogleUser("subject", "user@example.com", "Jane", "Jane")
+    }
 }

@@ -13,28 +13,33 @@ import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.GoogleAuthCodeService
 import com.pna.backend.services.GoogleTokenVerifierService
 import com.pna.backend.services.RefreshTokenService
+import com.pna.backend.services.SessionClientMetadata
 import domain.auth.GoogleUser
 import io.ktor.client.request.cookie
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.auth.Authentication
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import support.TestDatabase
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import testJwtService
 import testRootConfig
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class AuthRoutesTest {
     @Test
@@ -212,7 +217,9 @@ class AuthRoutesTest {
             installAuthRoutes()
         }
 
-        val response = client.get("/api/v1/auth/google/redirect?code=auth-code&state=wrong-state&frontendOrigin=https%3A%2F%2Fevil.example&returnPath=%2Fnumbers") {
+        val response = client.get(
+            "/api/v1/auth/google/redirect?code=auth-code&state=wrong-state&frontendOrigin=https%3A%2F%2Fevil.example&returnPath=%2Fnumbers"
+        ) {
             cookie("pna_google_oauth_state", "expected-state")
         }
 
@@ -247,7 +254,9 @@ class AuthRoutesTest {
             followRedirects = false
         }
 
-        val response = noRedirectClient.get("/api/v1/auth/google/redirect?frontendOrigin=https%3A%2F%2Fapp.example.com&returnPath=%2F")
+        val response = noRedirectClient.get(
+            "/api/v1/auth/google/redirect?frontendOrigin=https%3A%2F%2Fapp.example.com&returnPath=%2F"
+        )
         val setCookies = response.headers.getAll(HttpHeaders.SetCookie) ?: emptyList()
 
         assertTrue(setCookies.any { it.contains("pna_google_oauth_state=") && it.contains("SameSite=Lax") })
@@ -258,10 +267,9 @@ class AuthRoutesTest {
     @Test
     fun `android google login verifies id token and returns access and refresh tokens`() = testApplication {
         val refreshTokenService = newRefreshTokenService()
-        val jwtService = newJwtService()
+        val jwtService = testJwtService()
 
         application {
-            install(ContentNegotiation) { json() }
             installAuthRoutes(
                 accessTokenService = jwtService,
                 refreshTokenService = refreshTokenService,
@@ -287,28 +295,23 @@ class AuthRoutesTest {
 
         val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
-        val accessToken = body["token"]?.jsonPrimitive?.content
-        val refreshToken = body["refreshToken"]?.jsonPrimitive?.content
+        val accessToken = assertNotNull(body["token"]?.jsonPrimitive?.content)
+        val refreshToken = assertNotNull(body["refreshToken"]?.jsonPrimitive?.content)
         val displayName = body["displayName"]?.jsonPrimitive?.content
 
-        assertNotNull(accessToken)
-        assertNotNull(refreshToken)
         assertEquals("Jane", displayName)
 
-        val verifiedUser = jwtService.verify(accessToken)
-        assertNotNull(verifiedUser)
+        val verifiedUser = assertNotNull(jwtService.verify(accessToken))
         assertEquals("subject", verifiedUser.subject)
         assertEquals("user@example.com", verifiedUser.email)
 
-        val rotation = refreshTokenService.rotateRefreshToken(refreshToken)
-        assertNotNull(rotation)
+        val rotation = assertNotNull(refreshTokenService.rotateRefreshToken(refreshToken, metadata()))
         assertEquals("subject", rotation.user.subject)
     }
 
     @Test
     fun `android google login rejects blank id token`() = testApplication {
         application {
-            install(ContentNegotiation) { json() }
             installAuthRoutes()
         }
 
@@ -330,7 +333,6 @@ class AuthRoutesTest {
     @Test
     fun `android google login rejects invalid google id token`() = testApplication {
         application {
-            install(ContentNegotiation) { json() }
             installAuthRoutes(
                 verifyGoogleCredential = { null }
             )
@@ -354,11 +356,10 @@ class AuthRoutesTest {
     @Test
     fun `android refresh rotates refresh token and returns new access and refresh tokens`() = testApplication {
         val refreshTokenService = newRefreshTokenService()
-        val jwtService = newJwtService()
-        val originalRefreshToken = refreshTokenService.createRefreshToken(user())
+        val jwtService = testJwtService()
+        val originalRefreshToken = refreshTokenService.createRefreshToken(user(), metadata())
 
         application {
-            install(ContentNegotiation) { json() }
             installAuthRoutes(
                 accessTokenService = jwtService,
                 refreshTokenService = refreshTokenService
@@ -381,26 +382,21 @@ class AuthRoutesTest {
 
         val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
 
-        val newAccessToken = body["token"]?.jsonPrimitive?.content
-        val newRefreshToken = body["refreshToken"]?.jsonPrimitive?.content
+        val newAccessToken = assertNotNull(body["token"]?.jsonPrimitive?.content)
+        val newRefreshToken = assertNotNull(body["refreshToken"]?.jsonPrimitive?.content)
 
-        assertNotNull(newAccessToken)
-        assertNotNull(newRefreshToken)
         assertTrue(newRefreshToken != originalRefreshToken)
 
-        val verifiedUser = jwtService.verify(newAccessToken)
-        assertNotNull(verifiedUser)
+        val verifiedUser = assertNotNull(jwtService.verify(newAccessToken))
         assertEquals("subject", verifiedUser.subject)
 
-        val secondRotation = refreshTokenService.rotateRefreshToken(newRefreshToken)
-        assertNotNull(secondRotation)
+        val secondRotation = assertNotNull(refreshTokenService.rotateRefreshToken(newRefreshToken, metadata()))
         assertEquals("subject", secondRotation.user.subject)
     }
 
     @Test
     fun `android refresh rejects blank refresh token`() = testApplication {
         application {
-            install(ContentNegotiation) { json() }
             installAuthRoutes()
         }
 
@@ -422,7 +418,6 @@ class AuthRoutesTest {
     @Test
     fun `android refresh rejects invalid refresh token`() = testApplication {
         application {
-            install(ContentNegotiation) { json() }
             installAuthRoutes(
                 refreshTokenService = newRefreshTokenService()
             )
@@ -606,12 +601,14 @@ class AuthRoutesTest {
                 assertEquals(HttpStatusCode.Unauthorized, response.status)
                 assertTrue(
                     setCookies.any {
-                        it.contains("$REFRESH_TOKEN_COOKIE_NAME=") && (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
+                        it.contains("$REFRESH_TOKEN_COOKIE_NAME=") &&
+                                (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
                     }
                 )
                 assertTrue(
                     setCookies.any {
-                        it.contains("$AUTH_ACCESS_COOKIE_NAME=") && (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
+                        it.contains("$AUTH_ACCESS_COOKIE_NAME=") &&
+                                (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
                     }
                 )
             }
@@ -649,12 +646,14 @@ class AuthRoutesTest {
                 assertEquals(HttpStatusCode.NoContent, response.status)
                 assertTrue(
                     setCookies.any {
-                        it.contains("$REFRESH_TOKEN_COOKIE_NAME=") && (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
+                        it.contains("$REFRESH_TOKEN_COOKIE_NAME=") &&
+                                (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
                     }
                 )
                 assertTrue(
                     setCookies.any {
-                        it.contains("$AUTH_ACCESS_COOKIE_NAME=") && (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
+                        it.contains("$AUTH_ACCESS_COOKIE_NAME=") &&
+                                (it.contains("Max-Age=0") || it.contains("Expires=Thu, 01 Jan 1970"))
                     }
                 )
             }
@@ -669,8 +668,10 @@ class AuthRoutesTest {
         verifyGoogleCredential: (String) -> GoogleUser? = { user() },
         exchangeGoogleAuthCode: (String, String) -> String? = { _, _ -> "id-token" }
     ) {
-        this.install(ContentNegotiation) {
-            json()
+        if (pluginOrNull(ContentNegotiation) == null) {
+            install(ContentNegotiation) {
+                json()
+            }
         }
 
         if (pluginOrNull(Authentication) == null) {
@@ -702,34 +703,41 @@ class AuthRoutesTest {
     }
 
     private fun newRefreshTokenService(): RefreshTokenService {
-        return TestDatabase.newDatabase("refresh-token-routes-test").use { database ->
-            database.migrate()
+        val database = TestDatabase.newDatabase("refresh_token_routes_${System.nanoTime()}")
+        database.migrate()
 
-            val userRepository = UserRepository(database)
+        val userRepository = UserRepository(database)
 
-            RefreshTokenService(
-                repository = RefreshTokenRepository(database, userRepository),
-                ttlSeconds = 2592000
-            )
-        }
+        return RefreshTokenService(
+            repository = RefreshTokenRepository(database, userRepository),
+            ttlSeconds = 2592000
+        )
     }
 
-    private fun user(): GoogleUser = GoogleUser("subject", "user@example.com", "Jane", "Jane")
+    private fun user(): GoogleUser {
+        return GoogleUser("subject", "user@example.com", "Jane", "Jane")
+    }
 
-    private fun metadata() = com.pna.backend.services.SessionClientMetadata(
-        userAgent = "JUnit",
-        ipAddress = "127.0.0.1"
-    )
+    private fun metadata(): SessionClientMetadata {
+        return SessionClientMetadata(
+            userAgent = "JUnit",
+            ipAddress = "127.0.0.1"
+        )
+    }
 
     private class FakeGoogleTokenVerifierService(
         private val verifier: (String) -> GoogleUser?
     ) : GoogleTokenVerifierService("test-client-id") {
-        override fun verify(idToken: String): GoogleUser? = verifier(idToken)
+        override fun verify(idToken: String): GoogleUser? {
+            return verifier(idToken)
+        }
     }
 
     private class FakeGoogleAuthCodeService(
         private val exchanger: (String, String) -> String?
     ) : GoogleAuthCodeService("test-client-id", "test-client-secret") {
-        override fun exchangeCodeForIdToken(code: String, redirectUri: String): String? = exchanger(code, redirectUri)
+        override fun exchangeCodeForIdToken(code: String, redirectUri: String): String? {
+            return exchanger(code, redirectUri)
+        }
     }
 }
