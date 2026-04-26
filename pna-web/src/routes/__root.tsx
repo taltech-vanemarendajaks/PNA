@@ -4,6 +4,7 @@ import { isAuthenticationError } from "../api/command";
 import { MobileAuthDock } from "../components/MobileAuthDock";
 import { ThemeController } from "../components/ThemeController";
 import { NotFoundRoute } from "../components/common/NotFound";
+import { FooterNav } from "../components/common/FooterNav";
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -54,8 +55,8 @@ function RootLayout() {
         >
           <Outlet />
         </main>
+        <FooterNav />
       </div>
-
       {isAuthenticatedRoute ? <MobileAuthDock onLogout={() => void handleLogout()} /> : null}
     </div>
   );
