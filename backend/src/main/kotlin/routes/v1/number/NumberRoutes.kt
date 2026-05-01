@@ -8,6 +8,7 @@ import com.pna.backend.routes.v1.respondPrivateNoStore
 import com.pna.backend.routes.v1.readAuthenticatedUser
 import com.pna.backend.services.NumberSearchService
 import com.pna.backend.services.PhoneLookupService
+import com.pna.backend.services.WebSocketSessionService
 import domain.auth.GoogleUser
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -20,7 +21,8 @@ fun Route.numberRoutes(
     rootConfig: RootConfig,
     verifyAccessToken: (String) -> GoogleUser?,
     lookupService: PhoneLookupService,
-    numberSearchService: NumberSearchService
+    numberSearchService: NumberSearchService,
+    sessionManager: WebSocketSessionService
 ) {
     route("/api/v1/number") {
         authenticate("auth-jwt") {
@@ -65,6 +67,7 @@ fun Route.numberRoutes(
                 val result = numberSearchService.getOrLookup(user, request.number) { number ->
                     lookupService.lookup(number)
                 }
+                sessionManager.broadcastToUser(user, """{"type":"refreshCalls"}""")
                 call.respond(HttpStatusCode.OK, SearchNumberResponse(result = result))
             }
         }

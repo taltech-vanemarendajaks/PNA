@@ -38,6 +38,7 @@ dependencies {
     implementation("com.sksamuel.hoplite:hoplite-core:2.9.0")
     implementation("com.sksamuel.hoplite:hoplite-yaml:2.9.0")
     implementation("com.auth0:java-jwt:4.5.1")
+    implementation("io.ktor:ktor-server-websockets")
 
     implementation("ch.qos.logback:logback-classic:1.5.18")
 

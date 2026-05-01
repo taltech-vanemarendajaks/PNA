@@ -36,9 +36,12 @@ export type SavedSearchNumberResult = SearchNumberResult & {
   createdAt: string;
 };
 
+export const NUMBER_API_BASE_ROUTE = "/api/v1/number";
+export const NUMBER_WS_ROUTE = "/api/ws/number";
+
 export async function getAllNumberSearches(): Promise<NumberLogItem[]> {
   const response = await executeApiQuery<SavedNumberSearchResponse[]>({
-    path: "/api/v1/number/all",
+    path: `${NUMBER_API_BASE_ROUTE}/all`,
   });
 
   return response.map(buildNumberLogItem);
@@ -46,7 +49,7 @@ export async function getAllNumberSearches(): Promise<NumberLogItem[]> {
 
 export async function searchNumber(number: string): Promise<NumberLogItem> {
   const response = await executeApiActionWithResponse<SearchNumberResponse, SearchNumberRequest>({
-    path: "/api/v1/number/search",
+    path: `${NUMBER_API_BASE_ROUTE}/search`,
     body: { number },
   });
 
@@ -69,12 +72,12 @@ export async function searchNumber(number: string): Promise<NumberLogItem> {
 
 export async function deleteNumberLog(searchId: string): Promise<void> {
   await executeApiDelete<DeleteNumberRequest>({
-    path: `/api/v1/number/search/${searchId}`,
+    path: `${NUMBER_API_BASE_ROUTE}/search/${searchId}`,
   });
 }
 
 export async function deleteAllNumberLogHistory(): Promise<void> {
   await executeApiDelete({
-    path: "/api/v1/number/all",
+    path: `${NUMBER_API_BASE_ROUTE}/all`,
   });
 }
