@@ -46,6 +46,7 @@ fun Application.configureRouting(
         )
 
         realtimeRoutes(
+            rootConfig,
             accessTokenService::verify,
             sessionManager
         )
