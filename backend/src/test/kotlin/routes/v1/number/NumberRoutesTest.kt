@@ -10,6 +10,7 @@ import com.pna.backend.routes.v1.number.numberRoutes
 import com.pna.backend.services.AppJwtService
 import com.pna.backend.services.NumberSearchService
 import com.pna.backend.services.PhoneLookupService
+import com.pna.backend.services.WebSocketSessionService
 import domain.auth.GoogleUser
 import io.ktor.client.request.cookie
 import io.ktor.client.request.get
@@ -442,7 +443,9 @@ class NumberRoutesTest {
         database: Database? = null,
         accessTokenService: AppJwtService = testJwtService(),
         lookupService: PhoneLookupService = PhoneLookupService(),
-        searchService: NumberSearchService? = null
+        searchService: NumberSearchService? = null,
+        websocketService: WebSocketSessionService = WebSocketSessionService()
+
     ) {
         val ownedDatabase = database ?: TestDatabase.newDatabase(uniqueSchemaName("number_routes")).also {
             it.migrate()
@@ -473,7 +476,8 @@ class NumberRoutesTest {
                 rootConfig,
                 accessTokenService::verify,
                 lookupService,
-                resolvedSearchService
+                resolvedSearchService,
+                websocketService
             )
         }
     }

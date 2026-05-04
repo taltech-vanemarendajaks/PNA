@@ -8,12 +8,8 @@ import com.pna.backend.dal.repositories.UserRepository
 import com.pna.backend.plugins.configureHttp
 import com.pna.backend.plugins.configureRouting
 import com.pna.backend.plugins.configureSecurity
-import com.pna.backend.services.AppJwtService
-import com.pna.backend.services.GoogleAuthCodeService
-import com.pna.backend.services.GoogleTokenVerifierService
-import com.pna.backend.services.NumberSearchService
-import com.pna.backend.services.PhoneLookupService
-import com.pna.backend.services.RefreshTokenService
+import com.pna.backend.plugins.configureWebSockets
+import com.pna.backend.services.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -66,6 +62,7 @@ fun Application.module(rootConfig: RootConfig = RootConfig.load()) {
     val lookupService = PhoneLookupService(rootConfig.app.phoneLookupDefaultRegion)
     val numberSearchRepository = NumberSearchRepository(database, userRepository)
     val numberSearchService = NumberSearchService(numberSearchRepository)
+    val sessionManager = WebSocketSessionService()
 
     install(CallLogging)
 
@@ -81,6 +78,8 @@ fun Application.module(rootConfig: RootConfig = RootConfig.load()) {
         rootConfig.jwt.audience
     )
 
+    configureWebSockets()
+
     configureRouting(
         rootConfig,
         accessTokenService,
@@ -88,6 +87,7 @@ fun Application.module(rootConfig: RootConfig = RootConfig.load()) {
         googleTokenVerifierService,
         googleAuthCodeService,
         lookupService,
-        numberSearchService
+        numberSearchService,
+        sessionManager
     )
 }

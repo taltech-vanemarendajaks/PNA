@@ -1,6 +1,7 @@
 import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { isAuthenticationError, leaveAuthenticatedFlow } from "../../api/auth/auth";
 import { deleteNumberLog, getAllNumberSearches, searchNumber } from "../../api/requests";
+import { connectNumberSocket, disconnectNumberSocket } from "../../api/numberSocket";
 import type { NumberLogItem } from "../../lib/numberLog";
 import { Alert } from "../common/Alert";
 import { NumberLogComponent } from "../number-log/NumberLogComponent";
@@ -75,6 +76,14 @@ export function SearchComponent() {
 
   useEffect(() => {
     void loadHistory();
+
+    connectNumberSocket(() => {
+      void loadHistory();
+    });
+
+    return () => {
+      disconnectNumberSocket();
+    };
   }, [loadHistory]);
 
   function handlePhoneNumberChange(event: ChangeEvent<HTMLInputElement>) {

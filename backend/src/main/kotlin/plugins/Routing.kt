@@ -3,12 +3,8 @@ package com.pna.backend.plugins
 import com.pna.backend.config.RootConfig
 import com.pna.backend.routes.v1.auth.googleAuthRoutes
 import com.pna.backend.routes.v1.number.numberRoutes
-import com.pna.backend.services.AppJwtService
-import com.pna.backend.services.GoogleAuthCodeService
-import com.pna.backend.services.GoogleTokenVerifierService
-import com.pna.backend.services.NumberSearchService
-import com.pna.backend.services.PhoneLookupService
-import com.pna.backend.services.RefreshTokenService
+import com.pna.backend.routes.v1.websocket.realtimeRoutes
+import com.pna.backend.services.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.openapi.*
 import io.ktor.server.plugins.swagger.*
@@ -22,7 +18,8 @@ fun Application.configureRouting(
     googleTokenVerifierService: GoogleTokenVerifierService,
     googleAuthCodeService: GoogleAuthCodeService,
     lookupService: PhoneLookupService,
-    numberSearchService: NumberSearchService
+    numberSearchService: NumberSearchService,
+    sessionManager: WebSocketSessionService
 ) {
     routing {
         openAPI(path = "openapi", swaggerFile = "openapi/documentation.yaml")
@@ -44,7 +41,14 @@ fun Application.configureRouting(
             rootConfig,
             accessTokenService::verify,
             lookupService,
-            numberSearchService
+            numberSearchService,
+            sessionManager
+        )
+
+        realtimeRoutes(
+            rootConfig,
+            accessTokenService::verify,
+            sessionManager
         )
     }
 }
