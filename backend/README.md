@@ -16,6 +16,8 @@ Create `backend/.env` (you can copy `backend/.env.example`) and set values there
 ```env
 APP_HOST=0.0.0.0
 APP_PORT=8080
+PHONE_LOOKUP_DEFAULT_REGION=EE
+PHONE_LOOKUP_ENABLE_CRAWLER=false
 GOOGLE_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-web-client-secret
 PUBLIC_BACKEND_BASE_URL=http://localhost:8080
@@ -42,6 +44,8 @@ Notes:
 - `POST /api/v1/number/search` checks SQLite first; if the number already exists, the stored lookup result is returned. If not, a new lookup is performed and saved.
 - `GET /api/v1/number/all` returns all saved number searches.
 - `NUMBER_SEARCH_DB_PATH` controls where the SQLite file is stored (relative or absolute path).
+- `PHONE_LOOKUP_DEFAULT_REGION` controls phone parsing fallback region (default `EE`).
+- `PHONE_LOOKUP_ENABLE_CRAWLER` enables crawler lookups in search results when set to `true`.
 
 ## Run
 

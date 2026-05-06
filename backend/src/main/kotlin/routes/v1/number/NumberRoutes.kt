@@ -19,8 +19,7 @@ fun Route.numberRoutes(
 ) {
     route("/api/v1/number") {
         post("/search") {
-            val user = authSessionService.get(call.request.cookies[AUTH_SESSION_COOKIE_NAME])
-            if (user == null) {
+            if (authSessionService.get(call.request.cookies[AUTH_SESSION_COOKIE_NAME]) == null) {
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
                 return@post
             }
@@ -34,7 +33,8 @@ fun Route.numberRoutes(
             val result = numberSearchService.getOrLookup(request.number) { number ->
                 lookupService.lookup(number)
             }
-            call.respond(HttpStatusCode.OK, SearchNumberResponse(result = result))
+            val output = result.copy(singleCrawlerResult = lookupService.crawl(request.number))
+            call.respond(HttpStatusCode.OK, SearchNumberResponse(result = output))
         }
 
         get("/all") {

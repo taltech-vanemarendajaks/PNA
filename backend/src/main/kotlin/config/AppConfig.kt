@@ -11,6 +11,8 @@ data class CorsOrigin(
 data class AppConfig(
     val host: String,
     val port: Int,
+    val phoneLookupDefaultRegion: String,
+    val phoneLookupEnableCrawler: Boolean,
     val googleClientId: String?,
     val googleClientSecret: String?,
     val publicBackendBaseUrl: String,
@@ -27,6 +29,14 @@ data class AppConfig(
 
             val host = readValue("APP_HOST", dotenv) ?: "0.0.0.0"
             val port = (readValue("APP_PORT", dotenv) ?: "8080").toIntOrNull() ?: 8080
+            val phoneLookupDefaultRegion = readValue("PHONE_LOOKUP_DEFAULT_REGION", dotenv)
+                ?.trim()
+                ?.ifBlank { null }
+                ?.uppercase()
+                ?: "EE"
+            val phoneLookupEnableCrawler = readValue("PHONE_LOOKUP_ENABLE_CRAWLER", dotenv)
+                ?.toBooleanStrictOrNull()
+                ?: false
             val googleClientId = readValue("GOOGLE_CLIENT_ID", dotenv)?.takeIf { it.isNotBlank() }
             val googleClientSecret = readValue("GOOGLE_CLIENT_SECRET", dotenv)?.takeIf { it.isNotBlank() }
             val publicBackendBaseUrl = normalizeBaseUrl(
@@ -54,6 +64,8 @@ data class AppConfig(
             return AppConfig(
                 host = host,
                 port = port,
+                phoneLookupDefaultRegion = phoneLookupDefaultRegion,
+                phoneLookupEnableCrawler = phoneLookupEnableCrawler,
                 googleClientId = googleClientId,
                 googleClientSecret = googleClientSecret,
                 publicBackendBaseUrl = publicBackendBaseUrl,

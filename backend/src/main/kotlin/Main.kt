@@ -1,6 +1,7 @@
 package com.pna.backend
 
 import com.pna.backend.config.AppConfig
+import com.pna.backend.crawler.Crawler
 import com.pna.backend.dal.repositories.NumberSearchRepository
 import com.pna.backend.routes.v1.auth.googleAuthRoutes
 import com.pna.backend.routes.v1.number.numberRoutes
@@ -31,7 +32,10 @@ fun main() {
 
 fun Application.module(appConfig: AppConfig = AppConfig.load()) {
     val authSessionService = AuthSessionService(ttlSeconds = appConfig.sessionTtlSeconds)
-    val lookupService = PhoneLookupService()
+    val lookupService = PhoneLookupService(
+        defaultRegion = appConfig.phoneLookupDefaultRegion,
+        crawler = if (appConfig.phoneLookupEnableCrawler) Crawler(defaultRegion = appConfig.phoneLookupDefaultRegion) else null
+    )
     val numberSearchRepository = NumberSearchRepository()
     val numberSearchService = NumberSearchService(numberSearchRepository)
 

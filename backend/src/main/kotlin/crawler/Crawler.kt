@@ -1,103 +1,183 @@
 package com.pna.backend.crawler
 
+import com.google.i18n.phonenumbers.NumberParseException
+import com.google.i18n.phonenumbers.PhoneNumberUtil
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.jsoup.Jsoup
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
 
-data class SearchResult(
+private data class SearchResult(
     val title: String,
-    val url: String
+    val url: String,
+    val snippet: String
 )
 
-fun main() {
-    val query = "6173001"
-    val keywords = listOf(
-        "telefon", "telephone", "phone", "tel", "kontakt", "caller", "telefoninumber"
+class Crawler(
+    private val http: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(8, TimeUnit.SECONDS)
+        .build(),
+    private val maxResults: Int = 8,
+    private val searchBaseUrl: String = "https://html.duckduckgo.com/html/",
+    private val defaultRegion: String = "EE"
+) {
+    private data class ParsedNumber(
+        val localDigits: String,
+        val countryCode: String?
     )
 
-    val results = searchDuckDuckGo(query, "ee-et")
-    println("Found ${results.size} search results")
-    val filtered = results.filter { pageLooksRelevant(it.url, keywords, query, 8) }
-    println("Filtered to ${filtered.size} relevant results")
+    private val phoneNumberUtil = PhoneNumberUtil.getInstance()
 
-    filtered.forEachIndexed { index, result ->
-        println("${index + 1}. ${result.title}")
-        println("   ${result.url}")
-    }
-}
-
-fun searchDuckDuckGo(query: String, region: String): List<SearchResult> {
-    val encodedQuery = URLEncoder.encode(query, Charsets.UTF_8)
-    val searchUrl = "https://html.duckduckgo.com/html/?q=$encodedQuery&kl=$region"
-
-    val doc = Jsoup.connect(searchUrl)
-        .userAgent("Mozilla/5.0")
-        .referrer("https://duckduckgo.com/")
-        .timeout(10_000)
-        .get()
-
-    return doc.select("a.result__a")
-        .map { element ->
-            SearchResult(
-                title = element.text(),
-                url = unwrapDuckDuckGoUrl(element.attr("href"))
-            )
+    fun search(phoneNumber: String): String {
+        val parsedNumber = parseNumber(phoneNumber) ?: return ""
+        val variants = variants(parsedNumber)
+        val results = searchResults(searchQueries(parsedNumber, variants)).take(maxResults)
+        if (results.isEmpty()) {
+            return NO_MATCH_FOUND
         }
-        .distinctBy { it.url }
-}
 
-fun pageLooksRelevant(
-    url: String,
-    keywords: List<String>,
-    query: String,
-    maxDistance: Int
-): Boolean {
-    return try {
-        val doc = Jsoup.connect(url)
-            .userAgent("Mozilla/5.0")
-            .referrer("https://duckduckgo.com/")
-            .timeout(10_000)
-            .followRedirects(true)
-            .get()
+        for (result in results) {
+            if (matches(result.title, variants) || matches(result.snippet, variants)) {
+                return formatResult(result.title, result.url)
+            }
 
-        val text = doc.body().text()
-        hasKeywordNearNumber(text, keywords, query, maxDistance)
-    } catch (_: Exception) {
-        false
+            val html = fetch(result.url) ?: continue
+            if (matches(html, variants)) {
+                val title = Jsoup.parse(html).title().ifBlank { result.title.ifBlank { result.url } }
+                return formatResult(title, result.url)
+            }
+        }
+
+        return NO_MATCH_FOUND
     }
-}
 
-fun hasKeywordNearNumber(
-    text: String,
-    keywords: List<String>,
-    query: String,
-    maxDistance: Int
-): Boolean {
-    val escapedKeywords = keywords.joinToString("|") { "${Regex.escape(it)}\\p{L}*" }
-    val digitPattern = query
-        .filter { it.isDigit() }
-        .map { Regex.escape(it.toString()) }
-        .joinToString("""[\s\-()]*""")
+    private fun parseNumber(input: String): ParsedNumber? {
+        val trimmedInput = input.trim()
+        if (trimmedInput.isBlank()) {
+            return null
+        }
 
-    val regex = Regex(
-        """(?:\b(?:$escapedKeywords)\b[\s\p{Punct}]{0,$maxDistance}$digitPattern|$digitPattern[\s\p{Punct}]{0,$maxDistance}\b(?:$escapedKeywords)\b)""",
-        setOf(RegexOption.IGNORE_CASE)
-    )
+        return try {
+            val parsed = phoneNumberUtil.parse(trimmedInput, defaultRegion)
+            val localDigits = parsed.nationalNumber.toString().ifBlank { return null }
+            ParsedNumber(localDigits = localDigits, countryCode = parsed.countryCode.toString())
+        } catch (_: NumberParseException) {
+            val digits = trimmedInput.filter(Char::isDigit).ifBlank { return null }
+            ParsedNumber(localDigits = digits, countryCode = null)
+        }
+    }
 
-    return regex.containsMatchIn(text)
-}
+    private fun variants(number: ParsedNumber): List<String> {
+        val digits = number.localDigits
+        val localVariants = listOf(
+            digits,
+            digits.chunked(3).joinToString(" "),
+            digits.chunked(2).joinToString(" "),
+            digits.chunked(3).joinToString("-"),
+            digits.chunked(2).joinToString("-")
+        )
+        val countryCode = number.countryCode
+        if (countryCode == null) {
+            return localVariants.distinct()
+        }
 
-fun unwrapDuckDuckGoUrl(href: String): String {
-    val absolute = if (href.startsWith("//")) "https:$href" else href
-    val marker = "uddg="
-    val start = absolute.indexOf(marker)
+        val internationalDigits = "$countryCode$digits"
+        val internationalVariants = listOf(
+            internationalDigits,
+            "00$internationalDigits",
+            "+$internationalDigits",
+            "+$countryCode $digits",
+            "+$countryCode-${digits.chunked(3).joinToString("-")}",
+            "+$countryCode ${digits.chunked(3).joinToString("-")}",
+            "+$countryCode ${digits.chunked(3).joinToString(" ")}",
+            "+$countryCode ${digits.chunked(2).joinToString(" ")}",
+            "$countryCode ${digits.chunked(3).joinToString(" ")}",
+            "$countryCode-${digits.chunked(3).joinToString("-")}"
+        )
 
-    if (start == -1) return absolute
+        return (localVariants + internationalVariants).distinct()
+    }
 
-    val valueStart = start + marker.length
-    val valueEnd = absolute.indexOf("&", valueStart)
-        .let { if (it == -1) absolute.length else it }
+    private fun searchQueries(number: ParsedNumber, variants: List<String>): List<String> {
+        val localDigits = number.localDigits
+        val countryCode = number.countryCode
+        val internationalDigits = countryCode?.let { "$it$localDigits" }
+        val quotedAndInternational = buildList {
+            if (countryCode != null) {
+                add("\"+$countryCode ${localDigits.chunked(3).joinToString(" ")}\"")
+                add("\"+$countryCode$localDigits\"")
+                add("+$countryCode ${localDigits.chunked(3).joinToString(" ")}")
+                add("+$countryCode$localDigits")
+            }
+            if (internationalDigits != null) {
+                add("\"$internationalDigits\"")
+                add(internationalDigits)
+            }
+        }
 
-    val encodedTarget = absolute.substring(valueStart, valueEnd)
-    return URLDecoder.decode(encodedTarget, Charsets.UTF_8)
+        return (quotedAndInternational + listOf(
+            "\"$localDigits\"",
+            localDigits,
+            localDigits.takeLast(6),
+            localDigits.takeLast(5)
+        ) + variants).distinct()
+    }
+
+    private fun searchResults(queries: List<String>): List<SearchResult> {
+        return queries.flatMap { query ->
+            val html = fetch("$searchBaseUrl?q=${URLEncoder.encode(query, "UTF-8")}") ?: return@flatMap emptyList()
+            val document = Jsoup.parse(html)
+            document.select(".result").mapNotNull { element ->
+                val link = element.selectFirst("a.result__a") ?: return@mapNotNull null
+                val url = unwrap(link.attr("href")) ?: return@mapNotNull null
+                val title = link.text().ifBlank { url }
+                val snippet = element.selectFirst(".result__snippet")?.text().orEmpty()
+                SearchResult(title = title, url = url, snippet = snippet)
+            }
+        }.distinctBy { it.url }
+    }
+
+    private fun matches(html: String, variants: List<String>): Boolean {
+        val normalizedHaystack = html.normalizePhoneDigits()
+        val digitVariants = variants.map { it.filter(Char::isDigit) }.filter { it.length >= 7 }
+        if (digitVariants.any { it in normalizedHaystack }) {
+            return true
+        }
+
+        if (digitVariants.any { normalizedHaystack.contains(it.takeLast(6)) || normalizedHaystack.contains(it.takeLast(5)) }) {
+            return true
+        }
+
+        val text = Jsoup.parse(html).text()
+        return variants.any { it in html || it in text }
+    }
+
+    private fun formatResult(title: String, url: String): String {
+        return "${title.ifBlank { url }} — $url"
+    }
+
+    private fun unwrap(href: String): String? {
+        val absolute = if (href.startsWith("//")) "https:$href" else href
+        val marker = "uddg="
+        if (marker !in absolute) return absolute.takeIf { it.startsWith("http") }
+        val target = absolute.substringAfter(marker).substringBefore("&")
+        return runCatching { URLDecoder.decode(target, "UTF-8") }.getOrNull()
+    }
+
+    private fun fetch(url: String): String? = runCatching {
+        val request = Request.Builder()
+            .url(url)
+            .header("User-Agent", "Mozilla/5.0 (compatible; PNA-Crawler/1.0)")
+            .build()
+        http.newCall(request).execute().use { it.body?.string() }
+    }.getOrNull()
+
+    private fun String.normalizePhoneDigits(): String = filter(Char::isDigit)
+
+    companion object {
+        const val NO_MATCH_FOUND: String = "No match found"
+    }
 }

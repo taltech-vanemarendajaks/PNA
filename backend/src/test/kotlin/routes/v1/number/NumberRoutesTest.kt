@@ -18,6 +18,7 @@ import io.ktor.server.testing.*
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class NumberRoutesTest {
@@ -116,11 +117,12 @@ class NumberRoutesTest {
         assertTrue(body.contains("\"result\""))
         assertTrue(body.contains("\"country\""))
         assertTrue(body.contains("\"countryCode\""))
-        assertTrue(body.contains("\"regionCode\""))
+        assertFalse(body.contains("\"regionCode\""))
         assertTrue(body.contains("\"numberType\""))
         assertTrue(body.contains("\"internationalFormat\""))
         assertTrue(body.contains("\"carrier\""))
         assertTrue(body.contains("\"timeZones\""))
+        assertTrue(body.contains("\"singlecrawler_result\""))
     }
 
     @Test

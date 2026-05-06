@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir C:UsersmarkuIdeaProjectsPNAbackend *)",
+      "Bash(./gradlew compileKotlin)",
+      "Bash(./gradlew test *)"
+    ]
+  }
+}

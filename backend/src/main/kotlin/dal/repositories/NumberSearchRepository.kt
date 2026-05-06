@@ -12,7 +12,9 @@ class NumberSearchRepository(
         ?.trim()
         ?.ifBlank { null }
         ?: "number-searches.db",
-    private val json: Json = Json
+    private val json: Json = Json {
+        ignoreUnknownKeys = true
+    }
 ) {
     private val jdbcUrl = "jdbc:sqlite:$databasePath"
 
